@@ -1055,7 +1055,14 @@ html input[type='radio'] {
     background: var(--dh-bg-0);
 }
 
-.x-progress-bar {
+/* deluge.css sizes bars a couple of pixels shorter than their track (the
+   stock themes hide the gap with borders), so stretch the flat bar to the
+   full track height. Stacking it above the "back" label keeps that label
+   from peeking out underneath the white one. */
+html body .x-progress-bar {
+    position: relative;
+    z-index: 1;
+    min-height: 100%;
     background: linear-gradient(90deg, var(--dh-accent-2), var(--dh-accent));
     border: 0 none;
 }
@@ -1067,6 +1074,26 @@ html input[type='radio'] {
 
 .x-progress-text-back {
     color: var(--dh-text-muted);
+}
+
+/* The label is drawn twice (white over the bar, muted over the track) and
+   deluge.css gives the two copies different offsets; line them up so a
+   partly filled bar reads as one label. */
+html body .x-progress-wrap .x-progress-inner .x-progress-text {
+    top: 0;
+    height: 100%;
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 18px;
+}
+
+html body .x-progress-wrap .x-progress-inner .x-progress-text > div {
+    line-height: inherit;
+}
+
+html body .x-tree .x-progress-wrap .x-progress-inner .x-progress-text {
+    line-height: 12px;
 }
 
 /* ------------------------------------------------------------------------ */
