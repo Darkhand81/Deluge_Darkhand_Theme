@@ -54,8 +54,8 @@ ${C_BOLD}Darkhand${C_RESET} - dark theme for the Deluge 2.x Web UI
 ${C_BOLD}Usage:${C_RESET} $(basename "$0") <install|uninstall|status> [options]
 
 ${C_BOLD}Commands:${C_RESET}
-  install      Copy the theme into Deluge and set it as the Web UI theme
-  uninstall    Remove the theme and restore the theme used before install
+  install      Copy the theme into Deluge and set it as the Web UI theme (root)
+  uninstall    Remove the theme and restore the theme used before install (root)
   status       Show detected Deluge installs and the active theme
 
 ${C_BOLD}Options:${C_RESET}
@@ -75,7 +75,7 @@ ${C_BOLD}Options:${C_RESET}
 ${C_BOLD}Examples:${C_RESET}
   sudo ./$(basename "$0") install
   sudo ./$(basename "$0") install -c /var/lib/deluged/config
-  ./$(basename "$0") install -w ~/.local/lib/python3.12/site-packages/deluge/ui/web
+  sudo ./$(basename "$0") install -w ~/.local/lib/python3.12/site-packages/deluge/ui/web
   sudo ./$(basename "$0") uninstall
 EOF
 }
@@ -164,7 +164,7 @@ deluge_web_pids() {
     local d
     local -a args
     for d in /proc/[0-9]*; do
-        mapfile -d '' -t args <"$d/cmdline" 2>/dev/null || continue
+        mapfile -d '' -t args 2>/dev/null <"$d/cmdline" || continue
         ((${#args[@]})) || continue
         if [[ "${args[0]##*/}" == deluge-web || "${args[1]:-}" == */deluge-web ||
             "${args[1]:-}" == deluge-web || "${args[2]:-}" == deluge.ui.web ]]; then
@@ -177,7 +177,7 @@ deluge_web_pids() {
 pid_config_dir() {
     local -a args
     local i
-    mapfile -d '' -t args <"/proc/$1/cmdline" 2>/dev/null || return 0
+    mapfile -d '' -t args 2>/dev/null <"/proc/$1/cmdline" || return 0
     for ((i = 0; i < ${#args[@]}; i++)); do
         case "${args[i]}" in
             -c | --config) printf '%s\n' "${args[i + 1]:-}" ;;
@@ -195,7 +195,7 @@ detect_web_dirs() {
     # The interpreter of a running deluge-web is the most reliable hint.
     local -a args
     for pid in $(deluge_web_pids); do
-        mapfile -d '' -t args <"/proc/$pid/cmdline" 2>/dev/null || continue
+        mapfile -d '' -t args 2>/dev/null <"/proc/$pid/cmdline" || continue
         case "${args[0]##*/}" in
             python*) pys+=("${args[0]}") ;;
             deluge-web) [[ -f "${args[0]}" ]] && pys+=("$(shebang_python "${args[0]}")") ;;
@@ -247,12 +247,13 @@ detect_config_dirs() {
     for pid in $(deluge_web_pids); do
         dir="$(pid_config_dir "$pid")"
         if [[ -n "$dir" ]]; then
-            [[ "$dir" == /* ]] || dir="$(readlink -f "/proc/$pid/cwd")/$dir"
+            [[ "$dir" == /* ]] ||
+                dir="$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)/$dir"
             cands+=("$dir")
             # deluge-web changes into its config directory once running
             cands+=("$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)")
         else
-            home="$(tr '\0' '\n' <"/proc/$pid/environ" 2>/dev/null |
+            home="$( (tr '\0' '\n' 2>/dev/null <"/proc/$pid/environ" || true) |
                 sed -n 's/^HOME=//p')"
             [[ -n "$home" ]] && cands+=("$home/.config/deluge")
         fi
@@ -572,8 +573,19 @@ cmd_status() {
     printf '  - processes:     %s\n' "${pids:-none running}"
 }
 
+# install/uninstall write into Deluge's package directory, edit web.conf files
+# owned by other users and stop/start services, so they need root. status is
+# read-only and may run unprivileged (it just sees less of other users' state).
+require_root() {
+    ((EUID == 0)) && return 0
+    printf '%serror:%s "%s" must be run as root.\n' "${C_RED}${C_BOLD}" "${C_RESET}" "$ACTION" >&2
+    printf '       Try: sudo %s\n' "$ORIG_CMD" >&2
+    exit 1
+}
+
 main() {
     parse_args "$@"
+    [[ "$ACTION" == status ]] || require_root
     case "$ACTION" in
         install) cmd_install ;;
         uninstall) cmd_uninstall ;;
@@ -581,4 +593,5 @@ main() {
     esac
 }
 
+ORIG_CMD="$0${*:+ $*}"
 main "$@"
