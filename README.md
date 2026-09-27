@@ -78,6 +78,10 @@ Shows the detected web UI directories and whether the theme is installed in
 each, every `web.conf` with its active theme, and any running `deluge-web`
 units or processes.
 
+`install` and `uninstall` need root and exit with a hint to use `sudo` when run
+as a regular user. `status` is read-only and runs without `sudo`, but it can't
+see into other users' processes or config directories, so it may report less.
+
 ## Options
 
 | Option | Description |
@@ -96,7 +100,7 @@ Examples:
 sudo ./darkhand.sh install -c /var/lib/deluged/config
 
 # Deluge installed with pipx
-./darkhand.sh install -p ~/.local/share/pipx/venvs/deluge/bin/python
+sudo ./darkhand.sh install -p ~/.local/share/pipx/venvs/deluge/bin/python
 ```
 
 ### Docker
