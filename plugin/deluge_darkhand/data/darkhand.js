@@ -77,7 +77,10 @@ Ext.ns('Deluge.plugins.darkhand');
             '</div>' +
             '</div>' +
             '</div>' +
+            '<div class="dh-overview">' +
             statsHtml() +
+            chartHtml() +
+            '</div>' +
             '</div>'
         );
     }
@@ -176,6 +179,171 @@ Ext.ns('Deluge.plugins.darkhand');
         );
     }
 
+    // -----------------------------------------------------------------------
+    // Speed chart: download and upload over the last few minutes, sampled
+    // from the same update poll. Deluge's web API keeps no history, so it
+    // starts empty when the page loads. Plain SVG, no chart library.
+    // -----------------------------------------------------------------------
+
+    var CHART_WINDOW = 5 * 60 * 1000; // ms of history shown
+    var samples = []; // { t: ms, down: bytes/s, up: bytes/s }
+
+    function chartHtml() {
+        return (
+            '<div class="dh-chart">' +
+            '<div class="dh-chart-head">' +
+            '<div class="dh-chart-title">Transfer speed ' +
+            '<span>Last 5 minutes</span></div>' +
+            '<div class="dh-chart-legend">' +
+            '<span class="dh-legend-down"><i></i>Download ' +
+            '<b id="dh-chart-down">&ndash;</b></span>' +
+            '<span class="dh-legend-up"><i></i>Upload ' +
+            '<b id="dh-chart-up">&ndash;</b></span>' +
+            '</div>' +
+            '</div>' +
+            '<div class="dh-chart-plot" id="dh-chart-plot"></div>' +
+            '</div>'
+        );
+    }
+
+    function addSample(stats) {
+        var now = new Date().getTime();
+        samples.push({
+            t: now,
+            down: stats.download_rate || 0,
+            up: stats.upload_rate || 0,
+        });
+        // Keep one sample beyond the window so the lines run off the edge
+        while (samples.length > 2 && samples[1].t < now - CHART_WINDOW) {
+            samples.shift();
+        }
+        var down = document.getElementById('dh-chart-down');
+        if (down) down.innerHTML = fspeed(stats.download_rate || 0, true);
+        var up = document.getElementById('dh-chart-up');
+        if (up) up.innerHTML = fspeed(stats.upload_rate || 0, true);
+    }
+
+    // A round axis maximum just above the value, in the largest binary unit
+    // (KiB/s, MiB/s...) below it: 1, 1.5, 2, 3, 4, 5, 6 or 8 times a power
+    // of ten, so the lines use most of the chart. At least 16 KiB/s.
+    function niceMax(value) {
+        value = Math.max(value, 16 * 1024);
+        var unit = 1;
+        while (value / unit >= 1000) unit *= 1024;
+        var n = value / unit;
+        var decade = Math.pow(10, Math.floor(Math.log(n) / Math.LN10));
+        var steps = [1, 1.5, 2, 3, 4, 5, 6, 8, 10];
+        for (var i = 0; i < steps.length; i++) {
+            if (steps[i] * decade >= n) return steps[i] * decade * unit;
+        }
+        return 10 * decade * unit;
+    }
+
+    // Smooth path through the points without overshooting them (monotone
+    // cubic interpolation, Fritsch-Carlson), so a line never dips below zero.
+    function smoothPath(pts) {
+        var n = pts.length;
+        if (n < 2) return '';
+        var i, dx = [], m = [], t = [];
+        for (i = 0; i < n - 1; i++) {
+            dx[i] = pts[i + 1][0] - pts[i][0];
+            m[i] = dx[i] ? (pts[i + 1][1] - pts[i][1]) / dx[i] : 0;
+        }
+        t[0] = m[0];
+        t[n - 1] = m[n - 2];
+        for (i = 1; i < n - 1; i++) {
+            t[i] = m[i - 1] * m[i] <= 0 ? 0 : (m[i - 1] + m[i]) / 2;
+        }
+        for (i = 0; i < n - 1; i++) {
+            if (m[i] === 0) {
+                t[i] = t[i + 1] = 0;
+            } else {
+                var a = t[i] / m[i], b = t[i + 1] / m[i], h = a * a + b * b;
+                if (h > 9) {
+                    var k = 3 / Math.sqrt(h);
+                    t[i] = k * a * m[i];
+                    t[i + 1] = k * b * m[i];
+                }
+            }
+        }
+        var f = function (v) {
+            return Math.round(v * 10) / 10;
+        };
+        var d = 'M' + f(pts[0][0]) + ',' + f(pts[0][1]);
+        for (i = 0; i < n - 1; i++) {
+            var third = dx[i] / 3;
+            d +=
+                'C' + f(pts[i][0] + third) + ',' + f(pts[i][1] + t[i] * third) +
+                ' ' + f(pts[i + 1][0] - third) + ',' + f(pts[i + 1][1] - t[i + 1] * third) +
+                ' ' + f(pts[i + 1][0]) + ',' + f(pts[i + 1][1]);
+        }
+        return d;
+    }
+
+    function drawChart() {
+        var plot = document.getElementById('dh-chart-plot');
+        if (!plot) return;
+        var w = plot.clientWidth, h = plot.clientHeight;
+        if (w < 20 || h < 20) return;
+
+        var peak = 0;
+        Ext.each(samples, function (s) {
+            peak = Math.max(peak, s.down, s.up);
+        });
+        var max = niceMax(peak * 1.1);
+        // Axis labels get their own column on the left, clear of the lines
+        var gutter = 70;
+        var top = 6, bottom = h - 6;
+        var now = samples.length ? samples[samples.length - 1].t : 0;
+        var x = function (t) {
+            return gutter + (1 - (now - t) / CHART_WINDOW) * (w - gutter);
+        };
+        var y = function (v) {
+            return bottom - (v / max) * (bottom - top);
+        };
+
+        var svg =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h +
+            '" viewBox="0 0 ' + w + ' ' + h + '">' +
+            '<defs>' +
+            '<linearGradient id="dh-fill-down" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0" class="dh-stop-down" stop-opacity="0.3"/>' +
+            '<stop offset="1" class="dh-stop-down" stop-opacity="0"/>' +
+            '</linearGradient>' +
+            '<linearGradient id="dh-fill-up" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0" class="dh-stop-up" stop-opacity="0.18"/>' +
+            '<stop offset="1" class="dh-stop-up" stop-opacity="0"/>' +
+            '</linearGradient>' +
+            '</defs>';
+
+        // Grid lines and labels at the top, middle and bottom of the scale
+        Ext.each([1, 0.5, 0], function (f) {
+            var gy = Math.round(y(max * f)) + 0.5;
+            svg +=
+                '<line class="dh-chart-grid" x1="' + gutter + '" x2="' + w +
+                '" y1="' + gy + '" y2="' + gy + '"/>' +
+                '<text class="dh-chart-label" text-anchor="end" x="' + (gutter - 10) +
+                '" y="' + (gy + 3.5) + '">' + (f ? fspeed(max * f, true) : '0') + '</text>';
+        });
+
+        if (samples.length > 1) {
+            Ext.each(['up', 'down'], function (key) {
+                var pts = [];
+                Ext.each(samples, function (s) {
+                    pts.push([x(s.t), y(s[key])]);
+                });
+                var line = smoothPath(pts);
+                var first = pts[0][0], last = pts[pts.length - 1][0];
+                svg +=
+                    '<path class="dh-chart-area" fill="url(#dh-fill-' + key + ')" d="' +
+                    line + 'L' + last + ',' + bottom + 'L' + first + ',' + bottom + 'Z"/>' +
+                    '<path class="dh-chart-line dh-chart-' + key + '" d="' + line + '"/>';
+            });
+        }
+
+        plot.innerHTML = svg + '</svg>';
+    }
+
     /**
      * Lay out the stat cards and size the header region to fit them. Six
      * columns when there's room, three otherwise; with the details card on
@@ -183,25 +351,34 @@ Ext.ns('Deluge.plugins.darkhand');
      * it stays at three to keep the torrent list from jumping.
      */
     function fitHeader(header) {
+        // Layout polish only: never let a failure here break Deluge's UI
+        try {
+            doFitHeader(header);
+        } catch (e) {
+            if (window.console) console.error('Darkhand: header layout failed', e);
+        }
+    }
+
+    function doFitHeader(header) {
         var el = header.getEl();
         if (!el) return;
         var wrap = el.child('.dh-header-wrap');
         var grid = el.child('.dh-stats');
-        if (!wrap || !grid) return;
+        var overview = el.child('.dh-overview');
+        if (!wrap || !grid || !overview) return;
 
-        // A stacked section needs about 160px for "1023.9 MiB/s"; one with
-        // the icon beside the text needs about 230px.
-        var width = grid.getWidth();
-        var fits = function (n, min) {
-            return width / n >= min;
-        };
-        var cols = fits(6, 160) ? 6 : fits(3, 160) ? 3 : 2;
-        if (state.mode === 'right') cols = Math.min(cols, 3);
-        grid.setStyle('grid-template-columns', 'repeat(' + cols + ', minmax(0, 1fr))');
-        // The dividers between sections depend on the column count
-        grid.removeClass(['dh-cols-2', 'dh-cols-3', 'dh-cols-6']);
-        grid.addClass('dh-cols-' + cols);
-        grid[fits(cols, 230) ? 'removeClass' : 'addClass']('dh-stats-compact');
+        // Where the speed chart goes: beside the stats when the column is
+        // wide, below them otherwise, or hidden when either would leave the
+        // torrent list too short (a small window, a tall details card).
+        var placements = overview.getWidth() >= 1000 ? ['side', 'below', 'off'] : ['below', 'off'];
+        var side;
+        for (var i = 0; i < placements.length; i++) {
+            side = placements[i] === 'side';
+            overview[side ? 'addClass' : 'removeClass']('dh-overview-side');
+            overview[placements[i] === 'off' ? 'addClass' : 'removeClass']('dh-chart-off');
+            layoutStats(grid, side);
+            if (listRoom(header, wrap.getHeight()) >= MIN_LIST_HEIGHT) break;
+        }
 
         var height = wrap.getHeight();
         if (height && height !== header.getHeight()) {
@@ -213,6 +390,39 @@ Ext.ns('Deluge.plugins.darkhand');
                 if (header.ownerCt) header.ownerCt.doLayout();
             }, 1);
         }
+    }
+
+    // The torrent list should keep at least this much height (toolbar,
+    // column headings and about four rows).
+    var MIN_LIST_HEIGHT = 220;
+
+    // Height left for the torrent list if the header were headerHeight tall.
+    function listRoom(header, headerHeight) {
+        var main = header.ownerCt;
+        if (!main || !main.body) return Infinity;
+        var room = main.body.getHeight() - headerHeight - GAP;
+        var details = deluge.ui.detailsPanel;
+        if (state.mode === 'bottom' && details && !details.collapsed) {
+            // Not drawn yet during the first layout: use its configured size
+            room -= (details.rendered ? details.getHeight() : details.height || 0) + GAP;
+        }
+        return room;
+    }
+
+    function layoutStats(grid, side) {
+        // A stacked section needs about 160px for "1023.9 MiB/s"; one with
+        // the icon beside the text needs about 230px.
+        var width = grid.getWidth();
+        var fits = function (n, min) {
+            return width / n >= min;
+        };
+        var cols = fits(6, 160) ? 6 : fits(3, 160) ? 3 : 2;
+        if (side || state.mode === 'right') cols = Math.min(cols, 3);
+        grid.setStyle('grid-template-columns', 'repeat(' + cols + ', minmax(0, 1fr))');
+        // The dividers between sections depend on the column count
+        grid.removeClass(['dh-cols-2', 'dh-cols-3', 'dh-cols-6']);
+        grid.addClass('dh-cols-' + cols);
+        grid[fits(cols, 230) ? 'removeClass' : 'addClass']('dh-stats-compact');
     }
 
     // Spacing between cards and around the window edge. Where a resize bar
@@ -384,6 +594,18 @@ Ext.ns('Deluge.plugins.darkhand');
                 fitHeader(header);
             });
         }
+        // Room for the chart depends on the column's height and, with the
+        // details card at the bottom, on that card's size.
+        var refit = function () {
+            fitHeader(header);
+        };
+        if (header.ownerCt) header.ownerCt.on('resize', refit);
+        details.on({ resize: refit, collapse: refit, expand: refit });
+
+        var plot = document.getElementById('dh-chart-plot');
+        if (plot && window.ResizeObserver) {
+            new ResizeObserver(drawChart).observe(plot);
+        }
 
         Ext.each(ICON_BUTTONS, function (id) {
             var btn = deluge.toolbar.items.get(id);
@@ -421,6 +643,10 @@ Ext.ns('Deluge.plugins.darkhand');
             try {
                 updateTitle(data);
                 updateStats(data);
+                if (data && data.connected && data.stats) {
+                    addSample(data.stats);
+                    drawChart();
+                }
             } catch (e) {}
             return result;
         };
