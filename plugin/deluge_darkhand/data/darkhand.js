@@ -82,7 +82,7 @@ Ext.ns('Deluge.plugins.darkhand');
         );
     }
 
-    // Stat cards shown under the page title. Values come from the regular
+    // Stats shown under the page title, as sections of one card. Values come from the regular
     // web.update_ui poll (data.stats and data.filters), so they cost nothing
     // extra.
     var STATS = [
@@ -189,15 +189,18 @@ Ext.ns('Deluge.plugins.darkhand');
         var grid = el.child('.dh-stats');
         if (!wrap || !grid) return;
 
-        // A stacked card needs about 160px for "1023.9 MiB/s"; a card with
+        // A stacked section needs about 160px for "1023.9 MiB/s"; one with
         // the icon beside the text needs about 230px.
         var width = grid.getWidth();
         var fits = function (n, min) {
-            return (width - (n - 1) * GAP) / n >= min;
+            return width / n >= min;
         };
         var cols = fits(6, 160) ? 6 : fits(3, 160) ? 3 : 2;
         if (state.mode === 'right') cols = Math.min(cols, 3);
         grid.setStyle('grid-template-columns', 'repeat(' + cols + ', minmax(0, 1fr))');
+        // The dividers between sections depend on the column count
+        grid.removeClass(['dh-cols-2', 'dh-cols-3', 'dh-cols-6']);
+        grid.addClass('dh-cols-' + cols);
         grid[fits(cols, 230) ? 'removeClass' : 'addClass']('dh-stats-compact');
 
         var height = wrap.getHeight();
