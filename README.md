@@ -282,6 +282,9 @@ python3 tools/build-icons.py package/icons
 To customise the colours, edit the `--dh-*` custom properties at the top of
 `theme/xtheme-darkhand.css` and re-run the installer.
 
+For the design tokens, layout rules, and the Deluge and ExtJS quirks the
+theme and dashboard work around, see the [style guide](docs/STYLE_GUIDE.md).
+
 ## Credits
 
 - [Inter](https://github.com/rsms/inter) by The Inter Project Authors, SIL Open
