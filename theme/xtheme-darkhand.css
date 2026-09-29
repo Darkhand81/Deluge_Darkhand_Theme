@@ -1063,6 +1063,12 @@ html input[type='radio'] {
     font-weight: 600;
 }
 
+/* Ext pulls the legend 3px left and pads it 2px, so its text started 1px
+   outside the fieldset, which clips it; start it on the fieldset's edge */
+.x-fieldset legend {
+    margin-left: -2px;
+}
+
 .x-html-editor-wrap {
     background-color: var(--dh-bg-0);
     border-color: var(--dh-border-strong);
