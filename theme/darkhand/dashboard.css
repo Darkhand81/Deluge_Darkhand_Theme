@@ -702,11 +702,6 @@ html body.dh-dashboard,
     background: var(--dh-bg-2);
 }
 
-.dh-dashboard #torrentGrid .x-grid3-cell-inner {
-    padding-top: 6px;
-    padding-bottom: 6px;
-}
-
 .dh-dashboard #torrentGrid .x-grid3-td-name .x-grid3-cell-inner {
     color: var(--dh-text-strong);
     font-weight: 500;
