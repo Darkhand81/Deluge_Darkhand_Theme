@@ -1160,6 +1160,118 @@ Ext.ns('Deluge.plugins.darkhand');
         });
     }
 
+    // -----------------------------------------------------------------------
+    // Connection Manager: columns sized to their text (Deluge's are fixed
+    // proportions, which cut off "Connected" and the host), and when there's
+    // only one host, select it so Connect is one click.
+    // -----------------------------------------------------------------------
+
+    var CM_MAX_WIDTH = 640; // the window widens up to this to fit the hosts
+    var CM_CELL_PAD = 16; // around each column's text
+
+    function fitConnectionColumns(cm) {
+        try {
+            doFitConnectionColumns(cm);
+        } catch (e) {
+            if (window.console) console.error('Darkhand: connection list layout failed', e);
+        }
+    }
+
+    function doFitConnectionColumns(cm) {
+        var list = cm.list;
+        if (!list || !list.innerHd || !list.innerBody || !cm.isVisible()) return;
+        var cols = list.columns;
+        var headers = list.innerHd.dom.querySelectorAll('em');
+        var rows = list.innerBody.dom.querySelectorAll('dl');
+        if (headers.length !== cols.length) return;
+
+        measureCanvas = measureCanvas || document.createElement('canvas');
+        var ctx = measureCanvas.getContext('2d');
+        var measure = function (el, text) {
+            var s = window.getComputedStyle(el);
+            ctx.font = s.fontWeight + ' ' + s.fontSize + ' ' + s.fontFamily;
+            return ctx.measureText(text).width;
+        };
+
+        // Widest text in each column, header included
+        var need = [], total = 0, host = -1;
+        Ext.each(cols, function (col, i) {
+            if (col.dataIndex === 'host') host = i;
+            var w = measure(headers[i], headers[i].textContent);
+            Ext.each(Ext.toArray(rows), function (dl) {
+                var dt = dl.querySelectorAll('dt')[i];
+                // the text is in the cell's <em>, which has the theme's font
+                var text = dt && (dt.querySelector('em') || dt);
+                if (text) w = Math.max(w, measure(text, text.textContent));
+            });
+            need[i] = Math.ceil(w) + CM_CELL_PAD;
+            total += need[i];
+        });
+
+        // Widen the window if the text doesn't fit (the list fills it)
+        var avail = list.innerHd.getWidth();
+        if (total > avail && cm.getWidth() < CM_MAX_WIDTH) {
+            cm.setWidth(Math.min(CM_MAX_WIDTH, cm.getWidth() + total - avail));
+            cm.doLayout();
+            avail = list.innerHd.getWidth();
+        }
+        if (!avail) return;
+
+        // Each column gets its width; the host column the rest (Ext's list
+        // columns are fractions of its width)
+        var widths = [], used = 0, changed = false;
+        Ext.each(cols, function (col, i) {
+            if (i === host) return;
+            widths[i] = Math.round((need[i] / avail) * 1000) / 1000;
+            used += widths[i];
+        });
+        if (host >= 0) widths[host] = Math.max(0.2, Math.round((1 - used) * 1000) / 1000);
+        Ext.each(cols, function (col, i) {
+            if (Math.abs(col.width - widths[i]) > 0.002) changed = true;
+        });
+        if (!changed) return;
+
+        Ext.each(cols, function (col, i) {
+            col.width = widths[i];
+        });
+        // Redrawing the list clears its selection: keep it
+        var selected = list.getSelectedIndexes();
+        list.setHdWidths();
+        list.refresh();
+        if (selected.length) list.select(selected, false, true);
+    }
+
+    function setUpConnectionManager() {
+        var cm = deluge.connectionManager;
+        if (!cm) return;
+        var autoSelect = false;
+
+        // Each time the window opens it reloads the hosts
+        var onGetHosts = cm.onGetHosts;
+        cm.onGetHosts = function () {
+            autoSelect = true;
+            var result = onGetHosts.apply(this, arguments);
+            fitConnectionColumns(this);
+            return result;
+        };
+
+        // A host's status arrives separately, and Deluge's buttons need it,
+        // so select the only host then (once per load, so it doesn't fight
+        // you if you deselect it)
+        var onGetHostStatus = cm.onGetHostStatus;
+        cm.onGetHostStatus = function () {
+            var result = onGetHostStatus.apply(this, arguments);
+            if (autoSelect) {
+                autoSelect = false;
+                if (this.list.getStore().getCount() === 1 && !this.list.getSelectionCount()) {
+                    this.list.select(0);
+                }
+            }
+            fitConnectionColumns(this);
+            return result;
+        };
+    }
+
     // Hide the Owner column by default, to leave Name more room. Done once
     // per browser; after that, showing it from the column menu sticks (Ext
     // saves the grid's state when a column is shown or hidden).
@@ -1202,6 +1314,7 @@ Ext.ns('Deluge.plugins.darkhand');
         hideOwnerOnce(deluge.torrents);
         styleAboutWindow();
         setUpBrand();
+        setUpConnectionManager();
         rememberDetailsSize(mode, details);
 
         var refit = function () {
