@@ -1402,6 +1402,10 @@ Ext.ns('Deluge.plugins.darkhand');
                 add.optionsPanel.files.addClass('dh-add-files');
                 stretchFileNames(add.optionsPanel.files);
             }
+            // The Options tab's form in from the frame like the Preferences
+            // pages (Deluge pads it 5px); set before it renders, so Ext
+            // sizes the fields to fit
+            if (add.optionsPanel.form) add.optionsPanel.form.bodyStyle = 'padding: 5px 15px';
             // The Options tab's form fills Deluge's 265px exactly, so the
             // rounded section would clip its last row: 12px more for it, and
             // for the window, so the torrent list keeps its height
