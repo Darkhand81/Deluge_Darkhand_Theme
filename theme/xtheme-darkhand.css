@@ -7,8 +7,14 @@
  * repaints everything on top of it. Selectors that compete with Deluge's own
  * deluge.css are prefixed with "html" so they win regardless of stylesheet
  * load order (Deluge < 2.2 loads the theme before deluge.css).
+ *
+ * The bundled fonts (Inter, JetBrains Mono) and the Lucide icon set live in
+ * ../darkhand/ and are served locally by deluge-web; nothing is loaded from
+ * the internet.
  */
 @import url('xtheme-gray.css');
+@import url('../darkhand/fonts.css');
+@import url('../darkhand/icons.css');
 
 :root {
     --dh-bg-0: #0d1014; /* app backdrop, gutters between panels */
@@ -30,11 +36,12 @@
     --dh-good: #3ecf8e;
     --dh-warn: #f5b84b;
     --dh-bad: #ff5f6d;
-    --dh-radius: 6px;
-    --dh-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter',
-        'Helvetica Neue', Arial, sans-serif;
-    --dh-mono: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Menlo, Consolas,
-        monospace;
+    --dh-radius: 8px;
+    --dh-font: 'Darkhand Inter', 'Inter Variable', Inter, system-ui,
+        -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --dh-mono: 'Darkhand Mono', 'JetBrains Mono', 'SFMono-Regular', Menlo,
+        Consolas, monospace;
+    --dh-font-size: 12px;
     /* Recolours dark-on-light ExtJS sprites (arrows, tools) to light-on-dark */
     --dh-sprite-filter: invert(0.86) hue-rotate(180deg) brightness(1.1);
     --dh-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23aab3c2' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -53,8 +60,11 @@ html body {
     background: var(--dh-bg-0);
     color: var(--dh-text);
     font-family: var(--dh-font);
+    /* Inter alternates that tell l, I and 1 apart in torrent names */
+    font-feature-settings: 'cv05', 'cv08';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 html body,
@@ -87,6 +97,38 @@ html body button,
 .x-list-body dt em,
 .ext-el-mask-msg div {
     font-family: var(--dh-font);
+    font-size: var(--dh-font-size);
+}
+
+/* Numbers line up in columns. Not applied to names: Inter's tabular forms
+   also widen hyphens, which spaces out file names. */
+.x-grid3-row td,
+.x-treegrid-col,
+.x-progress-text,
+#torrentDetails dd,
+.x-statusbar {
+    font-variant-numeric: tabular-nums;
+}
+
+.x-grid3-row td .torrent-name,
+.x-grid3-row td .x-deluge-peer,
+.x-grid3-row td .x-deluge-seed,
+.x-treegrid-col .x-treegrid-text,
+.x-treegrid-col .x-tree-node-anchor,
+#torrentDetails dd.torrent_name,
+#torrentDetails dd.path,
+#torrentDetails dd.comment,
+#torrentDetails dd.tracker {
+    font-variant-numeric: normal;
+}
+
+/* Hashes, addresses and paths in the monospace face */
+#torrentDetails dd.hash,
+#torrentDetails dd.path,
+.x-deluge-peers .x-grid3-col-address .x-grid3-cell-inner,
+.x-deluge-peers .x-grid3-col-client .x-grid3-cell-inner {
+    font-family: var(--dh-mono);
+    font-size: 11.5px;
 }
 
 html input {
@@ -1392,11 +1434,6 @@ dl.singleline dd,
     color: var(--dh-text);
 }
 
-/* Peers tab: IP addresses read better in a monospace face */
-.x-deluge-peers .x-grid3-col-address .x-grid3-cell-inner {
-    font-family: var(--dh-mono);
-}
-
 /* Status bar connection state */
 .x-not-connected {
     color: var(--dh-bad) !important;
@@ -1405,4 +1442,85 @@ dl.singleline dd,
 /* About window */
 .x-deluge-logo {
     filter: drop-shadow(0 4px 16px rgba(76, 144, 232, 0.35));
+}
+
+/* ------------------------------------------------------------------------ */
+/* Modern layout                                                            */
+/* ------------------------------------------------------------------------ */
+
+/* Main regions float as rounded cards on the backdrop */
+#sidebar.x-border-panel,
+#torrentGrid.x-border-panel,
+#detailsPanel.x-border-panel {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px var(--dh-border);
+}
+
+#sidebar .x-panel-body,
+#torrentGrid .x-panel-body,
+#detailsPanel .x-panel-body,
+#detailsPanel .x-tab-panel-body {
+    border-color: transparent;
+}
+
+/* App bar and status bar blend into the backdrop */
+.x-toolbar:has(#tbar-deluge-text),
+#deluge-statusbar {
+    background: var(--dh-bg-0);
+    border-color: transparent;
+}
+
+/* Section headers: small caps labels */
+.x-panel-header,
+.x-accordion-hd {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Column headers: compact and quiet so narrow columns keep their labels */
+.x-grid3-hd-row td,
+.x-grid3-hd-inner,
+.x-list-header-inner div em,
+.x-tree-hd {
+    font-size: 11px;
+}
+
+.x-grid3-hd-inner {
+    color: var(--dh-text-muted);
+}
+
+/* Window titles a touch larger */
+.x-window-tl .x-window-header,
+.x-window-header-text {
+    font-size: 12.5px;
+}
+
+/* Softer pill-shaped tabs */
+.x-tab-strip li {
+    border-radius: 7px 7px 0 0;
+}
+
+.x-tab-strip span.x-tab-strip-text {
+    font-weight: 500;
+}
+
+/* Rounder progress bars */
+.x-progress-wrap {
+    border-radius: 6px;
+}
+
+/* Deluge's dialogs have fixed-size forms laid out for narrower fonts; a
+   slightly smaller size keeps long labels on one line. */
+.x-window .x-form-item,
+.x-window .x-form-item label,
+.x-window .x-form-cb-label,
+.x-window .x-form-field,
+.x-window .x-fieldset legend,
+.x-window .x-list-body dt em,
+#detailsPanel .x-form-item,
+#detailsPanel .x-form-cb-label {
+    font-size: 11.5px;
+    letter-spacing: -0.005em;
 }
