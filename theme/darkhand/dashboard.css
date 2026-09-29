@@ -1238,13 +1238,15 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     background-color: var(--dh-accent-soft);
 }
 
-/* Checkboxes in lists (Add Torrents' Download column, the Plugins list's
-   Enabled) drawn like the form checkboxes: a rounded box, filled with the
+/* Checkboxes in lists and grids (Add Torrents' Download column, the
+   Plugins list's Enabled, Notifications' subscriptions) drawn like the form checkboxes: a rounded box, filled with the
    accent and ticked when on */
 .dh-dashboard .dh-add-files .x-grid3-check-col,
 .dh-dashboard .dh-inset-list .x-grid3-check-col,
+.dh-dashboard .dh-inset-grid .x-grid3-check-col,
 .dh-dashboard .dh-add-files .x-grid3-check-col-on,
-.dh-dashboard .dh-inset-list .x-grid3-check-col-on {
+.dh-dashboard .dh-inset-list .x-grid3-check-col-on,
+.dh-dashboard .dh-inset-grid .x-grid3-check-col-on {
     position: relative;
     height: 18px;
     background: none;
@@ -1253,8 +1255,10 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 
 .dh-dashboard .dh-add-files .x-grid3-check-col::after,
 .dh-dashboard .dh-inset-list .x-grid3-check-col::after,
+.dh-dashboard .dh-inset-grid .x-grid3-check-col::after,
 .dh-dashboard .dh-add-files .x-grid3-check-col-on::after,
-.dh-dashboard .dh-inset-list .x-grid3-check-col-on::after {
+.dh-dashboard .dh-inset-list .x-grid3-check-col-on::after,
+.dh-dashboard .dh-inset-grid .x-grid3-check-col-on::after {
     content: '';
     position: absolute;
     top: 2px;
@@ -1270,7 +1274,8 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 }
 
 .dh-dashboard .dh-add-files .x-grid3-check-col-on::after,
-.dh-dashboard .dh-inset-list .x-grid3-check-col-on::after {
+.dh-dashboard .dh-inset-list .x-grid3-check-col-on::after,
+.dh-dashboard .dh-inset-grid .x-grid3-check-col-on::after {
     border-color: var(--dh-accent);
     background-color: var(--dh-accent);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
@@ -1297,7 +1302,8 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 }
 
 /* Preferences' page list, and the lists inset the same way (Add Torrents'
-   torrents, Edit Trackers, the Connection Manager, Preferences' Plugins): rows in from their frame, rounded, the current
+   torrents, Edit Trackers, the Connection Manager, Preferences' Plugins,
+   plugins' own pages: every list in a window, which the plugin marks): rows in from their frame, rounded, the current
    one filled with the soft accent */
 .dh-dashboard .dh-pref-list .x-list-body-inner,
 .dh-dashboard .dh-inset-list .x-list-body-inner {
@@ -1336,6 +1342,36 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 
 .dh-dashboard .dh-pref-list .x-list-selected,
 .dh-dashboard .dh-inset-list .x-list-selected {
+    box-shadow: none;
+}
+
+/* Grids in windows (plugins' pages: Notifications, Blocklist) inset the
+   same way: the rows 4px / 6px in from the frame (Ext sizes the scroller
+   less its padding, and the plugin leaves the columns room for it), the
+   headers moved in with them, and rounded rows without stripes or the
+   selection bar. */
+.dh-dashboard .dh-inset-grid .x-grid3-scroller {
+    padding: 4px 6px;
+}
+
+.dh-dashboard .dh-inset-grid .x-grid3-header-offset {
+    padding-left: 6px;
+}
+
+.dh-dashboard .dh-inset-grid .x-grid3-hd-row td:last-child {
+    border-right-color: transparent;
+}
+
+.dh-dashboard .dh-inset-grid .x-grid3-row {
+    border-radius: var(--dh-bar-radius);
+}
+
+.dh-dashboard .dh-inset-grid .x-grid3-row-alt {
+    background-color: transparent;
+}
+
+.dh-dashboard .dh-inset-grid .x-grid3-row-selected,
+.dh-dashboard .dh-inset-grid .x-grid3-row-selected.x-grid3-row-over {
     box-shadow: none;
 }
 
