@@ -178,6 +178,26 @@ html body .x-deluge-moving {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b197fc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' %3E%3Cpath d='M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1' /%3E%3Cpath d='M2 13h10' /%3E%3Cpath d='m9 16 3-3-3-3' /%3E%3C/svg%3E") !important;
 }
 
+/* Dashboard stat cards (Darkhand plugin) */
+html body .dh-stat-download .dh-stat-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233ecf8e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' %3E%3Cpath d='M12 5v14' /%3E%3Cpath d='m19 12-7 7-7-7' /%3E%3C/svg%3E") !important;
+}
+html body .dh-stat-upload .dh-stat-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235b9dff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' %3E%3Cpath d='m5 12 7-7 7 7' /%3E%3Cpath d='M12 19V5' /%3E%3C/svg%3E") !important;
+}
+html body .dh-stat-active .dh-stat-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234c90e8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' %3E%3Cpath d='M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2' /%3E%3C/svg%3E") !important;
+}
+html body .dh-stat-connections .dh-stat-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b197fc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' %3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' /%3E%3Cpath d='M16 3.128a4 4 0 0 1 0 7.744' /%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87' /%3E%3Ccircle cx='9' cy='7' r='4' /%3E%3C/svg%3E") !important;
+}
+html body .dh-stat-dht .dh-stat-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b4bccb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' %3E%3Cpath d='m10.586 5.414-5.172 5.172' /%3E%3Cpath d='m18.586 13.414-5.172 5.172' /%3E%3Cpath d='M6 12h12' /%3E%3Ccircle cx='12' cy='20' r='2' /%3E%3Ccircle cx='12' cy='4' r='2' /%3E%3Ccircle cx='20' cy='12' r='2' /%3E%3Ccircle cx='4' cy='12' r='2' /%3E%3C/svg%3E") !important;
+}
+html body .dh-stat-space .dh-stat-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f5b84b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' %3E%3Cpath d='M10 16h.01' /%3E%3Cpath d='M2.212 11.577a2 2 0 0 0-.212.896V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.527a2 2 0 0 0-.212-.896L18.55 5.11A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z' /%3E%3Cpath d='M21.946 12.013H2.054' /%3E%3Cpath d='M6 16h.01' /%3E%3C/svg%3E") !important;
+}
+
 /* Files tree */
 html body .x-tree-node-leaf .x-deluge-file {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a94a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' %3E%3Cpath d='M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z' /%3E%3Cpath d='M14 2v5a1 1 0 0 0 1 1h5' /%3E%3C/svg%3E") !important;

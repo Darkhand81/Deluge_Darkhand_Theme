@@ -13,7 +13,12 @@ that installs and uninstalls it on Linux.
 
 This branch adds an optional **Darkhand plugin** that rebuilds the Web UI as a
 dashboard of floating cards: a navigation card with the torrent filters, a page
-header, the torrent list, and the torrent details. The details card sits either
+header, live stat cards, the torrent list, and the torrent details.
+
+The stat cards show download and upload speed (with their limits), active
+torrents (downloading and seeding), connections, DHT nodes (and whether incoming
+connections work), and free space in the download folder. They refresh with
+Deluge's regular two-second update, so they add no extra requests. The details card sits either
 on the right, opening when you select a torrent and folding away when nothing
 is selected, or below the list. Switch between the two with the **Details**
 control in the header; your choice is remembered per browser.
