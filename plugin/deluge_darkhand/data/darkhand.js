@@ -1219,7 +1219,13 @@ Ext.ns('Deluge.plugins.darkhand');
     // -----------------------------------------------------------------------
 
     var LIST_CELL_PAD = 16; // around each column's text
-    var LIST_INSET = 12; // an inset list's rows sit 6px in each side (dashboard.css)
+
+    // How far an inset list's rows sit in from its frame, on each side:
+    // dashboard.css's --dh-inset
+    function insetOf(el) {
+        var v = parseFloat(window.getComputedStyle(el).getPropertyValue('--dh-inset'));
+        return isNaN(v) ? 6 : v;
+    }
 
     // opts.stretch: the dataIndex of the column that takes the rest of the
     // width. opts.maxWidth: the widest the window gets (never narrower than
@@ -1262,7 +1268,7 @@ Ext.ns('Deluge.plugins.darkhand');
             need[i] = Math.ceil(w) + LIST_CELL_PAD;
             total += need[i];
         });
-        var inset = list.el.hasClass('dh-inset-list') ? LIST_INSET : 0;
+        var inset = list.el.hasClass('dh-inset') ? 2 * insetOf(list.el.dom) : 0;
 
         // Size the window to the text (the list fills it)
         var avail = list.innerHd.getWidth() - inset;
@@ -1368,40 +1374,35 @@ Ext.ns('Deluge.plugins.darkhand');
         }
     }
 
-    // Every list and grid in a window (Add Torrents, the Connection Manager,
-    // Edit Trackers, Preferences' Plugins page, plugins' own pages...) inset
-    // from its frame (dashboard.css), and a list's columns fitted to their
-    // text. Preferences' page list is a menu instead. Hooked on the
-    // prototypes, so lists that plugins add later are included.
-    var GRID_INSET = 12; // an inset grid's rows sit 6px in each side
-
+    // Every list, grid and tree grid in a window (Add Torrents, the
+    // Connection Manager, Edit Trackers, Preferences' Plugins page, plugins'
+    // own pages...) inset from its frame (dashboard.css), its columns fitted
+    // to the width that leaves. Preferences' page list is a menu instead.
+    // Hooked on the prototypes, so lists that plugins add later are included.
     function insetWindowLists() {
-        var ListView = Ext.list && Ext.list.ListView;
-        if (ListView) {
-            var listAfterRender = ListView.prototype.afterRender;
-            ListView.prototype.afterRender = function () {
-                var result = listAfterRender.apply(this, arguments);
-                if (!this.el.hasClass('dh-pref-list') && this.el.up('.x-window')) {
-                    this.addClass('dh-inset-list');
-                    fitListInPlace(this);
-                }
-                return result;
-            };
-        }
-        var GridPanel = Ext.grid && Ext.grid.GridPanel;
-        if (GridPanel) {
-            var gridAfterRender = GridPanel.prototype.afterRender;
-            GridPanel.prototype.afterRender = function () {
-                // Before the grid's first layout: Ext fits the columns to
-                // the width less its scrollbar; leave room for the inset too
-                if (this.el.up('.x-window')) {
-                    this.addClass('dh-inset-grid');
-                    var view = this.getView();
-                    view.scrollOffset = view.getScrollOffset() + GRID_INSET;
-                }
-                return gridAfterRender.apply(this, arguments);
-            };
-        }
+        hookInset(Ext.list && Ext.list.ListView, 'dh-inset-list', fitListInPlace);
+        hookInset(Ext.grid && Ext.grid.GridPanel, 'dh-inset-grid', function (grid) {
+            // Ext fits the columns to the width less its scrollbar; leave
+            // room for the inset too
+            var view = grid.getView();
+            view.scrollOffset = view.getScrollOffset() + 2 * insetOf(grid.el.dom);
+        });
+        hookInset(Ext.ux && Ext.ux.tree && Ext.ux.tree.TreeGrid, 'dh-inset-tree', stretchTreeColumn);
+    }
+
+    // Mark each one in a window and let setUp adjust it, before its first
+    // layout (which its afterRender starts)
+    function hookInset(Component, cls, setUp) {
+        if (!Component) return;
+        var afterRender = Component.prototype.afterRender;
+        Component.prototype.afterRender = function () {
+            if (this.el.up('.x-window') && !this.el.hasClass('dh-pref-list')) {
+                this.addClass('dh-inset');
+                this.addClass(cls);
+                setUp(this);
+            }
+            return afterRender.apply(this, arguments);
+        };
     }
 
     // Columns fitted to their text as the list's items change and it's
@@ -1474,22 +1475,25 @@ Ext.ns('Deluge.plugins.darkhand');
         card[needed > ct.dom.offsetWidth ? 'addClass' : 'removeClass']('dh-toolbar-compact');
     }
 
-    // Add Torrents' Files tab: Filename takes whatever width Size and
-    // Download leave, so the rows fill the tab. The tree grid sizes its
-    // columns (on resize, and when its scrollbar comes or goes) through
-    // updateColumnWidths.
-    function stretchFileNames(files) {
-        var update = files.updateColumnWidths;
-        files.updateColumnWidths = function () {
+    // A tree grid's widest column (Add Torrents' Filename) takes whatever
+    // width the others leave, less the inset, so its rows fill it. The tree
+    // grid sizes its columns (on resize, and when its scrollbar comes or
+    // goes) through updateColumnWidths.
+    function stretchTreeColumn(tree) {
+        var cols = tree.columns;
+        var stretch = 0;
+        for (var i = 1; i < cols.length; i++) {
+            if (cols[i].width > cols[stretch].width) stretch = i;
+        }
+        var update = tree.updateColumnWidths;
+        tree.updateColumnWidths = function () {
             var body = this.innerBody && this.innerBody.dom;
-            var cols = this.columns;
             if (body && body.clientWidth) {
                 var others = 0;
-                for (var i = 1; i < cols.length; i++) {
-                    if (!cols[i].hidden) others += cols[i].width;
+                for (var i = 0; i < cols.length; i++) {
+                    if (i !== stretch && !cols[i].hidden) others += cols[i].width;
                 }
-                // less the rows' 6px inset each side (dashboard.css)
-                cols[0].width = Math.max(120, body.clientWidth - 12 - others);
+                cols[stretch].width = Math.max(120, body.clientWidth - 2 * insetOf(body) - others);
             }
             return update.apply(this, arguments);
         };
@@ -1511,10 +1515,6 @@ Ext.ns('Deluge.plugins.darkhand');
             add.addClass('dh-add');
             add.items.get(0).addClass('dh-add-section');
             add.optionsPanel.addClass('dh-add-section');
-            if (add.optionsPanel.files) {
-                add.optionsPanel.files.addClass('dh-add-files');
-                stretchFileNames(add.optionsPanel.files);
-            }
             // The Options tab's form in from the frame like the Preferences
             // pages (Deluge pads it 5px); set before it renders, so Ext
             // sizes the fields to fit

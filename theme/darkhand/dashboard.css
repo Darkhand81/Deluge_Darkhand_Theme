@@ -17,6 +17,9 @@
     --dh-bar-radius: 6px;
     /* Framed panels clip to their frame's outer edge, 1px in (see the frames) */
     --dh-frame-clip: inset(1px round calc(var(--dh-frame-radius) - 1px));
+    /* How far the rows of lists in windows sit in from their frame, and the
+       tab strip above them (the plugin reads it too) */
+    --dh-inset: 6px;
     --dh-nav-width: 248px;
 }
 
@@ -1175,11 +1178,11 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     pointer-events: none;
 }
 
-/* The tab strip on the section's own surface, 6px in from the frame. The
-   line dividing it from the tab below is the header's, which runs the full
-   width (the strip's own starts 6px in). */
+/* The tab strip on the section's own surface, in from the frame like the
+   rows. The line dividing it from the tab below is the header's, which runs
+   the full width (the strip's own starts in with it). */
 .dh-dashboard .dh-add-section .x-tab-panel-header {
-    padding: 6px 6px 0;
+    padding: var(--dh-inset) var(--dh-inset) 0;
     background: transparent;
     border-color: transparent;
     border-bottom-color: var(--dh-border);
@@ -1188,97 +1191,6 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 .dh-dashboard .dh-add-section ul.x-tab-strip-top {
     background: transparent;
     border-bottom-color: transparent;
-}
-
-/* The Files tab in the torrent list's design: rows 6px in from the frame
-   (the plugin stretches Filename to fill the rest), no grid lines, and the
-   hovered / selected file as a rounded bar. The header's columns move in
-   with the rows. */
-.dh-dashboard .dh-add-files .x-treegrid-header-inner {
-    padding-left: 6px;
-}
-
-.dh-dashboard .dh-add-files .x-grid3-hd-row td:last-child {
-    border-right-color: transparent;
-}
-
-.dh-dashboard .dh-add-files .x-treegrid-root-node {
-    box-sizing: border-box;
-    padding: 6px;
-}
-
-.dh-dashboard .dh-add-files .x-treegrid-root-table,
-.dh-dashboard .dh-add-files .x-treegrid-col {
-    border: 0;
-}
-
-.dh-dashboard .dh-add-files .x-tree-node-el > .x-treegrid-col {
-    padding: 3px 0;
-}
-
-.dh-dashboard .dh-add-files .x-tree-node-el > .x-treegrid-col:first-child {
-    padding-left: 4px;
-    border-radius: var(--dh-bar-radius) 0 0 var(--dh-bar-radius);
-}
-
-.dh-dashboard .dh-add-files .x-tree-node-el > .x-treegrid-col:last-child {
-    border-radius: 0 var(--dh-bar-radius) var(--dh-bar-radius) 0;
-}
-
-/* The row colour on its cells, which take the rounding */
-.dh-dashboard .dh-add-files .x-tree-node-el {
-    background: transparent;
-}
-
-.dh-dashboard .dh-add-files .x-tree-node-over > .x-treegrid-col {
-    background-color: var(--dh-bg-3);
-}
-
-.dh-dashboard .dh-add-files .x-tree-selected > .x-treegrid-col {
-    background-color: var(--dh-accent-soft);
-}
-
-/* Checkboxes in lists and grids (Add Torrents' Download column, the
-   Plugins list's Enabled, Notifications' subscriptions) drawn like the form checkboxes: a rounded box, filled with the
-   accent and ticked when on */
-.dh-dashboard .dh-add-files .x-grid3-check-col,
-.dh-dashboard .dh-inset-list .x-grid3-check-col,
-.dh-dashboard .dh-inset-grid .x-grid3-check-col,
-.dh-dashboard .dh-add-files .x-grid3-check-col-on,
-.dh-dashboard .dh-inset-list .x-grid3-check-col-on,
-.dh-dashboard .dh-inset-grid .x-grid3-check-col-on {
-    position: relative;
-    height: 18px;
-    background: none;
-    filter: none;
-}
-
-.dh-dashboard .dh-add-files .x-grid3-check-col::after,
-.dh-dashboard .dh-inset-list .x-grid3-check-col::after,
-.dh-dashboard .dh-inset-grid .x-grid3-check-col::after,
-.dh-dashboard .dh-add-files .x-grid3-check-col-on::after,
-.dh-dashboard .dh-inset-list .x-grid3-check-col-on::after,
-.dh-dashboard .dh-inset-grid .x-grid3-check-col-on::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 50%;
-    box-sizing: border-box;
-    width: 14px;
-    height: 14px;
-    margin-left: -7px;
-    border: 1px solid var(--dh-border-strong);
-    border-radius: 4px;
-    background: var(--dh-bg-0) center / 12px 12px no-repeat;
-    cursor: pointer;
-}
-
-.dh-dashboard .dh-add-files .x-grid3-check-col-on::after,
-.dh-dashboard .dh-inset-list .x-grid3-check-col-on::after,
-.dh-dashboard .dh-inset-grid .x-grid3-check-col-on::after {
-    border-color: var(--dh-accent);
-    background-color: var(--dh-accent);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
 }
 
 /* Toolbars inside window frames (Connection Manager's Add / Edit / Remove,
@@ -1301,18 +1213,16 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     border-bottom: 1px solid var(--dh-border);
 }
 
-/* Preferences' page list, and the lists inset the same way (Add Torrents'
-   torrents, Edit Trackers, the Connection Manager, Preferences' Plugins,
-   plugins' own pages: every list in a window, which the plugin marks): rows in from their frame, rounded, the current
-   one filled with the soft accent */
+/* Preferences' page list: in from its frame, with rounded rows and the
+   current page filled with the soft accent. The inset lists below share it. */
 .dh-dashboard .dh-pref-list .x-list-body-inner,
 .dh-dashboard .dh-inset-list .x-list-body-inner {
-    padding: 6px 0;
+    padding: var(--dh-inset) 0;
 }
 
 .dh-dashboard .dh-pref-list dl,
 .dh-dashboard .dh-inset-list dl {
-    margin: 0 6px 2px;
+    margin: 0 var(--dh-inset) 2px;
     border-radius: var(--dh-bar-radius);
 }
 
@@ -1321,18 +1231,68 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     padding: 5px 8px;
 }
 
-/* An inset list's rows 6px apart, like its inset; text too long for its
-   column ends in an ellipsis */
+.dh-dashboard .dh-pref-list .x-list-selected,
+.dh-dashboard .dh-inset-list .x-list-selected {
+    box-shadow: none;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Inset lists: every list, grid and tree grid in a window                  */
+/* ------------------------------------------------------------------------ */
+
+/* The plugin marks each list, grid and tree grid it finds in a window with
+   .dh-inset and its kind (.dh-inset-list, -grid, -tree), and fits its
+   columns to the width less the inset. Whatever the kind: rows
+   --dh-inset in from the frame, rounded, no stripes, grid lines or
+   selection bar, the hovered / selected row filled; the column headers
+   moved in with the rows; checkboxes drawn like the form's. */
+
+/* The last column header's divider would stand alone by the frame */
+.dh-dashboard .dh-inset .x-grid3-hd-row td:last-child {
+    border-right-color: transparent;
+}
+
+/* Checkboxes: a rounded box, filled with the accent and ticked when on */
+.dh-dashboard .dh-inset .x-grid3-check-col,
+.dh-dashboard .dh-inset .x-grid3-check-col-on {
+    position: relative;
+    height: 18px;
+    background: none;
+    filter: none;
+}
+
+.dh-dashboard .dh-inset .x-grid3-check-col::after,
+.dh-dashboard .dh-inset .x-grid3-check-col-on::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    box-sizing: border-box;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    border: 1px solid var(--dh-border-strong);
+    border-radius: 4px;
+    background: var(--dh-bg-0) center / 12px 12px no-repeat;
+    cursor: pointer;
+}
+
+.dh-dashboard .dh-inset .x-grid3-check-col-on::after {
+    border-color: var(--dh-accent);
+    background-color: var(--dh-accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+}
+
+/* Lists (ListView): rows --dh-inset apart too; text too long for its
+   column ends in an ellipsis (the plugin adds the full text as a tooltip) */
 .dh-dashboard .dh-inset-list dt em {
     padding-top: 2px;
     padding-bottom: 2px;
     text-overflow: ellipsis;
 }
 
-/* Column headers (Edit Trackers, the Connection Manager, Plugins) moved in with the rows, their text lined
-   up with the rows' */
 .dh-dashboard .dh-inset-list .x-list-header-inner {
-    padding: 0 6px;
+    padding: 0 var(--dh-inset);
 }
 
 .dh-dashboard .dh-inset-list .x-list-header-inner em {
@@ -1340,26 +1300,14 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     padding-right: 8px;
 }
 
-.dh-dashboard .dh-pref-list .x-list-selected,
-.dh-dashboard .dh-inset-list .x-list-selected {
-    box-shadow: none;
-}
-
-/* Grids in windows (plugins' pages: Notifications, Blocklist) inset the
-   same way: the rows 4px / 6px in from the frame (Ext sizes the scroller
-   less its padding, and the plugin leaves the columns room for it), the
-   headers moved in with them, and rounded rows without stripes or the
-   selection bar. */
+/* Grids (GridPanel): Ext sizes the scroller less its padding, and the
+   plugin leaves the columns room for it */
 .dh-dashboard .dh-inset-grid .x-grid3-scroller {
-    padding: 4px 6px;
+    padding: var(--dh-inset);
 }
 
 .dh-dashboard .dh-inset-grid .x-grid3-header-offset {
-    padding-left: 6px;
-}
-
-.dh-dashboard .dh-inset-grid .x-grid3-hd-row td:last-child {
-    border-right-color: transparent;
+    padding-left: var(--dh-inset);
 }
 
 .dh-dashboard .dh-inset-grid .x-grid3-row {
@@ -1373,6 +1321,47 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 .dh-dashboard .dh-inset-grid .x-grid3-row-selected,
 .dh-dashboard .dh-inset-grid .x-grid3-row-selected.x-grid3-row-over {
     box-shadow: none;
+}
+
+/* Tree grids (TreeGrid, like Add Torrents' Files tab): a row is a table
+   row, so its colour goes on its cells, which take the rounding */
+.dh-dashboard .dh-inset-tree .x-treegrid-header-inner {
+    padding-left: var(--dh-inset);
+}
+
+.dh-dashboard .dh-inset-tree .x-treegrid-root-node {
+    box-sizing: border-box;
+    padding: var(--dh-inset);
+}
+
+.dh-dashboard .dh-inset-tree .x-treegrid-root-table,
+.dh-dashboard .dh-inset-tree .x-treegrid-col {
+    border: 0;
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-node-el {
+    background: transparent;
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-node-el > .x-treegrid-col {
+    padding: 3px 0;
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-node-el > .x-treegrid-col:first-child {
+    padding-left: 4px;
+    border-radius: var(--dh-bar-radius) 0 0 var(--dh-bar-radius);
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-node-el > .x-treegrid-col:last-child {
+    border-radius: 0 var(--dh-bar-radius) var(--dh-bar-radius) 0;
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-node-over > .x-treegrid-col {
+    background-color: var(--dh-bg-3);
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-selected > .x-treegrid-col {
+    background-color: var(--dh-accent-soft);
 }
 
 /* Windows laid out in regions (Preferences: the page list and the page)
