@@ -340,6 +340,10 @@ separate title or body frame, outer outline + shadow (G20).
   torrent list with its File / Url / Remove bar at the bottom, and the Files /
   Options tabs at the top of the second. The Options section and the window
   get 12px more height so the rounded corners don't clip the form's last row.
+  The torrent list is styled like Preferences' page list (rows 6px apart),
+  and the Files tab matches it: rows 6px in, no grid lines, rounded
+  hover/selected bars, Filename stretched to fill (`stretchFileNames`), Lucide
+  file icons, and CSS-drawn Download checkboxes like the Options tab's.
 - Footer: buttons with 8px corners; the last one (the main action: OK, Connect, Add,
   Move, Remove Torrent) accent-filled. Not in message boxes (G17).
 - Message boxes: Lucide circle-help / info (accent), triangle-alert (warn),

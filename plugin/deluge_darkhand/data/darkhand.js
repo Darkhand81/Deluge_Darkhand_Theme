@@ -1361,6 +1361,27 @@ Ext.ns('Deluge.plugins.darkhand');
         card[needed > ct.dom.offsetWidth ? 'addClass' : 'removeClass']('dh-toolbar-compact');
     }
 
+    // Add Torrents' Files tab: Filename takes whatever width Size and
+    // Download leave, so the rows fill the tab. The tree grid sizes its
+    // columns (on resize, and when its scrollbar comes or goes) through
+    // updateColumnWidths.
+    function stretchFileNames(files) {
+        var update = files.updateColumnWidths;
+        files.updateColumnWidths = function () {
+            var body = this.innerBody && this.innerBody.dom;
+            var cols = this.columns;
+            if (body && body.clientWidth) {
+                var others = 0;
+                for (var i = 1; i < cols.length; i++) {
+                    if (!cols[i].hidden) others += cols[i].width;
+                }
+                // less the rows' 6px inset each side (dashboard.css)
+                cols[0].width = Math.max(120, body.clientWidth - 12 - others);
+            }
+            return update.apply(this, arguments);
+        };
+    }
+
     function wireUp(mode, details, box) {
         setUpColumnStretch(deluge.torrents);
         hideOwnerOnce(deluge.torrents);
@@ -1377,6 +1398,10 @@ Ext.ns('Deluge.plugins.darkhand');
             add.items.get(0).addClass('dh-add-section');
             add.optionsPanel.addClass('dh-add-section');
             if (add.list) add.list.addClass('dh-add-list');
+            if (add.optionsPanel.files) {
+                add.optionsPanel.files.addClass('dh-add-files');
+                stretchFileNames(add.optionsPanel.files);
+            }
             // The Options tab's form fills Deluge's 265px exactly, so the
             // rounded section would clip its last row: 12px more for it, and
             // for the window, so the torrent list keeps its height

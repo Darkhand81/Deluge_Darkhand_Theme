@@ -100,7 +100,7 @@ ICONS = [
     ('', ['.dh-stat-dht .dh-stat-icon'], 'waypoints', ICON),
     ('', ['.dh-stat-space .dh-stat-icon'], 'hard-drive', AMBER),
     ('Files tree', None, None, None),
-    ('', ['.x-tree-node-leaf .x-deluge-file'], 'file', GRAY),
+    ('', ['.x-tree-node-leaf .x-deluge-file', '.x-treegrid .x-tree-node-leaf .x-tree-node-icon'], 'file', GRAY),
     ('', ['.x-tree-node-collapsed .x-tree-node-icon'], 'folder', AMBER),
     ('', ['.x-tree-node-expanded .x-tree-node-icon'], 'folder-open', AMBER),
 ]
