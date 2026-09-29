@@ -566,6 +566,14 @@ Each learned the hard way. Symptom → cause → what the code does.
 - **G38. A component's classes arrive after `onRender`.** `addClass()`
   before rendering queues the class (`this.cls`); Ext puts it on the element
   after `onRender`, so a hook there doesn't see it → hook `afterRender`.
+- **G40. Ext only looks 10 elements up for a grid row.** A grid finds the
+  row a click is in with `findParent(rowSelector, 10)`, so a click on
+  anything nested deeper selects nothing and opens no context menu. The
+  filled progress bar's own label is one level too deep; with the bar
+  stacked above the "back" label (so it doesn't peek out), it was what got
+  clicked → `pointer-events: none` on `.x-progress-bar`. Don't add wrapper
+  elements inside grid cells, and give anything stacked on top of a cell's
+  content `pointer-events: none`.
 - **G39. Padding and Ext's sizes.** Where Ext sizes an element with
   `setSize` / `setWidth` (a grid's scroller, a panel body it lays out), it
   subtracts the element's CSS padding, so padding there is safe. Where the
