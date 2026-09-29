@@ -360,7 +360,9 @@ separate title or body frame, outer outline + shadow (G20).
   up to 800px (or the viewport less 48px) and back, centred. Longer URLs end
   in an ellipsis, with the full URL as a tooltip.
 - Preferences: the page list is inset 6px in its frame, rows with 6px
-  corners, the current page filled with the soft accent.
+  corners, the current page filled with the soft accent. The Plugins page's
+  list is an inset list, its Enabled checkboxes CSS-drawn like the Files
+  tab's; Find More gets the Lucide search icon.
 
 ### Status bar
 

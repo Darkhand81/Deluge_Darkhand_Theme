@@ -70,6 +70,7 @@ ICONS = [
     ('', ['.icon-forward'], 'arrow-right', ICON),
     ('', ['.x-deluge-login-window-icon'], 'lock', ICON),
     ('', ['.x-deluge-install-plugin'], 'blocks', ICON),
+    ('', ['.x-deluge-find-more'], 'search', ICON),
     ('', ['.icon-ok'], 'circle-check', GREEN),
     ('', ['.icon-error', '.x-not-connected'], 'circle-alert', RED),
     ('File priorities', None, None, None),

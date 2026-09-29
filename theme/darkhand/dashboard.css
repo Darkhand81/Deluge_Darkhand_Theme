@@ -1238,10 +1238,13 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     background-color: var(--dh-accent-soft);
 }
 
-/* Download checkboxes drawn like the Options tab's: a rounded box, filled
-   with the accent and ticked when on */
+/* Checkboxes in lists (Add Torrents' Download column, the Plugins list's
+   Enabled) drawn like the form checkboxes: a rounded box, filled with the
+   accent and ticked when on */
 .dh-dashboard .dh-add-files .x-grid3-check-col,
-.dh-dashboard .dh-add-files .x-grid3-check-col-on {
+.dh-dashboard .dh-inset-list .x-grid3-check-col,
+.dh-dashboard .dh-add-files .x-grid3-check-col-on,
+.dh-dashboard .dh-inset-list .x-grid3-check-col-on {
     position: relative;
     height: 18px;
     background: none;
@@ -1249,7 +1252,9 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 }
 
 .dh-dashboard .dh-add-files .x-grid3-check-col::after,
-.dh-dashboard .dh-add-files .x-grid3-check-col-on::after {
+.dh-dashboard .dh-inset-list .x-grid3-check-col::after,
+.dh-dashboard .dh-add-files .x-grid3-check-col-on::after,
+.dh-dashboard .dh-inset-list .x-grid3-check-col-on::after {
     content: '';
     position: absolute;
     top: 2px;
@@ -1264,7 +1269,8 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     cursor: pointer;
 }
 
-.dh-dashboard .dh-add-files .x-grid3-check-col-on::after {
+.dh-dashboard .dh-add-files .x-grid3-check-col-on::after,
+.dh-dashboard .dh-inset-list .x-grid3-check-col-on::after {
     border-color: var(--dh-accent);
     background-color: var(--dh-accent);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
@@ -1291,7 +1297,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 }
 
 /* Preferences' page list, and the lists inset the same way (Add Torrents'
-   torrents, Edit Trackers, the Connection Manager): rows in from their frame, rounded, the current
+   torrents, Edit Trackers, the Connection Manager, Preferences' Plugins): rows in from their frame, rounded, the current
    one filled with the soft accent */
 .dh-dashboard .dh-pref-list .x-list-body-inner,
 .dh-dashboard .dh-inset-list .x-list-body-inner {
@@ -1317,7 +1323,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     text-overflow: ellipsis;
 }
 
-/* Column headers (Edit Trackers, the Connection Manager) moved in with the rows, their text lined
+/* Column headers (Edit Trackers, the Connection Manager, Plugins) moved in with the rows, their text lined
    up with the rows' */
 .dh-dashboard .dh-inset-list .x-list-header-inner {
     padding: 0 6px;

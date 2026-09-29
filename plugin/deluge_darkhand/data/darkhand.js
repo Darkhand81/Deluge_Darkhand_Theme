@@ -1460,6 +1460,12 @@ Ext.ns('Deluge.plugins.darkhand');
         }
         // Preferences' page list, styled as a menu (dashboard.css)
         if (deluge.preferences && deluge.preferences.list) deluge.preferences.list.addClass('dh-pref-list');
+        // The Plugins page's list inset like the Connection Manager's
+        Ext.iterate((deluge.preferences && deluge.preferences.pages) || {}, function (name, page) {
+            if (Deluge.preferences.Plugins && page instanceof Deluge.preferences.Plugins && page.list && page.list.addClass) {
+                page.list.addClass('dh-inset-list');
+            }
+        });
         rememberDetailsSize(mode, details);
 
         var refit = function () {
