@@ -33,12 +33,35 @@
     --dh-text-faint: #5a6373;
     --dh-accent: #4c90e8;
     --dh-accent-2: #094491;
-    --dh-accent-soft: rgba(76, 144, 232, 0.16);
-    --dh-accent-softer: rgba(76, 144, 232, 0.08);
+    /* Tints of the accent: selections and pressed buttons, soft washes,
+       and the ring of an accent-tinted button */
+    --dh-accent-soft: color-mix(in srgb, var(--dh-accent) 16%, transparent);
+    --dh-accent-softer: color-mix(in srgb, var(--dh-accent) 8%, transparent);
+    --dh-accent-ring: color-mix(in srgb, var(--dh-accent) 45%, transparent);
+    --dh-on-accent: #fff; /* text and marks on the accent */
     --dh-good: #3ecf8e;
     --dh-warn: #f5b84b;
     --dh-bad: #ff5f6d;
+    --dh-bad-surface: #3a1c22; /* error tooltips */
+    /* Colours of the dashboard's stats and chart (and their icons) */
+    --dh-upload: #5b9dff;
+    --dh-purple: #b197fc;
+    --dh-icon: #b4bccb;
+    /* Hover on a button's ring and on scrollbars */
+    --dh-border-hover: #414a5a;
+    --dh-scroll-hover: #465062;
+    /* Corner radii, largest to smallest: the dashboard's cards and windows;
+       frames inside them, containers of controls, the plain theme's panels;
+       buttons, inputs' containers, menus, the plain theme's windows; bars,
+       badges and anything inside a frame with 4px around it (so its
+       corners run parallel to the frame's); inputs, checkboxes, menu
+       items */
+    --dh-card-radius: 18px;
+    --dh-frame-radius: 10px;
     --dh-radius: 8px;
+    --dh-bar-radius: 6px;
+    --dh-small-radius: 4px;
+    --dh-ease: 0.12s ease; /* hover and state transitions */
     --dh-font: 'Darkhand Inter', 'Inter Variable', Inter, system-ui,
         -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --dh-mono: 'Darkhand Mono', 'JetBrains Mono', 'SFMono-Regular', Menlo,
@@ -143,7 +166,7 @@ a {
 
 ::selection {
     background: var(--dh-accent);
-    color: #fff;
+    color: var(--dh-on-accent);
 }
 
 /* Scrollbars */
@@ -165,12 +188,12 @@ a {
 ::-webkit-scrollbar-thumb {
     background: var(--dh-border-strong);
     border: 2px solid transparent;
-    border-radius: 10px;
+    border-radius: 10px; /* round ends */
     background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: #465062;
+    background-color: var(--dh-scroll-hover);
 }
 
 /* Masks and loading */
@@ -245,6 +268,22 @@ a {
     filter: var(--dh-sprite-filter);
 }
 
+/* Main regions float as rounded cards on the backdrop */
+#sidebar.x-border-panel,
+#torrentGrid.x-border-panel,
+#detailsPanel.x-border-panel {
+    border-radius: var(--dh-frame-radius);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px var(--dh-border);
+}
+
+#sidebar .x-panel-body,
+#torrentGrid .x-panel-body,
+#detailsPanel .x-panel-body,
+#detailsPanel .x-tab-panel-body {
+    border-color: transparent;
+}
+
 /* ------------------------------------------------------------------------ */
 /* Panels                                                                   */
 /* ------------------------------------------------------------------------ */
@@ -264,13 +303,16 @@ a {
     color: var(--dh-text);
 }
 
+/* Section headers: small caps labels */
 .x-panel-header,
 .x-accordion-hd {
     background: var(--dh-bg-2);
     border-color: var(--dh-border);
     color: var(--dh-text-muted);
+    font-size: 10.5px;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .x-panel-header-text {
@@ -351,6 +393,13 @@ html body #tbar-deluge-text {
     letter-spacing: 0.03em;
 }
 
+/* The app bar and status bar blend into the backdrop */
+.x-toolbar:has(#tbar-deluge-text),
+#deluge-statusbar {
+    background: var(--dh-bg-0);
+    border-color: transparent;
+}
+
 .x-toolbar-more-icon,
 .x-tbar-page-first,
 .x-tbar-page-last,
@@ -398,12 +447,12 @@ table.x-btn {
     border-radius: var(--dh-radius);
     background: var(--dh-bg-3);
     box-shadow: inset 0 0 0 1px var(--dh-border-strong);
-    transition: background-color 0.12s ease, box-shadow 0.12s ease;
+    transition: background-color var(--dh-ease), box-shadow var(--dh-ease);
 }
 
 table.x-btn.x-btn-over {
     background: var(--dh-bg-4);
-    box-shadow: inset 0 0 0 1px #414a5a;
+    box-shadow: inset 0 0 0 1px var(--dh-border-hover);
 }
 
 table.x-btn.x-btn-click,
@@ -450,7 +499,7 @@ table.x-btn.x-btn-disabled {
 .x-toolbar table.x-btn.x-btn-pressed,
 .x-toolbar table.x-btn.x-btn-menu-active {
     background: var(--dh-accent-soft);
-    box-shadow: inset 0 0 0 1px rgba(76, 144, 232, 0.45);
+    box-shadow: inset 0 0 0 1px var(--dh-accent-ring);
 }
 
 .x-toolbar table.x-btn.x-btn-disabled {
@@ -476,7 +525,7 @@ table.x-btn.x-btn-disabled {
 .x-window-footer table.x-btn.x-btn-over button,
 .x-panel-fbar table.x-btn.x-btn-over button,
 .x-panel-btns table.x-btn.x-btn-over button {
-    color: #fff;
+    color: var(--dh-on-accent);
 }
 
 /* Drop-down arrows: the em also wraps the button's icon and label, so draw
@@ -548,8 +597,8 @@ ul.x-tab-strip-bottom {
 }
 
 .x-tab-strip li {
-    border-radius: var(--dh-radius) var(--dh-radius) 0 0;
-    transition: background-color 0.12s ease;
+    border-radius: calc(var(--dh-radius) - 1px) calc(var(--dh-radius) - 1px) 0 0;
+    transition: background-color var(--dh-ease);
 }
 
 .x-tab-strip li.x-tab-strip-over {
@@ -564,6 +613,7 @@ ul.x-tab-strip-bottom {
 
 .x-tab-strip span.x-tab-strip-text {
     color: var(--dh-text-muted);
+    font-weight: 500;
 }
 
 .x-tab-strip-over span.x-tab-strip-text {
@@ -572,7 +622,6 @@ ul.x-tab-strip-bottom {
 
 .x-tab-strip-active span.x-tab-strip-text {
     color: var(--dh-text-strong);
-    font-weight: 600;
 }
 
 .x-tab-strip-disabled .x-tabs-text,
@@ -622,6 +671,14 @@ ul.x-tab-strip-bottom {
 .x-grid3-hd-inner,
 .x-list-header-inner div em {
     color: var(--dh-text-muted);
+}
+
+/* Column headers: compact and quiet so narrow columns keep their labels */
+.x-grid3-hd-row td,
+.x-grid3-hd-inner,
+.x-list-header-inner div em,
+.x-tree-hd {
+    font-size: 11px;
 }
 
 .x-grid3-hd-inner {
@@ -838,10 +895,6 @@ html body .deluge-torrents .torrent-name {
     background-color: var(--dh-bg-1);
 }
 
-#sidebar .x-list-selected em {
-    color: var(--dh-text-strong);
-}
-
 /* ------------------------------------------------------------------------ */
 /* Trees (files tab, add-torrent file list, preferences)                    */
 /* ------------------------------------------------------------------------ */
@@ -936,18 +989,18 @@ textarea.x-form-field,
     background: var(--dh-bg-0);
     border-color: var(--dh-border-strong);
     color: var(--dh-text);
-    border-radius: 4px;
+    border-radius: var(--dh-small-radius);
 }
 
 .x-form-field-wrap .x-form-text {
-    border-radius: 4px 0 0 4px;
+    border-radius: var(--dh-small-radius) 0 0 var(--dh-small-radius);
 }
 
 .x-form-focus,
 textarea.x-form-focus,
 .x-trigger-wrap-focus .x-form-text {
     border-color: var(--dh-accent);
-    box-shadow: 0 0 0 2px rgba(76, 144, 232, 0.2);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--dh-accent) 20%, transparent);
     outline: none;
 }
 
@@ -960,7 +1013,7 @@ textarea.x-form-invalid,
 .ext-webkit .x-form-invalid,
 .x-form-inner-invalid,
 textarea.x-form-inner-invalid {
-    background-color: rgba(255, 95, 109, 0.08);
+    background-color: color-mix(in srgb, var(--dh-bad) 8%, transparent);
     background-image: none;
     border-color: var(--dh-bad);
 }
@@ -980,8 +1033,8 @@ textarea.x-form-inner-invalid {
     background-position: center !important;
     border: 1px solid var(--dh-border-strong);
     border-left: 0 none;
-    border-radius: 0 4px 4px 0;
-    transition: background-color 0.12s ease;
+    border-radius: 0 var(--dh-small-radius) var(--dh-small-radius) 0;
+    transition: background-color var(--dh-ease);
 }
 
 .x-form-field-wrap .x-form-spinner-trigger {
@@ -1114,7 +1167,7 @@ html input[type='radio'] {
 
 .x-progress-wrap {
     border-color: var(--dh-border-strong);
-    border-radius: 4px;
+    border-radius: var(--dh-bar-radius);
     overflow: hidden;
 }
 
@@ -1135,7 +1188,7 @@ html body .x-progress-bar {
 }
 
 .x-progress-text {
-    color: #fff;
+    color: var(--dh-on-accent);
     font-weight: 600;
 }
 
@@ -1174,7 +1227,7 @@ html body .x-tree .x-progress-wrap .x-progress-inner .x-progress-text {
 /* ------------------------------------------------------------------------ */
 
 .x-window {
-    border-radius: 8px;
+    border-radius: var(--dh-radius);
     box-shadow: 0 0 0 1px var(--dh-border-strong), 0 24px 60px rgba(0, 0, 0, 0.6);
 }
 
@@ -1193,24 +1246,25 @@ html body .x-tree .x-progress-wrap .x-progress-inner .x-progress-text {
 }
 
 .x-window-tl {
-    border-radius: 8px 0 0 0;
+    border-radius: var(--dh-radius) 0 0 0;
 }
 
 .x-window-tr {
-    border-radius: 0 8px 0 0;
+    border-radius: 0 var(--dh-radius) 0 0;
 }
 
 .x-window-bl {
-    border-radius: 0 0 0 8px;
+    border-radius: 0 0 0 var(--dh-radius);
 }
 
 .x-window-br {
-    border-radius: 0 0 8px 0;
+    border-radius: 0 0 var(--dh-radius) 0;
 }
 
 .x-window-tl .x-window-header,
 .x-window-header-text {
     color: var(--dh-text-strong);
+    font-size: 12.5px;
     font-weight: 600;
 }
 
@@ -1231,7 +1285,7 @@ body.x-body-masked .x-window-plain .x-window-mc {
 .x-window-proxy {
     background-color: var(--dh-bg-2);
     border-color: var(--dh-accent);
-    border-radius: 8px;
+    border-radius: var(--dh-radius);
 }
 
 .x-window-maximized .x-window-tc {
@@ -1257,6 +1311,20 @@ body.x-body-masked .x-window-plain .x-window-mc {
 
 .x-dlg-mask {
     background-color: #000;
+}
+
+/* Deluge's dialogs have fixed-size forms laid out for narrower fonts; a
+   slightly smaller size keeps long labels on one line. */
+.x-window .x-form-item,
+.x-window .x-form-item label,
+.x-window .x-form-cb-label,
+.x-window .x-form-field,
+.x-window .x-fieldset legend,
+.x-window .x-list-body dt em,
+#detailsPanel .x-form-item,
+#detailsPanel .x-form-cb-label {
+    font-size: 11.5px;
+    letter-spacing: -0.005em;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -1286,7 +1354,7 @@ a.x-menu-item,
 .x-menu-item-active {
     background: var(--dh-accent-soft);
     border-color: transparent;
-    border-radius: 4px;
+    border-radius: var(--dh-small-radius);
 }
 
 .x-menu-item-active a.x-menu-item {
@@ -1377,7 +1445,7 @@ a.x-menu-item-arrow::after {
 .x-form-invalid-tip .x-tip-ml,
 .x-form-invalid-tip .x-tip-mr,
 .x-form-invalid-tip .x-tip-mc {
-    background-color: #3a1c22;
+    background-color: var(--dh-bad-surface);
 }
 
 .x-dd-drag-ghost {
@@ -1472,86 +1540,5 @@ dl.singleline dd,
 
 /* About window */
 .x-deluge-logo {
-    filter: drop-shadow(0 4px 16px rgba(76, 144, 232, 0.35));
-}
-
-/* ------------------------------------------------------------------------ */
-/* Finishing touches                                                        */
-/* ------------------------------------------------------------------------ */
-
-/* Main regions float as rounded cards on the backdrop */
-#sidebar.x-border-panel,
-#torrentGrid.x-border-panel,
-#detailsPanel.x-border-panel {
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 0 0 1px var(--dh-border);
-}
-
-#sidebar .x-panel-body,
-#torrentGrid .x-panel-body,
-#detailsPanel .x-panel-body,
-#detailsPanel .x-tab-panel-body {
-    border-color: transparent;
-}
-
-/* App bar and status bar blend into the backdrop */
-.x-toolbar:has(#tbar-deluge-text),
-#deluge-statusbar {
-    background: var(--dh-bg-0);
-    border-color: transparent;
-}
-
-/* Section headers: small caps labels */
-.x-panel-header,
-.x-accordion-hd {
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-/* Column headers: compact and quiet so narrow columns keep their labels */
-.x-grid3-hd-row td,
-.x-grid3-hd-inner,
-.x-list-header-inner div em,
-.x-tree-hd {
-    font-size: 11px;
-}
-
-.x-grid3-hd-inner {
-    color: var(--dh-text-muted);
-}
-
-/* Window titles a touch larger */
-.x-window-tl .x-window-header,
-.x-window-header-text {
-    font-size: 12.5px;
-}
-
-/* Softer tabs, rounded along the top */
-.x-tab-strip li {
-    border-radius: 7px 7px 0 0;
-}
-
-.x-tab-strip span.x-tab-strip-text {
-    font-weight: 500;
-}
-
-/* Rounder progress bars */
-.x-progress-wrap {
-    border-radius: 6px;
-}
-
-/* Deluge's dialogs have fixed-size forms laid out for narrower fonts; a
-   slightly smaller size keeps long labels on one line. */
-.x-window .x-form-item,
-.x-window .x-form-item label,
-.x-window .x-form-cb-label,
-.x-window .x-form-field,
-.x-window .x-fieldset legend,
-.x-window .x-list-body dt em,
-#detailsPanel .x-form-item,
-#detailsPanel .x-form-cb-label {
-    font-size: 11.5px;
-    letter-spacing: -0.005em;
+    filter: drop-shadow(0 4px 16px color-mix(in srgb, var(--dh-accent) 35%, transparent));
 }

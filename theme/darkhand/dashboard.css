@@ -8,13 +8,7 @@
  */
 
 .dh-dashboard {
-    /* Corner radii, largest to smallest: cards and windows; frames inside
-       them (and containers of controls); buttons and inputs (the theme's
-       --dh-radius); bars, badges and anything sitting inside a frame with
-       4px around it (so its corners run parallel to the frame's) */
-    --dh-card-radius: 18px;
-    --dh-frame-radius: 10px;
-    --dh-bar-radius: 6px;
+    /* Colours, radii and the rest are the theme's (xtheme-darkhand.css) */
     /* Framed panels clip to their frame's outer edge, 1px in (see the frames) */
     --dh-frame-clip: inset(1px round calc(var(--dh-frame-radius) - 1px));
     /* How far the rows of lists in windows sit in from their frame, and the
@@ -51,6 +45,24 @@ html body.dh-dashboard,
     box-shadow: none;
 }
 
+/* Cards: the navigation, stats, chart, torrent list and details. (Windows
+   are cards too, their outline outside: see Windows.) */
+.dh-dashboard #dh-nav,
+.dh-stats,
+.dh-chart,
+.dh-dashboard #dh-torrents-card,
+.dh-dashboard #detailsPanel.x-border-panel {
+    border-radius: var(--dh-card-radius);
+    background: var(--dh-bg-1);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
+}
+
+.dh-dashboard #dh-nav,
+.dh-dashboard #dh-torrents-card,
+.dh-dashboard #detailsPanel.x-border-panel {
+    overflow: hidden;
+}
+
 /* ------------------------------------------------------------------------ */
 /* Navigation column: brand + torrent filters                               */
 /* ------------------------------------------------------------------------ */
@@ -60,13 +72,7 @@ html body.dh-dashboard,
     background: var(--dh-bg-1);
 }
 
-/* Navigation is a floating card like the others */
-.dh-dashboard #dh-nav {
-    border-radius: var(--dh-card-radius);
-    overflow: hidden;
-    box-shadow: inset 0 0 0 1px var(--dh-border);
-}
-
+/* The brand; it opens the About window */
 .dh-brand {
     display: flex;
     align-items: center;
@@ -75,6 +81,17 @@ html body.dh-dashboard,
     box-sizing: border-box;
     padding: 0 28px;
     border-bottom: 1px solid var(--dh-border);
+    cursor: pointer;
+    outline: none;
+    transition: background-color var(--dh-ease);
+}
+
+.dh-brand:hover {
+    background: var(--dh-accent-softer);
+}
+
+.dh-brand:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--dh-accent);
 }
 
 .dh-brand-mark {
@@ -82,7 +99,11 @@ html body.dh-dashboard,
     width: 30px;
     height: 30px;
     background: url('../../icons/deluge-192.png') center / contain no-repeat;
-    filter: drop-shadow(0 4px 14px rgba(76, 144, 232, 0.45));
+    filter: drop-shadow(0 4px 14px var(--dh-accent-ring));
+}
+
+.dh-brand:hover .dh-brand-mark {
+    filter: drop-shadow(0 4px 16px color-mix(in srgb, var(--dh-accent) 70%, transparent));
 }
 
 .dh-brand-name {
@@ -124,7 +145,7 @@ html body.dh-dashboard,
 /* Filters as navigation items */
 .dh-dashboard #sidebar .x-list-body dl {
     padding: 0 20px 0 28px;
-    transition: background-color 0.12s ease;
+    transition: background-color var(--dh-ease);
 }
 
 .dh-dashboard #sidebar .x-list-body dt em {
@@ -152,7 +173,7 @@ html body.dh-dashboard,
 
 .dh-dashboard #sidebar .x-list-selected dt em,
 .dh-dashboard #sidebar .x-list-selected em {
-    color: var(--dh-text-strong);
+    color: var(--dh-text-strong); /* over the muted filters, above */
     font-weight: 700;
 }
 
@@ -224,6 +245,7 @@ html body.dh-dashboard,
 
 .dh-header-tools {
     display: flex;
+    flex: none;
     align-items: center;
     gap: 10px;
     padding-bottom: 4px;
@@ -254,10 +276,6 @@ html body.dh-dashboard,
     text-overflow: ellipsis;
 }
 
-.dh-header-tools {
-    flex: none;
-}
-
 .dh-header-compact .dh-seg-label {
     display: none;
 }
@@ -286,7 +304,7 @@ html body.dh-dashboard,
     color: var(--dh-text-muted);
     font: 600 12px var(--dh-font);
     cursor: pointer;
-    transition: background-color 0.12s ease, color 0.12s ease;
+    transition: background-color var(--dh-ease), color var(--dh-ease);
 }
 
 .dh-seg-btn:hover {
@@ -295,7 +313,7 @@ html body.dh-dashboard,
 
 .dh-seg-btn.dh-seg-active {
     background: var(--dh-accent);
-    color: #fff;
+    color: var(--dh-on-accent);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -339,9 +357,6 @@ html body.dh-dashboard,
 .dh-stats {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    border-radius: var(--dh-card-radius);
-    background: var(--dh-bg-1);
-    box-shadow: inset 0 0 0 1px var(--dh-border);
 }
 
 .dh-stat {
@@ -396,29 +411,30 @@ html body.dh-dashboard,
     background-size: 22px 22px;
 }
 
-/* Soft tint behind each icon in its own colour */
+/* Soft tint behind each icon in its own colour (icons.css draws them in
+   the same palette) */
 .dh-stat-download .dh-stat-icon {
-    background-color: rgba(62, 207, 142, 0.12);
+    background-color: color-mix(in srgb, var(--dh-good) 12%, transparent);
 }
 
 .dh-stat-upload .dh-stat-icon {
-    background-color: rgba(91, 157, 255, 0.12);
+    background-color: color-mix(in srgb, var(--dh-upload) 12%, transparent);
 }
 
 .dh-stat-active .dh-stat-icon {
-    background-color: rgba(76, 144, 232, 0.14);
+    background-color: color-mix(in srgb, var(--dh-accent) 14%, transparent);
 }
 
 .dh-stat-connections .dh-stat-icon {
-    background-color: rgba(177, 151, 252, 0.12);
+    background-color: color-mix(in srgb, var(--dh-purple) 12%, transparent);
 }
 
 .dh-stat-dht .dh-stat-icon {
-    background-color: rgba(180, 188, 203, 0.1);
+    background-color: color-mix(in srgb, var(--dh-icon) 10%, transparent);
 }
 
 .dh-stat-space .dh-stat-icon {
-    background-color: rgba(245, 184, 75, 0.12);
+    background-color: color-mix(in srgb, var(--dh-warn) 12%, transparent);
 }
 
 .dh-stat-text {
@@ -513,9 +529,6 @@ html body.dh-dashboard,
     min-width: 0;
     box-sizing: border-box;
     padding: 14px 18px 12px;
-    border-radius: var(--dh-card-radius);
-    background: var(--dh-bg-1);
-    box-shadow: inset 0 0 0 1px var(--dh-border);
 }
 
 /* Below the stats it is a strip; beside them it matches their height */
@@ -568,7 +581,7 @@ html body.dh-dashboard,
 }
 
 .dh-legend-up i {
-    background: #5b9dff;
+    background: var(--dh-upload);
 }
 
 .dh-chart-legend b {
@@ -615,7 +628,7 @@ html body.dh-dashboard,
 }
 
 .dh-chart-up {
-    stroke: #5b9dff;
+    stroke: var(--dh-upload);
 }
 
 .dh-stop-down {
@@ -623,20 +636,12 @@ html body.dh-dashboard,
 }
 
 .dh-stop-up {
-    stop-color: #5b9dff;
+    stop-color: var(--dh-upload);
 }
 
 /* ------------------------------------------------------------------------ */
-/* Cards                                                                    */
+/* Torrent list card                                                        */
 /* ------------------------------------------------------------------------ */
-
-.dh-dashboard #dh-torrents-card,
-.dh-dashboard #detailsPanel.x-border-panel {
-    border-radius: var(--dh-card-radius);
-    overflow: hidden;
-    background: var(--dh-bg-1);
-    box-shadow: inset 0 0 0 1px var(--dh-border);
-}
 
 .dh-dashboard #dh-torrents-card .x-panel-body,
 .dh-dashboard #dh-torrents-card .x-grid3,
@@ -666,70 +671,37 @@ html body.dh-dashboard,
 /* Preferences, Connection Manager, Help and Logout as buttons with a
    label; when the toolbar is too narrow for the labels (the plugin adds
    dh-toolbar-compact), icon-only buttons. */
-.dh-dashboard #preferences,
-.dh-dashboard #connectionman,
-.dh-dashboard #help,
-.dh-dashboard #logout {
+.dh-dashboard :is(#preferences, #connectionman, #help, #logout) {
     margin-left: 6px;
     border-radius: var(--dh-radius);
     background: var(--dh-bg-2);
     box-shadow: inset 0 0 0 1px var(--dh-border);
 }
 
-.dh-dashboard #preferences.x-btn-over,
-.dh-dashboard #connectionman.x-btn-over,
-.dh-dashboard #help.x-btn-over,
-.dh-dashboard #logout.x-btn-over {
+.dh-dashboard :is(#preferences, #connectionman, #help, #logout).x-btn-over {
     background: var(--dh-bg-3);
 }
 
 /* Drop Ext's corner cells so the button is just its middle cell */
-.dh-dashboard #preferences tr:first-child,
-.dh-dashboard #connectionman tr:first-child,
-.dh-dashboard #help tr:first-child,
-.dh-dashboard #logout tr:first-child,
-.dh-dashboard #preferences tr:last-child,
-.dh-dashboard #connectionman tr:last-child,
-.dh-dashboard #help tr:last-child,
-.dh-dashboard #logout tr:last-child,
-.dh-dashboard #preferences .x-btn-ml,
-.dh-dashboard #connectionman .x-btn-ml,
-.dh-dashboard #help .x-btn-ml,
-.dh-dashboard #logout .x-btn-ml,
-.dh-dashboard #preferences .x-btn-mr,
-.dh-dashboard #connectionman .x-btn-mr,
-.dh-dashboard #help .x-btn-mr,
-.dh-dashboard #logout .x-btn-mr {
+.dh-dashboard :is(#preferences, #connectionman, #help, #logout) :is(tr:first-child, tr:last-child, .x-btn-ml, .x-btn-mr) {
     display: none;
 }
 
-.dh-dashboard #preferences .x-btn-mc,
-.dh-dashboard #connectionman .x-btn-mc,
-.dh-dashboard #help .x-btn-mc,
-.dh-dashboard #logout .x-btn-mc {
+.dh-dashboard :is(#preferences, #connectionman, #help, #logout) .x-btn-mc {
     padding: 5px 12px 5px 10px !important; /* beats Ext's .x-btn td */
 }
 
-.dh-dashboard #preferences button,
-.dh-dashboard #connectionman button,
-.dh-dashboard #help button,
-.dh-dashboard #logout button {
+.dh-dashboard :is(#preferences, #connectionman, #help, #logout) button {
     height: 18px;
     line-height: 18px;
     background-position: 0 center !important;
 }
 
-.dh-dashboard .dh-toolbar-compact #preferences .x-btn-mc,
-.dh-dashboard .dh-toolbar-compact #connectionman .x-btn-mc,
-.dh-dashboard .dh-toolbar-compact #help .x-btn-mc,
-.dh-dashboard .dh-toolbar-compact #logout .x-btn-mc {
+.dh-dashboard .dh-toolbar-compact :is(#preferences, #connectionman, #help, #logout) .x-btn-mc {
     padding: 6px !important;
 }
 
-.dh-dashboard .dh-toolbar-compact #preferences button,
-.dh-dashboard .dh-toolbar-compact #connectionman button,
-.dh-dashboard .dh-toolbar-compact #help button,
-.dh-dashboard .dh-toolbar-compact #logout button {
+.dh-dashboard .dh-toolbar-compact :is(#preferences, #connectionman, #help, #logout) button {
     display: block;
     width: 16px;
     height: 16px;
@@ -771,7 +743,7 @@ html body.dh-dashboard,
     border-radius: 1px;
     background: var(--dh-border-strong);
     opacity: 0;
-    transition: opacity 0.12s ease;
+    transition: opacity var(--dh-ease);
     pointer-events: none;
 }
 
@@ -835,7 +807,6 @@ html body.dh-dashboard,
     font-weight: 500;
 }
 
-.dh-dashboard .x-progress-wrap,
 .dh-dashboard .x-progress-inner {
     border-radius: var(--dh-bar-radius);
 }
@@ -890,7 +861,7 @@ html body.dh-dashboard,
     border-radius: 1px;
     background: var(--dh-border-strong);
     opacity: 0;
-    transition: opacity 0.12s ease;
+    transition: opacity var(--dh-ease);
 }
 
 .dh-details-right .x-layout-split-east::before {
@@ -920,7 +891,7 @@ html body.dh-dashboard,
     background: var(--dh-border-strong);
     opacity: 1;
     filter: none;
-    transition: background-color 0.12s ease;
+    transition: background-color var(--dh-ease);
 }
 
 .dh-details-right .x-layout-split-east .x-layout-mini {
@@ -960,7 +931,7 @@ html body.dh-dashboard,
     background: var(--dh-bg-1);
     box-shadow: inset 0 0 0 1px var(--dh-border);
     cursor: pointer;
-    transition: background-color 0.12s ease;
+    transition: background-color var(--dh-ease);
 }
 
 .dh-details-right .x-layout-cmini-east:hover,
@@ -980,9 +951,8 @@ html body.dh-dashboard,
     width: 12px;
     height: 48px;
     margin-top: -24px;
-    /* Lucide chevron-left, in --dh-text-muted */
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a94a6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 18-6-6 6-6'/%3E%3C/svg%3E")
-        center / 12px 12px no-repeat;
+    /* Lucide chevron-left (icons.css) */
+    background: center / 12px 12px no-repeat;
 }
 
 .dh-details-bottom .x-layout-cmini-south .x-layout-mini {
@@ -991,37 +961,13 @@ html body.dh-dashboard,
     width: 48px;
     height: 12px;
     margin-left: -24px;
-    /* Lucide chevron-up, in --dh-text-muted */
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a94a6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m18 15-6-6-6 6'/%3E%3C/svg%3E")
-        center / 12px 12px no-repeat;
+    /* Lucide chevron-up (icons.css) */
+    background: center / 12px 12px no-repeat;
 }
 
 .dh-details-right .x-layout-cmini-east:hover .x-layout-mini,
 .dh-details-bottom .x-layout-cmini-south:hover .x-layout-mini {
     opacity: 1;
-}
-
-/* ------------------------------------------------------------------------ */
-/* Brand                                                                    */
-/* ------------------------------------------------------------------------ */
-
-/* The brand opens the About window */
-.dh-brand {
-    cursor: pointer;
-    outline: none;
-    transition: background-color 0.12s ease;
-}
-
-.dh-brand:hover {
-    background: var(--dh-accent-softer);
-}
-
-.dh-brand:focus-visible {
-    box-shadow: inset 0 0 0 2px var(--dh-accent);
-}
-
-.dh-brand:hover .dh-brand-mark {
-    filter: drop-shadow(0 4px 16px rgba(76, 144, 232, 0.7));
 }
 
 /* ------------------------------------------------------------------------ */
@@ -1086,18 +1032,15 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 
 .dh-dashboard .x-window-header-text {
     font-size: 14px;
-    font-weight: 600;
-    color: var(--dh-text-strong);
 }
 
-/* Close button: a Lucide x, in --dh-text-muted */
+/* Close button: a Lucide x (icons.css) */
 .dh-dashboard .x-window .x-tool-close {
     width: 24px;
     height: 24px;
     margin: -4px -4px 0 0;
     border-radius: var(--dh-bar-radius);
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a94a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E")
-        center / 16px 16px no-repeat;
+    background: center / 16px 16px no-repeat;
     filter: none;
     opacity: 1;
 }
@@ -1119,7 +1062,12 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
    Connection Manager's, which the frame then takes in.) The wrapper is
    clipped to the frame's outer edge, so the lines inside it (toolbars,
    grid headers, tab strips) stop at the frame instead of running 1px past
-   it. */
+   it.
+   Some windows frame their whole body (Login, Remove...) the same way,
+   unless a framed panel inside already frames the contents (Connection
+   Manager, Edit Trackers): one frame, not two. (Every selector here needs
+   :has(); nothing without it goes in these rules, since a selector a
+   browser can't read drops its whole rule, G37.) */
 .dh-dashboard .x-window-body .x-panel-body:not(.x-panel-body-noborder),
 .dh-dashboard .x-window-body .x-tab-panel-body:not(.x-tab-panel-body-noborder) {
     border-color: transparent;
@@ -1132,25 +1080,12 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     clip-path: var(--dh-frame-clip);
 }
 
-.dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder))::after,
-.dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder))::after {
-    content: '';
-    position: absolute;
-    z-index: 2;
-    inset: 1px;
-    border: 1px solid var(--dh-border);
-    border-radius: calc(var(--dh-frame-radius) - 1px);
-    pointer-events: none;
-}
-
-/* Some windows frame their whole body (Login, Add Torrents, Remove...),
-   unless a framed panel inside already frames the contents (Connection
-   Manager, Edit Trackers): one frame, not two. (Kept in their own rules:
-   an invalid selector drops its whole rule.) */
 .dh-dashboard .x-window:not(.dh-about):not(.dh-add) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)):not(:has(.x-panel-body:not(.x-panel-body-noborder))):not(:has(.x-tab-panel-body:not(.x-tab-panel-body-noborder))) {
     position: relative;
 }
 
+.dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder))::after,
+.dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder))::after,
 .dh-dashboard .x-window:not(.dh-about):not(.dh-add) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)):not(:has(.x-panel-body:not(.x-panel-body-noborder))):not(:has(.x-tab-panel-body:not(.x-tab-panel-body-noborder)))::after {
     content: '';
     position: absolute;
@@ -1252,7 +1187,8 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     border-right-color: transparent;
 }
 
-/* Checkboxes: a rounded box, filled with the accent and ticked when on */
+/* Checkboxes: a rounded box, filled with the accent and ticked (icons.css)
+   when on */
 .dh-dashboard .dh-inset .x-grid3-check-col,
 .dh-dashboard .dh-inset .x-grid3-check-col-on {
     position: relative;
@@ -1272,7 +1208,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     height: 14px;
     margin-left: -7px;
     border: 1px solid var(--dh-border-strong);
-    border-radius: 4px;
+    border-radius: var(--dh-small-radius);
     background: var(--dh-bg-0) center / 12px 12px no-repeat;
     cursor: pointer;
 }
@@ -1280,7 +1216,6 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 .dh-dashboard .dh-inset .x-grid3-check-col-on::after {
     border-color: var(--dh-accent);
     background-color: var(--dh-accent);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
 }
 
 /* Lists (ListView): rows --dh-inset apart too; text too long for its
@@ -1380,21 +1315,17 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     padding: 8px 6px 16px;
 }
 
-.dh-dashboard .x-window-footer table.x-btn {
-    border-radius: var(--dh-radius);
-}
-
 .dh-dashboard .x-window-footer table.x-btn button {
     padding: 0 14px;
 }
 
 .dh-dashboard .x-window:not(.x-window-dlg) .x-window-footer td.x-toolbar-cell:last-child table.x-btn {
     background: var(--dh-accent-soft);
-    box-shadow: inset 0 0 0 1px rgba(76, 144, 232, 0.45);
+    box-shadow: inset 0 0 0 1px var(--dh-accent-ring);
 }
 
 .dh-dashboard .x-window:not(.x-window-dlg) .x-window-footer td.x-toolbar-cell:last-child table.x-btn.x-btn-over {
-    background: rgba(76, 144, 232, 0.28);
+    background: color-mix(in srgb, var(--dh-accent) 28%, transparent);
 }
 
 .dh-dashboard .x-window:not(.x-window-dlg) .x-window-footer td.x-toolbar-cell:last-child table.x-btn button {
@@ -1402,8 +1333,8 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 }
 
 /* Message box icons: Lucide circle-help, info, triangle-alert and
-   circle-x in the accent, warning and error colours, instead of Ext's
-   bitmaps */
+   circle-x (icons.css) in the accent, warning and error colours, instead
+   of Ext's bitmaps */
 .dh-dashboard .x-window-dlg .ext-mb-icon {
     width: 28px;
     height: 28px;
@@ -1411,22 +1342,6 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     padding: 0;
     background-position: center;
     background-size: 24px 24px;
-}
-
-.dh-dashboard .x-window-dlg .ext-mb-question {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234c90e8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
-}
-
-.dh-dashboard .x-window-dlg .ext-mb-info {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234c90e8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
-}
-
-.dh-dashboard .x-window-dlg .ext-mb-warning {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5b84b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
-}
-
-.dh-dashboard .x-window-dlg .ext-mb-error {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff5f6d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m15 9-6 6'/%3E%3Cpath d='m9 9 6 6'/%3E%3C/svg%3E");
 }
 
 /* The About window: the logo is its header, so its title is a small
@@ -1452,7 +1367,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 
 .dh-dashboard .dh-about-logo {
     background: url('../../icons/deluge-192.png') center / 64px no-repeat !important;
-    filter: drop-shadow(0 8px 22px rgba(76, 144, 232, 0.5));
+    filter: drop-shadow(0 8px 22px color-mix(in srgb, var(--dh-accent) 50%, transparent));
 }
 
 .dh-dashboard .dh-about-title {
@@ -1527,12 +1442,12 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     padding: 4px 20px;
 }
 
-/* Deluge fixes the Status tab at 1000px, which would bunch its four columns
-   up on the left of the wide bottom card. Spread them across the card,
-   wrapping to fewer per row when the card is narrow. */
-.dh-details-bottom #deluge-details-status,
-.dh-details-bottom #deluge-details-status > .x-panel-bwrap,
-.dh-details-bottom #deluge-details-status > .x-panel-bwrap > .x-panel-body {
+/* Deluge fixes the Status tab at 1000px; fit it to the card. At the bottom
+   its four columns spread across the card, wrapping to fewer per row when
+   it's narrow; on the right they stack. */
+.dh-dashboard #deluge-details-status,
+.dh-dashboard #deluge-details-status > .x-panel-bwrap,
+.dh-dashboard #deluge-details-status > .x-panel-bwrap > .x-panel-body {
     width: auto !important;
 }
 
@@ -1555,14 +1470,6 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 
 .dh-details-bottom #deluge-details-status br {
     display: none;
-}
-
-/* Deluge fixes the Status tab at 1000px and floats its four columns side by
-   side; in the narrow right-hand card, fit it to the card and stack them. */
-.dh-details-right #deluge-details-status,
-.dh-details-right #deluge-details-status > .x-panel-bwrap,
-.dh-details-right #deluge-details-status > .x-panel-bwrap > .x-panel-body {
-    width: auto !important;
 }
 
 .dh-details-right #deluge-details-status dl {

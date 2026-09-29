@@ -28,8 +28,10 @@ AMBER = '#f5b84b'
 GRAY = '#8a94a6'
 RED = '#ff7a84'
 PURPLE = '#b197fc'
+BAD = '#ff5f6d'
+WHITE = '#ffffff'
 
-# (comment, [selectors], lucide icon, colour)
+# (comment, [selectors], lucide icon, colour[, stroke width])
 ICONS = [
     ('Toolbar and context menu actions', None, None, None),
     ('', ['.icon-add', '.x-deluge-add-window-icon'], 'plus', ICON),
@@ -104,7 +106,19 @@ ICONS = [
     ('', ['.x-tree-node-leaf .x-deluge-file', '.x-treegrid .x-tree-node-leaf .x-tree-node-icon'], 'file', GRAY),
     ('', ['.x-tree-node-collapsed .x-tree-node-icon'], 'folder', AMBER),
     ('', ['.x-tree-node-expanded .x-tree-node-icon'], 'folder-open', AMBER),
+    ('Dashboard windows and details card (Darkhand plugin)', None, None, None),
+    ('', ['.dh-dashboard .x-window .x-tool-close'], 'x', GRAY),
+    ('', ['.dh-dashboard .x-window-dlg .ext-mb-question'], 'circle-help', ACCENT),
+    ('', ['.dh-dashboard .x-window-dlg .ext-mb-info'], 'info', ACCENT),
+    ('', ['.dh-dashboard .x-window-dlg .ext-mb-warning'], 'triangle-alert', AMBER),
+    ('', ['.dh-dashboard .x-window-dlg .ext-mb-error'], 'circle-x', BAD),
+    ('', ['.dh-dashboard .dh-inset .x-grid3-check-col-on::after'], 'check', WHITE, 3.5),
+    ('', ['.dh-details-right .x-layout-cmini-east .x-layout-mini'], 'chevron-left', GRAY, 2.5),
+    ('', ['.dh-details-bottom .x-layout-cmini-south .x-layout-mini'], 'chevron-up', GRAY, 2.5),
 ]
+
+# Classes the plugin puts on <body> itself
+BODY_CLASSES = ('.dh-dashboard', '.dh-details-right', '.dh-details-bottom')
 
 HEADER = """\
 /*
@@ -123,8 +137,10 @@ HEADER = """\
 """
 
 
-def data_uri(icon_dir, name, colour):
+def data_uri(icon_dir, name, colour, stroke=None):
     svg = (icon_dir / f'{name}.svg').read_text()
+    if stroke is not None:
+        svg = svg.replace('stroke-width="2"', f'stroke-width="{stroke}"', 1)
     svg = re.sub(r'<!--.*?-->', '', svg, flags=re.S)
     svg = re.sub(r'\s+class="[^"]*"', '', svg)
     svg = re.sub(r'width="24"', 'width="16"', svg, count=1)
@@ -139,12 +155,14 @@ def main():
         sys.exit(__doc__)
     icon_dir = Path(sys.argv[1])
     out = [HEADER]
-    for comment, selectors, name, colour in ICONS:
+    for comment, selectors, name, colour, *stroke in ICONS:
         if selectors is None:
             out.append(f'\n/* {comment} */\n')
             continue
-        sel = ',\n'.join(f'html body {s}' for s in selectors)
-        uri = data_uri(icon_dir, name, colour).replace('"', "'")
+        sel = ',\n'.join(
+            ('html body' if s.startswith(BODY_CLASSES) else 'html body ') + s for s in selectors
+        )
+        uri = data_uri(icon_dir, name, colour, *stroke).replace('"', "'")
         out.append(f'{sel} {{\n    background-image: url("{uri}") !important;\n}}\n')
     # Deluge leaves x-not-connected on the status text once connected and
     # relies on x-connected to blank the icon; keep that working.
