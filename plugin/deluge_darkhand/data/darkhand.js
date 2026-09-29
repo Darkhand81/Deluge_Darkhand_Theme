@@ -1318,6 +1318,7 @@ Ext.ns('Deluge.plugins.darkhand');
     function setUpConnectionManager() {
         var cm = deluge.connectionManager;
         if (!cm) return;
+        if (cm.list) cm.list.addClass('dh-inset-list');
         var autoSelect = false;
 
         // Each time the window opens it reloads the hosts
