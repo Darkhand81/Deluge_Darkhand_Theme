@@ -1138,11 +1138,11 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
    unless a framed panel inside already frames the contents (Connection
    Manager, Edit Trackers): one frame, not two. (Kept in their own rules:
    an invalid selector drops its whole rule.) */
-.dh-dashboard .x-window:not(.dh-about) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)):not(:has(.x-panel-body:not(.x-panel-body-noborder))):not(:has(.x-tab-panel-body:not(.x-tab-panel-body-noborder))) {
+.dh-dashboard .x-window:not(.dh-about):not(.dh-add) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)):not(:has(.x-panel-body:not(.x-panel-body-noborder))):not(:has(.x-tab-panel-body:not(.x-tab-panel-body-noborder))) {
     position: relative;
 }
 
-.dh-dashboard .x-window:not(.dh-about) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)):not(:has(.x-panel-body:not(.x-panel-body-noborder))):not(:has(.x-tab-panel-body:not(.x-tab-panel-body-noborder)))::after {
+.dh-dashboard .x-window:not(.dh-about):not(.dh-add) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)):not(:has(.x-panel-body:not(.x-panel-body-noborder))):not(:has(.x-tab-panel-body:not(.x-tab-panel-body-noborder)))::after {
     content: '';
     position: absolute;
     z-index: 2;
@@ -1150,6 +1150,35 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     border: 1px solid var(--dh-border);
     border-radius: calc(var(--dh-frame-radius) - 1px);
     pointer-events: none;
+}
+
+/* Add Torrents: two framed sections, the torrent list with its File / Url /
+   Remove bar at the bottom, and the Files / Options tabs, 10px apart (the
+   plugin sets the gap) */
+.dh-dashboard .dh-add-section {
+    overflow: hidden;
+    border-radius: var(--dh-frame-radius);
+}
+
+.dh-dashboard .dh-add-section::after {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    inset: 1px;
+    border: 1px solid var(--dh-border);
+    border-radius: calc(var(--dh-frame-radius) - 1px);
+    pointer-events: none;
+}
+
+/* The tab strip on the section's own surface; its bottom line divides it
+   from the tab below */
+.dh-dashboard .dh-add-section .x-tab-panel-header {
+    background: transparent;
+    border-color: transparent;
+}
+
+.dh-dashboard .dh-add-section ul.x-tab-strip-top {
+    background: transparent;
 }
 
 /* Toolbars inside window frames (Connection Manager's Add / Edit / Remove,

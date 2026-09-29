@@ -1367,6 +1367,24 @@ Ext.ns('Deluge.plugins.darkhand');
         styleAboutWindow();
         setUpBrand();
         setUpConnectionManager();
+        // Add Torrents as two framed sections, the torrent list with its
+        // File / Url / Remove bar and the Files / Options tabs, with a gap
+        // between (dashboard.css frames them). Its regions are laid out when
+        // the window is first shown, so they can still be configured.
+        var add = deluge.add;
+        if (add && !add.rendered && add.optionsPanel && add.items && add.items.get(0)) {
+            add.addClass('dh-add');
+            add.items.get(0).addClass('dh-add-section');
+            add.optionsPanel.addClass('dh-add-section');
+            // The Options tab's form fills Deluge's 265px exactly, so the
+            // rounded section would clip its last row: 12px more for it, and
+            // for the window, so the torrent list keeps its height
+            configure(add.optionsPanel, {
+                margins: margins(10, 0, 0, 0),
+                height: add.optionsPanel.height + 12,
+            });
+            if (typeof add.height === 'number') add.height += 12;
+        }
         // Preferences' page list, styled as a menu (dashboard.css)
         if (deluge.preferences && deluge.preferences.list) deluge.preferences.list.addClass('dh-pref-list');
         rememberDetailsSize(mode, details);
