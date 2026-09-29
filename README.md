@@ -12,14 +12,15 @@ that installs and uninstalls it on Linux.
 ## Dashboard layout (experimental)
 
 This branch adds an optional **Darkhand plugin** that rebuilds the Web UI as a
-dashboard: a full-height navigation column with the torrent filters, a page
-header, and the torrent list and details as cards. Torrent details open either
-in a drawer on the right or in a card below the list; switch between them with
-the **Details** control in the header.
+dashboard of floating cards: a navigation card with the torrent filters, a page
+header, the torrent list, and the torrent details. The details card sits either
+on the right, opening when you select a torrent and folding away when nothing
+is selected, or below the list. Switch between the two with the **Details**
+control in the header; your choice is remembered per browser.
 
-| Drawer | Card |
+| Details on the right | Details at the bottom |
 | --- | --- |
-| ![Dashboard with details drawer](screenshots/dashboard-drawer.png) | ![Dashboard with details card](screenshots/dashboard-card.png) |
+| ![Dashboard with the details card on the right](screenshots/dashboard-right.png) | ![Dashboard with the details card at the bottom](screenshots/dashboard-bottom.png) |
 
 A stylesheet can only restyle Deluge. It can't move panels, because Deluge's
 ExtJS layout places them in JavaScript. The plugin's script runs just before
