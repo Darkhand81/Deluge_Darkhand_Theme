@@ -17,6 +17,8 @@ DEFAULT_THEME="gray"              # Deluge's own default
 PREV_FILE=".darkhand-previous-theme"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_CSS="${SCRIPT_DIR}/theme/${THEME_FILE}"
+ASSET_DIR="$THEME_NAME" # fonts and icons, installed as themes/darkhand
+SRC_ASSETS="${SCRIPT_DIR}/theme/${ASSET_DIR}"
 
 ACTION=""
 WEB_DIRS=()
@@ -455,6 +457,13 @@ cmd_install() {
     for d in "${WEB_DIRS[@]}"; do
         install -m 0644 "$SRC_CSS" "$d/themes/css/$THEME_FILE"
         ok "copied $THEME_FILE to $d/themes/css"
+        if [[ -d "$SRC_ASSETS" ]]; then
+            check_writable "$d/themes"
+            rm -rf "${d:?}/themes/${ASSET_DIR:?}"
+            cp -R "$SRC_ASSETS" "$d/themes/$ASSET_DIR"
+            chmod -R u=rwX,go=rX "$d/themes/$ASSET_DIR"
+            ok "copied fonts and icons to $d/themes/$ASSET_DIR"
+        fi
     done
 
     if ((ACTIVATE)) && ((${#CONFIG_DIRS[@]})); then
@@ -522,10 +531,11 @@ cmd_uninstall() {
     fi
 
     for d in "${WEB_DIRS[@]}"; do
-        if [[ -f "$d/themes/css/$THEME_FILE" ]]; then
-            check_writable "$d/themes/css"
+        if [[ -f "$d/themes/css/$THEME_FILE" || -d "$d/themes/$ASSET_DIR" ]]; then
+            check_writable "$d/themes/css" "$d/themes"
             rm -f "$d/themes/css/$THEME_FILE"
-            ok "removed $d/themes/css/$THEME_FILE"
+            rm -rf "${d:?}/themes/${ASSET_DIR:?}"
+            ok "removed $THEME_FILE and $ASSET_DIR/ from $d/themes"
         else
             ok "not installed in $d"
         fi
@@ -547,7 +557,9 @@ cmd_status() {
     local d c
     for d in "${WEB_DIRS[@]}"; do
         if [[ -f "$d/themes/css/$THEME_FILE" ]]; then
-            if cmp -s "$SRC_CSS" "$d/themes/css/$THEME_FILE"; then
+            if cmp -s "$SRC_CSS" "$d/themes/css/$THEME_FILE" &&
+                { [[ ! -d "$SRC_ASSETS" ]] ||
+                    diff -rq "$SRC_ASSETS" "$d/themes/$ASSET_DIR" >/dev/null 2>&1; }; then
                 ok "$d  ${C_GREEN}installed${C_RESET}"
             else
                 ok "$d  ${C_YELLOW}installed (differs from this copy)${C_RESET}"
