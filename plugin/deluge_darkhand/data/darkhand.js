@@ -696,6 +696,51 @@ Ext.ns('Deluge.plugins.darkhand');
 
     var stretch = {}; // column id -> px added for display
 
+    // Columns you've resized by hand keep your width, even if their header
+    // doesn't fit (remembered across reloads; Deluge saves the widths).
+    var SIZED_KEY = 'darkhand.sizedColumns';
+
+    function getSizedColumns() {
+        try {
+            return JSON.parse(window.localStorage.getItem(SIZED_KEY) || '{}') || {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function markColumnSized(id) {
+        try {
+            var sized = getSizedColumns();
+            sized[id] = true;
+            window.localStorage.setItem(SIZED_KEY, JSON.stringify(sized));
+        } catch (e) {}
+    }
+
+    // Width a column needs to show its whole header, sort arrow included
+    function headerWidth(view, i) {
+        var cell = view.getHeaderCell(i);
+        var inner = cell && cell.firstChild;
+        if (!inner || !inner.offsetWidth) return 0;
+        var content = 0;
+        Ext.each(Ext.toArray(inner.childNodes), function (node) {
+            if (node.nodeType === 3) {
+                var range = document.createRange();
+                range.selectNodeContents(node);
+                content += range.getBoundingClientRect().width;
+            } else if (node.nodeType === 1 && !/x-grid3-hd-btn/.test(node.className) && node.offsetWidth) {
+                var s = window.getComputedStyle(node);
+                content += node.offsetWidth + parseFloat(s.marginLeft) + parseFloat(s.marginRight);
+            }
+        });
+        var style = window.getComputedStyle(inner);
+        return Math.ceil(
+            content +
+                parseFloat(style.paddingLeft) +
+                parseFloat(style.paddingRight) +
+                (cell.offsetWidth - inner.offsetWidth)
+        );
+    }
+
     function stretchColumns(grid) {
         try {
             doStretchColumns(grid);
@@ -716,6 +761,22 @@ Ext.ns('Deluge.plugins.darkhand');
             if (stretch[id]) cm.setColumnWidth(i, cm.getColumnWidth(i) - stretch[id], true);
         }
         stretch = {};
+
+        // Widen columns whose header doesn't fit (the theme's spaced
+        // capitals make "Down Speed" wider than Deluge's 80px), unless
+        // you've sized columns yourself. Name gives up the width.
+        if (!view.userResized) {
+            var sized = getSizedColumns();
+            for (i = 0; i < n; i++) {
+                id = cm.getColumnId(i);
+                if (cm.isHidden(i) || i === cm.getIndexById(grid.autoExpandColumn) || sized[id]) continue;
+                var fit = headerWidth(view, i) - cm.getColumnWidth(i);
+                if (fit > 0) {
+                    stretch[id] = fit;
+                    cm.setColumnWidth(i, cm.getColumnWidth(i) + fit, true);
+                }
+            }
+        }
 
         // Ext widens Name up to its cap (until a column is resized by hand)
         view.autoExpand(true);
@@ -739,7 +800,8 @@ Ext.ns('Deluge.plugins.darkhand');
                         ? spare - given
                         : Math.floor((spare * cm.getColumnWidth(i)) / total);
                 given += add;
-                stretch[cm.getColumnId(i)] = add;
+                id = cm.getColumnId(i);
+                stretch[id] = (stretch[id] || 0) + add;
                 cm.setColumnWidth(i, cm.getColumnWidth(i) + add, true);
             });
         }
@@ -770,12 +832,15 @@ Ext.ns('Deluge.plugins.darkhand');
         var splitterMoved = view.onColumnSplitterMoved;
         view.onColumnSplitterMoved = function (cellIndex) {
             delete stretch[cm.getColumnId(cellIndex)];
+            markColumnSized(cm.getColumnId(cellIndex));
             var result = splitterMoved.apply(this, arguments);
             restretch();
             return result;
         };
 
         cm.on('hiddenchange', restretch);
+        // The sort arrow makes a header wider
+        grid.on('sortchange', restretch);
 
         var getState = grid.getState;
         grid.getState = function () {
