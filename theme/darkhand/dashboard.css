@@ -855,39 +855,56 @@ html body.dh-dashboard,
 }
 
 /* The bar between the list and the details card, and the strip the card
-   leaves when it's closed, are 12px wide (SPLIT_RIGHT in darkhand.js)
-   rather than Ext's 5px, so they're easy to see and grab. */
+   leaves when it's closed, are 12px (SPLIT in darkhand.js) rather than
+   Ext's 5px, so they're easy to see and grab. The card is on the right
+   (east) or at the bottom (south). */
 .dh-details-right .x-layout-split-east {
     width: 12px !important;
+}
+
+.dh-details-bottom .x-layout-split-south {
+    height: 12px !important;
+}
+
+.dh-details-right .x-layout-split-east,
+.dh-details-bottom .x-layout-split-south {
     background: transparent;
 }
 
-/* A line down the middle while hovered: the bar can be dragged */
-.dh-details-right .x-layout-split-east::before {
+/* A line along the middle while hovered: the bar can be dragged */
+.dh-details-right .x-layout-split-east::before,
+.dh-details-bottom .x-layout-split-south::before {
     content: '';
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 5px;
-    width: 2px;
     border-radius: 1px;
     background: var(--dh-border-strong);
     opacity: 0;
     transition: opacity 0.12s ease;
 }
 
-.dh-details-right .x-layout-split-east:hover::before {
+.dh-details-right .x-layout-split-east::before {
+    top: 0;
+    bottom: 0;
+    left: 5px;
+    width: 2px;
+}
+
+.dh-details-bottom .x-layout-split-south::before {
+    left: 0;
+    right: 0;
+    top: 5px;
+    height: 2px;
+}
+
+.dh-details-right .x-layout-split-east:hover::before,
+.dh-details-bottom .x-layout-split-south:hover::before {
     opacity: 1;
 }
 
 /* Its close button: a grip in the middle of the bar */
-.dh-details-right .x-layout-split-east .x-layout-mini {
+.dh-details-right .x-layout-split-east .x-layout-mini,
+.dh-details-bottom .x-layout-split-south .x-layout-mini {
     z-index: 1;
-    top: 50%;
-    left: 3px;
-    width: 6px;
-    height: 48px;
-    margin-top: -24px;
     border-radius: 3px;
     background: var(--dh-border-strong);
     opacity: 1;
@@ -895,14 +912,39 @@ html body.dh-dashboard,
     transition: background-color 0.12s ease;
 }
 
-.dh-details-right .x-layout-split-east .x-layout-mini-over {
+.dh-details-right .x-layout-split-east .x-layout-mini {
+    top: 50%;
+    left: 3px;
+    width: 6px;
+    height: 48px;
+    margin-top: -24px;
+}
+
+.dh-details-bottom .x-layout-split-south .x-layout-mini {
+    top: 3px;
+    left: 50%;
+    width: 48px;
+    height: 6px;
+    margin-left: -24px;
+}
+
+.dh-details-right .x-layout-split-east .x-layout-mini-over,
+.dh-details-bottom .x-layout-split-south .x-layout-mini-over {
     background: var(--dh-accent);
 }
 
-/* The closed card leaves a rounded strip on the right, with an arrow to
-   open it again */
+/* The closed card leaves a rounded strip, with an arrow to open it again
+   (clicking anywhere on the strip opens it) */
 .dh-details-right .x-layout-cmini-east {
     width: 12px !important;
+}
+
+.dh-details-bottom .x-layout-cmini-south {
+    height: 12px !important;
+}
+
+.dh-details-right .x-layout-cmini-east,
+.dh-details-bottom .x-layout-cmini-south {
     border-radius: 999px;
     background: var(--dh-bg-1);
     box-shadow: inset 0 0 0 1px var(--dh-border);
@@ -910,8 +952,15 @@ html body.dh-dashboard,
     transition: background-color 0.12s ease;
 }
 
-.dh-details-right .x-layout-cmini-east:hover {
+.dh-details-right .x-layout-cmini-east:hover,
+.dh-details-bottom .x-layout-cmini-south:hover {
     background: var(--dh-bg-3);
+}
+
+.dh-details-right .x-layout-cmini-east .x-layout-mini,
+.dh-details-bottom .x-layout-cmini-south .x-layout-mini {
+    opacity: 0.8;
+    filter: none;
 }
 
 .dh-details-right .x-layout-cmini-east .x-layout-mini {
@@ -923,11 +972,21 @@ html body.dh-dashboard,
     /* Lucide chevron-left, in --dh-text-muted */
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a94a6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 18-6-6 6-6'/%3E%3C/svg%3E")
         center / 12px 12px no-repeat;
-    opacity: 0.8;
-    filter: none;
 }
 
-.dh-details-right .x-layout-cmini-east:hover .x-layout-mini {
+.dh-details-bottom .x-layout-cmini-south .x-layout-mini {
+    top: 0;
+    left: 50%;
+    width: 48px;
+    height: 12px;
+    margin-left: -24px;
+    /* Lucide chevron-up, in --dh-text-muted */
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a94a6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m18 15-6-6-6 6'/%3E%3C/svg%3E")
+        center / 12px 12px no-repeat;
+}
+
+.dh-details-right .x-layout-cmini-east:hover .x-layout-mini,
+.dh-details-bottom .x-layout-cmini-south:hover .x-layout-mini {
     opacity: 1;
 }
 
