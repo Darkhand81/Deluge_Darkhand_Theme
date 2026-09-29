@@ -15,6 +15,7 @@
 @import url('xtheme-gray.css');
 @import url('../darkhand/fonts.css');
 @import url('../darkhand/icons.css');
+@import url('../darkhand/dashboard.css');
 
 :root {
     --dh-bg-0: #0d1014; /* app backdrop, gutters between panels */

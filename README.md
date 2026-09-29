@@ -9,6 +9,26 @@ that installs and uninstalls it on Linux.
 | --- | --- |
 | ![Context menu](screenshots/menu.png) | ![Preferences](screenshots/preferences.png) |
 
+## Dashboard layout (experimental)
+
+This branch adds an optional **Darkhand plugin** that rebuilds the Web UI as a
+dashboard: a full-height navigation column with the torrent filters, a page
+header, and the torrent list and details as cards. Torrent details open either
+in a drawer on the right or in a card below the list; switch between them with
+the **Details** control in the header.
+
+| Drawer | Card |
+| --- | --- |
+| ![Dashboard with details drawer](screenshots/dashboard-drawer.png) | ![Dashboard with details card](screenshots/dashboard-card.png) |
+
+A stylesheet can only restyle Deluge. It can't move panels, because Deluge's
+ExtJS layout places them in JavaScript. The plugin's script runs just before
+Deluge builds its window and arranges Deluge's own components (toolbar,
+filters, torrent list, details tabs, status bar) differently, so everything
+keeps working as before. The dashboard styles live in the theme and only apply
+while the plugin is enabled. Disable the plugin under **Preferences → Plugins**
+and the standard layout returns after a page reload.
+
 ## Features
 
 - Flat, low-glare near-black palette with blue accents from the Deluge logo, and panels that
@@ -58,6 +78,18 @@ The script:
 4. Stops any active `deluge-web` systemd unit before editing `web.conf`, then
    starts it again. `deluge-web` writes `web.conf` when it exits, so an edit
    made while it's running would be lost.
+5. Installs the dashboard plugin into the daemon's `plugins/` folder (next to
+   `core.conf`) and enables it. It asks the running daemon to rescan and
+   enable it over Deluge's local connection, using the `localclient` account
+   from the daemon's `auth` file, so the daemon and your torrents keep
+   running. `deluge-web` is restarted so it loads the plugin.
+
+Use `--no-plugin` to install just the theme with Deluge's standard layout.
+
+If the daemon runs on a different machine from `deluge-web`, the plugin must be
+installed on both: run the script on each machine, or enable **Darkhand** under
+**Preferences → Plugins** after copying the plugin egg into the daemon's
+`plugins/` folder.
 
 If `deluge-web` is running outside systemd (in `screen`, from a shell, and so
 on), the script asks you to stop it first. You can also install only the file:
@@ -74,7 +106,8 @@ On Deluge 2.2+, then choose **Darkhand** under **Preferences → Interface → T
 sudo ./darkhand.sh uninstall
 ```
 
-This removes the stylesheet and restores the theme that was active before
+This disables and removes the dashboard plugin, removes the stylesheet, and
+restores the theme that was active before
 installing (`gray` if none was recorded). If `web.conf` can't be edited because
 `deluge-web` is running unmanaged, it's left alone. Once the stylesheet is gone,
 Deluge falls back to its default theme on the next start anyway.
@@ -102,6 +135,7 @@ see into other users' processes or config directories, so it may report less.
 | `-p, --python PATH` | Python interpreter Deluge is installed under (venv, pipx…). |
 | `--no-activate` | Only copy the stylesheet; leave `web.conf` alone. |
 | `--no-restart` | Don't stop/start `deluge-web` systemd units. |
+| `--no-plugin` | Theme only: skip the dashboard layout plugin. |
 | `-y, --yes` | Don't prompt. |
 
 Examples:
