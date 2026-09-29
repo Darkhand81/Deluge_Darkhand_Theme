@@ -31,7 +31,8 @@ Ext.ns('Deluge.plugins.darkhand');
 
     var state = {
         active: false, // dashboard layout built for this page
-        mode: null,
+        mode: null, // details card: 'right' or 'bottom'
+        statsPos: null, // stats and chart: 'above' or 'below' the list
     };
 
     function getMode() {
@@ -49,18 +50,42 @@ Ext.ns('Deluge.plugins.darkhand');
         } catch (e) {}
     }
 
-    function headerHtml(mode) {
-        var btn = function (value, label) {
-            return (
+    // Stats and speed chart above or below the torrent list
+    var STATS_KEY = 'darkhand.statsPosition';
+
+    function getStatsPosition() {
+        var pos = null;
+        try {
+            pos = window.localStorage.getItem(STATS_KEY);
+        } catch (e) {}
+        return pos === 'below' ? 'below' : 'above';
+    }
+
+    function setStatsPosition(pos) {
+        try {
+            window.localStorage.setItem(STATS_KEY, pos);
+        } catch (e) {}
+    }
+
+    // A labelled two-way switch; data-pref names the setting it changes.
+    function switchHtml(pref, label, current, options) {
+        // The title attribute keeps the label as a tooltip when the compact
+        // header hides it.
+        var html =
+            '<span class="dh-seg-label">' + label + '</span>' +
+            '<div class="dh-seg" title="' + label + '">';
+        Ext.each(options, function (opt) {
+            html +=
                 '<button type="button" class="dh-seg-btn' +
-                (mode === value ? ' dh-seg-active' : '') +
-                '" data-mode="' +
-                value +
-                '">' +
-                label +
-                '</button>'
-            );
-        };
+                (opt[0] === current ? ' dh-seg-active' : '') +
+                '" data-pref="' + pref + '" data-value="' + opt[0] + '">' +
+                opt[1] +
+                '</button>';
+        });
+        return html + '</div>';
+    }
+
+    function headerHtml(mode, statsPos) {
         return (
             '<div class="dh-header-wrap">' +
             '<div class="dh-header-inner">' +
@@ -70,13 +95,32 @@ Ext.ns('Deluge.plugins.darkhand');
             '<h1 id="dh-title">All Torrents</h1>' +
             '</div>' +
             '<div class="dh-header-tools">' +
-            '<span class="dh-seg-label">Details</span>' +
-            '<div class="dh-seg">' +
-            btn('right', 'Right') +
-            btn('bottom', 'Bottom') +
+            switchHtml('stats', 'Stats', statsPos, [['above', 'Above'], ['below', 'Below']]) +
+            switchHtml('details', 'Details', mode, [['right', 'Right'], ['bottom', 'Bottom']]) +
             '</div>' +
             '</div>' +
-            '</div>' +
+            '</div>'
+        );
+    }
+
+    // When the title and the switches don't both fit, hide the switch labels
+    // and tighten the buttons rather than wrapping the title.
+    function fitTitle() {
+        var inner = Ext.get(document.querySelector('.dh-header-inner'));
+        var title = document.getElementById('dh-title');
+        if (!inner || !title) return;
+        inner.removeClass('dh-header-compact');
+        // The title truncates itself with an ellipsis, so compare its full
+        // width with the width it's given
+        if (title.scrollWidth > title.clientWidth + 1) {
+            inner.addClass('dh-header-compact');
+        }
+    }
+
+    // Stats card and speed chart, shown above or below the torrent list
+    function overviewHtml() {
+        return (
+            '<div class="dh-overview-wrap">' +
             '<div class="dh-overview">' +
             statsHtml() +
             chartHtml() +
@@ -345,24 +389,24 @@ Ext.ns('Deluge.plugins.darkhand');
     }
 
     /**
-     * Lay out the stat cards and size the header region to fit them. Six
+     * Lay out the stats and chart and size their region to fit them. Six
      * columns when there's room, three otherwise; with the details card on
      * the right the column's width changes as the card opens and closes, so
      * it stays at three to keep the torrent list from jumping.
      */
-    function fitHeader(header) {
+    function fitOverview(box) {
         // Layout polish only: never let a failure here break Deluge's UI
         try {
-            doFitHeader(header);
+            doFitOverview(box);
         } catch (e) {
-            if (window.console) console.error('Darkhand: header layout failed', e);
+            if (window.console) console.error('Darkhand: stats layout failed', e);
         }
     }
 
-    function doFitHeader(header) {
-        var el = header.getEl();
+    function doFitOverview(box) {
+        var el = box.getEl();
         if (!el) return;
-        var wrap = el.child('.dh-header-wrap');
+        var wrap = el.child('.dh-overview-wrap');
         var grid = el.child('.dh-stats');
         var overview = el.child('.dh-overview');
         if (!wrap || !grid || !overview) return;
@@ -377,17 +421,17 @@ Ext.ns('Deluge.plugins.darkhand');
             overview[side ? 'addClass' : 'removeClass']('dh-overview-side');
             overview[placements[i] === 'off' ? 'addClass' : 'removeClass']('dh-chart-off');
             layoutStats(grid, side);
-            if (listRoom(header, wrap.getHeight()) >= MIN_LIST_HEIGHT) break;
+            if (listRoom(box, wrap.getHeight()) >= MIN_LIST_HEIGHT) break;
         }
 
         var height = wrap.getHeight();
-        if (height && height !== header.getHeight()) {
-            header.setHeight(height);
+        if (height && height !== box.getHeight()) {
+            box.setHeight(height);
             // Often called while Ext is already laying out the column (the
             // details card opening, a window resize), when a nested
             // doLayout() is silently ignored; lay out again right after.
             Ext.defer(function () {
-                if (header.ownerCt) header.ownerCt.doLayout();
+                if (box.ownerCt) box.ownerCt.doLayout();
             }, 1);
         }
     }
@@ -396,17 +440,13 @@ Ext.ns('Deluge.plugins.darkhand');
     // column headings and about four rows).
     var MIN_LIST_HEIGHT = 220;
 
-    // Height left for the torrent list if the header were headerHeight tall.
-    function listRoom(header, headerHeight) {
-        var main = header.ownerCt;
-        if (!main || !main.body) return Infinity;
-        var room = main.body.getHeight() - headerHeight - GAP;
-        var details = deluge.ui.detailsPanel;
-        if (state.mode === 'bottom' && details && !details.collapsed) {
-            // Not drawn yet during the first layout: use its configured size
-            room -= (details.rendered ? details.getHeight() : details.height || 0) + GAP;
-        }
-        return room;
+    // Height left for the torrent list if the stats region were this tall.
+    // The list shares its column only with that region (the column already
+    // shrinks as the details card grows).
+    function listRoom(box, boxHeight) {
+        var column = box.ownerCt;
+        if (!column || !column.body) return Infinity;
+        return column.body.getHeight() - boxHeight;
     }
 
     function layoutStats(grid, side) {
@@ -451,9 +491,11 @@ Ext.ns('Deluge.plugins.darkhand');
      */
     function buildLayout(ui, Viewport) {
         var mode = getMode();
+        var statsPos = getStatsPosition();
         state.mode = mode;
+        state.statsPos = statsPos;
 
-        Ext.getBody().addClass(['dh-dashboard', 'dh-details-' + mode]);
+        Ext.getBody().addClass(['dh-dashboard', 'dh-details-' + mode, 'dh-stats-' + statsPos]);
 
         // The filter sidebar becomes the body of the navigation column.
         configure(deluge.sidebar, {
@@ -488,12 +530,22 @@ Ext.ns('Deluge.plugins.darkhand');
         var header = new Ext.BoxComponent({
             id: 'dh-header',
             region: 'north',
-            // Resized to fit the stat cards once rendered (fitHeader)
-            height: 280,
-            html: headerHtml(mode),
+            height: 92,
+            html: headerHtml(mode, statsPos),
             listeners: {
-                resize: function (header) {
-                    fitHeader(header);
+                resize: fitTitle,
+            },
+        });
+
+        var overviewBox = new Ext.BoxComponent({
+            id: 'dh-overview-box',
+            region: statsPos === 'below' ? 'south' : 'north',
+            // Resized to fit the stats and chart once rendered (fitOverview)
+            height: 200,
+            html: overviewHtml(),
+            listeners: {
+                resize: function (box) {
+                    fitOverview(box);
                 },
             },
         });
@@ -506,16 +558,25 @@ Ext.ns('Deluge.plugins.darkhand');
             region: 'center',
             layout: 'fit',
             border: false,
-            margins:
-                mode === 'bottom'
-                    ? margins(0, GAP, 0, GAP)
-                    : margins(0, GAP - SPLIT, GAP, GAP),
             tbar: deluge.toolbar,
             items: [deluge.torrents],
         });
 
+        // The torrent list and the stats region stacked in one column
+        var listColumn = new Ext.Panel({
+            id: 'dh-list-column',
+            region: 'center',
+            layout: 'border',
+            border: false,
+            margins:
+                mode === 'bottom'
+                    ? margins(0, GAP, 0, GAP)
+                    : margins(0, GAP - SPLIT, GAP, GAP),
+            items: [overviewBox, tableCard],
+        });
+
         var details = ui.detailsPanel;
-        var mainItems = [header, tableCard];
+        var mainItems = [header, listColumn];
         var viewportItems = [nav];
 
         if (mode === 'bottom') {
@@ -571,7 +632,7 @@ Ext.ns('Deluge.plugins.darkhand');
         });
 
         state.active = true;
-        wireUp(mode, details, header);
+        wireUp(mode, details, overviewBox);
         return viewport;
     }
 
@@ -579,28 +640,26 @@ Ext.ns('Deluge.plugins.darkhand');
     // tooltips.
     var ICON_BUTTONS = ['preferences', 'connectionman', 'help', 'logout'];
 
-    function wireUp(mode, details, header) {
-        // The cards' height also changes without the header's width changing:
+    function wireUp(mode, details, box) {
+        var refit = function () {
+            fitOverview(box);
+        };
+        // The cards' height also changes without the region's width changing:
         // when the web font arrives, when they switch to the stacked layout,
         // or when a value wraps differently. Refit whenever it does.
-        var wrap = header.getEl() && header.getEl().child('.dh-header-wrap');
+        var wrap = box.getEl() && box.getEl().child('.dh-overview-wrap');
         if (wrap && window.ResizeObserver) {
-            new ResizeObserver(function () {
-                fitHeader(header);
-            }).observe(wrap.dom);
+            new ResizeObserver(refit).observe(wrap.dom);
         }
         if (document.fonts && document.fonts.ready) {
             document.fonts.ready.then(function () {
-                fitHeader(header);
+                refit();
+                fitTitle();
             });
         }
-        // Room for the chart depends on the column's height and, with the
-        // details card at the bottom, on that card's size.
-        var refit = function () {
-            fitHeader(header);
-        };
-        if (header.ownerCt) header.ownerCt.on('resize', refit);
-        details.on({ resize: refit, collapse: refit, expand: refit });
+        // Room for the chart depends on the column's height (window size,
+        // and with the details card at the bottom, that card's size).
+        if (box.ownerCt) box.ownerCt.on('resize', refit);
 
         var plot = document.getElementById('dh-chart-plot');
         if (plot && window.ResizeObserver) {
@@ -612,15 +671,21 @@ Ext.ns('Deluge.plugins.darkhand');
             if (btn && btn.setTooltip) btn.setTooltip(btn.text);
         });
 
-        // Details mode switch in the header.
+        // The Stats and Details switches in the header. The layout is built
+        // once at startup, so a change reloads the page.
         Ext.get('dh-header').on('click', function (e) {
             var btn = e.getTarget('.dh-seg-btn');
             if (!btn) return;
-            var value = btn.getAttribute('data-mode');
-            if (value && value !== state.mode) {
+            var pref = btn.getAttribute('data-pref');
+            var value = btn.getAttribute('data-value');
+            if (pref === 'details' && value !== state.mode) {
                 setMode(value);
-                window.location.reload();
+            } else if (pref === 'stats' && value !== state.statsPos) {
+                setStatsPosition(value);
+            } else {
+                return;
             }
+            window.location.reload();
         });
 
         if (mode === 'right') {

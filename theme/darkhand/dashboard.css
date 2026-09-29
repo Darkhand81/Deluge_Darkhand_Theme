@@ -145,12 +145,11 @@ html body.dh-dashboard,
 /* Page header                                                              */
 /* ------------------------------------------------------------------------ */
 
-/* Title row and stat cards. The header region is sized to this wrapper by
-   the plugin; its bottom padding is the gap to the torrent list. */
+/* Title row with the Stats and Details switches */
 .dh-header-wrap {
     box-sizing: border-box;
     /* Line up with the torrent list card's edges */
-    padding: 0 16px 16px;
+    padding: 0 16px;
     font-family: var(--dh-font);
 }
 
@@ -220,6 +219,42 @@ html body.dh-dashboard,
     color: var(--dh-text-muted);
 }
 
+/* Space between the Stats and Details switches */
+.dh-seg + .dh-seg-label {
+    margin-left: 12px;
+}
+
+/* The title never wraps; it can shrink so the plugin can tell it's short of
+   room and switch to the compact header */
+.dh-heading {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.dh-breadcrumb,
+#dh-title {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.dh-header-tools {
+    flex: none;
+}
+
+.dh-header-compact .dh-seg-label {
+    display: none;
+}
+
+.dh-header-compact .dh-header-tools {
+    gap: 8px;
+}
+
+.dh-header-compact .dh-seg-btn {
+    padding: 6px 10px;
+}
+
 .dh-seg {
     display: flex;
     padding: 4px;
@@ -252,8 +287,24 @@ html body.dh-dashboard,
 /* Stats card                                                               */
 /* ------------------------------------------------------------------------ */
 
-/* Stats card and speed chart: side by side when the column is wide (the
-   plugin adds dh-overview-side), the chart below the stats otherwise. */
+/* Stats card and speed chart, in their own region above or below the
+   torrent list. The plugin sizes the region to this wrapper; the padding is
+   the gap between it and the list. */
+.dh-overview-wrap {
+    box-sizing: border-box;
+    font-family: var(--dh-font);
+}
+
+.dh-stats-above .dh-overview-wrap {
+    padding-bottom: 16px;
+}
+
+.dh-stats-below .dh-overview-wrap {
+    padding-top: 16px;
+}
+
+/* Side by side when the column is wide (the plugin adds dh-overview-side),
+   the chart below the stats otherwise. */
 .dh-overview {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
