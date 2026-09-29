@@ -29,8 +29,11 @@ without squeezing the torrent list, it's hidden until there's room again.
 
 The details card sits either on the right, opening when you select a torrent
 and folding away when nothing is selected, or below the list. Switch between
-the two with the **Details** control in the header; your choice is remembered
-per browser.
+the two with the **Details** control in the header. The **Stats** control puts
+the stats and speed chart above or below the torrent list. Both choices are
+remembered per browser.
+
+![Stats and speed chart below the torrent list](screenshots/dashboard-stats-below.png)
 
 | Details on the right | Details at the bottom |
 | --- | --- |
