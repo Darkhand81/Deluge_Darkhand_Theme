@@ -1528,7 +1528,7 @@ dl.singleline dd,
     font-size: 12.5px;
 }
 
-/* Softer pill-shaped tabs */
+/* Softer tabs, rounded along the top */
 .x-tab-strip li {
     border-radius: 7px 7px 0 0;
 }

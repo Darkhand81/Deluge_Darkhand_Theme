@@ -139,13 +139,17 @@ those in step when changing a token.
 
 | Token / constant | Value | Where |
 | --- | --- | --- |
-| `--dh-radius` | 8px | Theme: buttons, inputs, small elements |
 | `--dh-card-radius` | 18px | Dashboard cards and windows |
-| Inner frames in windows | 10px | Lists, Preferences pages |
-| Progress bars | 6px | Track and fill |
-| Pills | 999px | Toolbar pills, window buttons, strips |
+| `--dh-frame-radius` | 10px | Frames inside windows (lists, Preferences pages), containers of controls (the header switches) |
+| `--dh-radius` | 8px | Buttons (toolbar, window footers), inputs, small elements |
+| `--dh-bar-radius` | 6px | Progress bars, the collapsed details strip, badges, and anything inside a frame with 4px around it (switch segments, Preferences rows) |
 | `GAP` (plugin) | 16px | Between cards and around the window edge |
 | `SPLIT` (plugin) | 12px | Resize bar / collapsed strip thickness |
+
+Radii follow that scale everywhere; nothing is fully rounded except circular
+icons and legend dots. Something nested inside a rounded container with a
+gap around it takes the container's radius minus the gap, so the curves run
+parallel (switch segments: 10px − 4px = 6px).
 | Nav width | 248px | `--dh-nav-width` and the plugin |
 | Brand height | 88px | Top of the nav card |
 | Header height | 92px | Page title row |
@@ -223,8 +227,8 @@ Defaults: details at the **bottom**, stats **below** the list, details card
   1000px), then the spare width is shared among the other columns in
   proportion. The details Status tab spreads its four columns across the
   bottom card and stacks them in the right-hand card.
-- Narrow: header switch labels hide (`dh-header-compact`); toolbar pills
-  become round icon buttons (`dh-toolbar-compact`); the torrent list gives
+- Narrow: header switch labels hide (`dh-header-compact`); the labelled
+  toolbar buttons become icon-only buttons (`dh-toolbar-compact`); the torrent list gives
   Name priority (next section).
 
 ---
@@ -251,7 +255,8 @@ bar is hidden.
 
 Breadcrumb ("Deluge / Torrents") and a large title that follows the selected
 filters, with a count badge. On the right, two segmented switches (Stats,
-Details); the active segment is an accent pill. When the title and switches
+Details) with 10px corners; the active segment is filled with the accent,
+with 6px corners. When the title and switches
 don't both fit, the switch labels hide (kept as tooltips) rather than the
 title wrapping. The header lines up with the list card's edges (right padding
 `GAP - SPLIT` in right mode).
@@ -260,9 +265,9 @@ title wrapping. The header lines up with the list card's edges (right padding
 
 Deluge's toolbar becomes the torrent card's header: transparent, flat text
 and icon buttons that tint on hover. The "Deluge" label is hidden (the brand
-replaces it). Preferences, Connection Manager, Help and Logout are pill
-buttons with a label, or 28px round icon buttons when the whole toolbar
-doesn't fit (measured on every toolbar resize). Labels stay as tooltips.
+replaces it). Preferences, Connection Manager, Help and Logout are buttons
+with a label and 8px corners, or 28px square icon buttons when the whole
+toolbar doesn't fit (measured on every toolbar resize). Labels stay as tooltips.
 
 ### Torrent list
 
@@ -331,7 +336,7 @@ separate title or body frame, outer outline + shadow (G20).
 - Body: 12px side padding; framed inner panels get 10px corners, drawn clip-
   safe (G19); windows that frame their whole body (Login, Add Torrents,
   Remove...) keep that frame.
-- Footer: pill buttons; the last one (the main action: OK, Connect, Add,
+- Footer: buttons with 8px corners; the last one (the main action: OK, Connect, Add,
   Move, Remove Torrent) accent-filled. Not in message boxes (G17).
 - Message boxes: Lucide circle-help / info (accent), triangle-alert (warn),
   circle-x (bad) instead of Ext's bitmaps.
@@ -340,8 +345,8 @@ separate title or body frame, outer outline + shadow (G20).
   version large, details muted, copyright faint, accent link, 300×412px.
 - Connection Manager: columns sized to their text, window widens up to
   640px for long hosts; a lone host is pre-selected once its status arrives.
-- Preferences: the page list is inset 6px in its frame, rows with 8px
-  corners, the current page a soft accent pill.
+- Preferences: the page list is inset 6px in its frame, rows with 6px
+  corners, the current page filled with the soft accent.
 
 ### Status bar
 
