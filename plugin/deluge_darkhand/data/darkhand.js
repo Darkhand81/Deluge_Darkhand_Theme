@@ -17,8 +17,8 @@
  *   status bar (full width)
  *
  * The navigation, torrent list and details are floating cards. The details
- * card sits on the right (opening when a torrent is selected) or below the
- * list; the header switch flips between the two.
+ * card sits below the list or on the right; a switch in the header flips
+ * between the two.
  *
  * Only the arrangement changes; every component keeps its own behaviour.
  * Styling lives in the Darkhand theme (themes/darkhand/dashboard.css), scoped
@@ -40,9 +40,8 @@ Ext.ns('Deluge.plugins.darkhand');
         try {
             mode = window.localStorage.getItem(MODE_KEY);
         } catch (e) {}
-        // Bottom unless the right-hand layout was chosen ("drawer" was its
-        // earlier name)
-        return mode === 'right' || mode === 'drawer' ? 'right' : 'bottom';
+        // Bottom unless the right-hand layout was chosen
+        return mode === 'right' ? 'right' : 'bottom';
     }
 
     function setMode(mode) {
@@ -939,53 +938,51 @@ Ext.ns('Deluge.plugins.darkhand');
             return inner - (cm.getTotalWidth(false) - cm.getColumnWidth(nameIndex));
         };
 
-        if (!view.userResized) {
-            var sized = getSizedColumns();
+        var sized = getSizedColumns();
 
-            // Widen columns whose header doesn't fit (the theme's spaced
-            // capitals make "Down Speed" wider than Deluge's 80px), unless
-            // you've sized columns yourself. Name gives up the width.
-            var fitHeaders = function () {
-                for (i = 0; i < n; i++) {
-                    id = cm.getColumnId(i);
-                    if (cm.isHidden(i) || i === nameIndex || sized[id]) continue;
-                    var needed = headerWidth(view, i);
-                    if (cm.config[i].dataIndex === 'progress') needed = Math.max(needed, progressMinWidth(view, i));
-                    var fit = needed - cm.getColumnWidth(i);
-                    if (fit > 0) {
-                        stretch[id] = (stretch[id] || 0) + fit;
-                        cm.setColumnWidth(i, cm.getColumnWidth(i) + fit, true);
-                    }
-                }
-            };
-
-            // Room Name would have with the full headers. A speed column
-            // showing its short header uses the width its full one needed
-            // (remembered from when it was shown), so deciding doesn't mean
-            // re-rendering the headers.
-            var others = 0;
+        // Widen columns whose header doesn't fit (the theme's spaced
+        // capitals make "Down Speed" wider than Deluge's 80px), unless
+        // you've sized columns yourself. Name gives up the width.
+        var fitHeaders = function () {
             for (i = 0; i < n; i++) {
-                if (cm.isHidden(i) || i === nameIndex) continue;
-                var c = cm.config[i], w = cm.getColumnWidth(i);
-                if (!sized[cm.getColumnId(i)]) {
-                    var short = SPEED_HEADERS[c.dataIndex] && c.dhHeader && c.header !== c.dhHeader;
-                    var need = short ? c.dhFullWidth || 0 : headerWidth(view, i);
-                    if (SPEED_HEADERS[c.dataIndex] && !short) c.dhFullWidth = need;
-                    if (c.dataIndex === 'progress') need = Math.max(need, progressMinWidth(view, i));
-                    w = Math.max(w, need);
+                id = cm.getColumnId(i);
+                if (cm.isHidden(i) || i === nameIndex || sized[id]) continue;
+                var needed = headerWidth(view, i);
+                if (cm.config[i].dataIndex === 'progress') needed = Math.max(needed, progressMinWidth(view, i));
+                var fit = needed - cm.getColumnWidth(i);
+                if (fit > 0) {
+                    stretch[id] = (stretch[id] || 0) + fit;
+                    cm.setColumnWidth(i, cm.getColumnWidth(i) + fit, true);
                 }
-                others += w;
             }
-            var tight = inner - others < NAME_MIN;
+        };
 
-            // Tight: "↓ Speed" / "↑ Speed", and the other columns give up
-            // some width
-            setShortHeaders(view, cm, tight);
-            fitHeaders();
-            if (tight) giveNameRoom(view, cm, nameIndex, NAME_MIN - nameRoom(), sized);
+        // Room Name would have with the full headers. A speed column
+        // showing its short header uses the width its full one needed
+        // (remembered from when it was shown), so deciding doesn't mean
+        // re-rendering the headers.
+        var others = 0;
+        for (i = 0; i < n; i++) {
+            if (cm.isHidden(i) || i === nameIndex) continue;
+            var c = cm.config[i], w = cm.getColumnWidth(i);
+            if (!sized[cm.getColumnId(i)]) {
+                var short = SPEED_HEADERS[c.dataIndex] && c.dhHeader && c.header !== c.dhHeader;
+                var need = short ? c.dhFullWidth || 0 : headerWidth(view, i);
+                if (SPEED_HEADERS[c.dataIndex] && !short) c.dhFullWidth = need;
+                if (c.dataIndex === 'progress') need = Math.max(need, progressMinWidth(view, i));
+                w = Math.max(w, need);
+            }
+            others += w;
         }
+        var tight = inner - others < NAME_MIN;
 
-        // Ext widens Name up to its cap (until a column is resized by hand)
+        // Tight: "↓ Speed" / "↑ Speed", and the other columns give up
+        // some width
+        setShortHeaders(view, cm, tight);
+        fitHeaders();
+        if (tight) giveNameRoom(view, cm, nameIndex, NAME_MIN - nameRoom(), sized);
+
+        // Ext widens Name up to its cap
         view.autoExpand(true);
 
         var spare = inner - cm.getTotalWidth(false);
@@ -993,9 +990,8 @@ Ext.ns('Deluge.plugins.darkhand');
             var cols = [], total = 0;
             for (i = 0; i < n; i++) {
                 if (cm.isHidden(i)) continue;
-                // Name already has its share, unless it's no longer
-                // auto-expanding because you resized a column
-                if (i === nameIndex && !view.userResized) continue;
+                // Name already has its share
+                if (i === nameIndex) continue;
                 cols.push(i);
                 total += cm.getColumnWidth(i);
             }
@@ -1068,9 +1064,9 @@ Ext.ns('Deluge.plugins.darkhand');
 
         // Dragging a column's edge: the width you choose becomes that
         // column's normal width. Forget its extra before Ext saves the state.
-        // Ext also marks the grid "user resized", which stops Name filling
-        // the list for the rest of the session, so the columns no longer
-        // followed the window's width. Keep Name filling: it takes up
+        // Ext also marks the grid "user resized", which would stop Name
+        // filling the list (and the columns following the window's width)
+        // for the rest of the session; clear that, so Name keeps taking up
         // whatever the other columns leave.
         var splitterMoved = view.onColumnSplitterMoved;
         view.onColumnSplitterMoved = function (cellIndex) {
@@ -1456,7 +1452,7 @@ Ext.ns('Deluge.plugins.darkhand');
 
     // Take over Viewport creation during initialize(). If the script arrives
     // after the UI is already up (plugin just enabled), this has no effect and
-    // the plugin asks for a reload instead.
+    // the plugin reloads the page into the dashboard (reloadIntoDashboard).
     if (deluge.ui && deluge.ui.initialize && !deluge.ui.Viewport) {
         var initialize = deluge.ui.initialize;
         deluge.ui.initialize = function () {

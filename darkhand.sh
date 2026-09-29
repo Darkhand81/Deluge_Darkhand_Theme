@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 #
-# Darkhand theme installer for the Deluge 2.x Web UI (Linux).
+# Darkhand installer for the Deluge 2.x Web UI (Linux): the theme and the
+# dashboard plugin.
 #
-#   sudo ./darkhand.sh install     copy the theme in and make it the active theme
-#   sudo ./darkhand.sh uninstall   remove the theme and restore the previous one
+#   sudo ./darkhand.sh install     install the theme (and, if chosen, the
+#                                  dashboard) and make it the active theme
+#   sudo ./darkhand.sh uninstall   remove both and restore the previous theme
 #        ./darkhand.sh status      show what is installed where
 #
 # Run "./darkhand.sh --help" for all options.
@@ -84,7 +86,6 @@ ${C_BOLD}Options:${C_RESET}
                          without asking (the default with --yes).
       --theme-only       Install just the theme, without asking; removes the
                          dashboard plugin if an earlier install added it.
-                         (--no-plugin is an alias.)
   -y, --yes              Do not ask for confirmation.
   -h, --help             Show this help.
 
@@ -128,8 +129,8 @@ parse_args() {
             --python=*) PYTHONS+=("${1#*=}") ;;
             --no-activate) ACTIVATE=0 ;;
             --no-restart) RESTART=0 ;;
-            --dashboard | --with-plugin) PLUGIN=1 ;;
-            --theme-only | --no-plugin) PLUGIN=0 ;;
+            --dashboard) PLUGIN=1 ;;
+            --theme-only) PLUGIN=0 ;;
             -y | --yes) ASSUME_YES=1 ;;
             -h | --help)
                 usage
