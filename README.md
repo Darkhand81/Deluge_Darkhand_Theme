@@ -39,6 +39,9 @@ remembered per browser.
 | --- | --- |
 | ![Dashboard with the details card on the right](screenshots/dashboard-right.png) | ![Dashboard with the details card at the bottom](screenshots/dashboard-bottom.png) |
 
+The transfer speeds in the dashboard screenshots are simulated; the test
+setup they were taken on has no peers.
+
 A stylesheet can only restyle Deluge. It can't move panels, because Deluge's
 ExtJS layout places them in JavaScript. The plugin's script runs just before
 Deluge builds its window and arranges Deluge's own components (toolbar,
