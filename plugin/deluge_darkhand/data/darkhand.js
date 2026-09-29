@@ -741,6 +741,61 @@ Ext.ns('Deluge.plugins.darkhand');
         );
     }
 
+    // Narrow lists: Name should keep at least this much room. Below it the
+    // speed headers become "↓ Speed" / "↑ Speed", then the other columns
+    // give up some width.
+    var NAME_MIN = 240;
+    var SHRINK_TO = 0.9; // of a column's normal width, at most
+
+    var SPEED_HEADERS = {
+        download_payload_rate: '↓ ',
+        upload_payload_rate: '↑ ',
+    };
+
+    function setShortHeaders(view, cm, short) {
+        var changed = false;
+        Ext.each(cm.config, function (c, i) {
+            var arrow = SPEED_HEADERS[c.dataIndex];
+            if (!arrow) return;
+            if (!c.dhHeader) {
+                c.dhHeader = c.header;
+                c.tooltip = c.header; // the full name, on hover
+            }
+            var text = short ? arrow + _('Speed') : c.dhHeader;
+            if (c.header !== text) {
+                cm.setColumnHeader(i, text);
+                changed = true;
+            }
+        });
+        // Changing a header re-renders the header row, losing the sort arrow
+        if (changed) view.updateHeaderSortState();
+    }
+
+    // Take up to `need` px from the other columns for Name, in proportion
+    // to what each can spare (never below its header, or SHRINK_TO of its
+    // normal width). Columns you've sized yourself are left alone.
+    function giveNameRoom(view, cm, nameIndex, need, sized) {
+        if (need < 1) return;
+        var cols = [], room = 0;
+        for (var i = 0; i < cm.getColumnCount(); i++) {
+            var id = cm.getColumnId(i);
+            if (cm.isHidden(i) || i === nameIndex || sized[id]) continue;
+            var w = cm.getColumnWidth(i);
+            var floor = Math.max(headerWidth(view, i), Math.ceil((w - (stretch[id] || 0)) * SHRINK_TO));
+            if (w > floor) {
+                cols.push([i, id, w - floor]);
+                room += w - floor;
+            }
+        }
+        if (!room) return;
+        var share = Math.min(1, need / room);
+        Ext.each(cols, function (c) {
+            var take = Math.floor(c[2] * share);
+            stretch[c[1]] = (stretch[c[1]] || 0) - take;
+            cm.setColumnWidth(c[0], cm.getColumnWidth(c[0]) - take, true);
+        });
+    }
+
     function stretchColumns(grid) {
         try {
             doStretchColumns(grid);
@@ -762,28 +817,60 @@ Ext.ns('Deluge.plugins.darkhand');
         }
         stretch = {};
 
-        // Widen columns whose header doesn't fit (the theme's spaced
-        // capitals make "Down Speed" wider than Deluge's 80px), unless
-        // you've sized columns yourself. Name gives up the width.
+        var nameIndex = cm.getIndexById(grid.autoExpandColumn);
+        var inner = view.getGridInnerWidth();
+        var nameRoom = function () {
+            return inner - (cm.getTotalWidth(false) - cm.getColumnWidth(nameIndex));
+        };
+
         if (!view.userResized) {
             var sized = getSizedColumns();
-            for (i = 0; i < n; i++) {
-                id = cm.getColumnId(i);
-                if (cm.isHidden(i) || i === cm.getIndexById(grid.autoExpandColumn) || sized[id]) continue;
-                var fit = headerWidth(view, i) - cm.getColumnWidth(i);
-                if (fit > 0) {
-                    stretch[id] = fit;
-                    cm.setColumnWidth(i, cm.getColumnWidth(i) + fit, true);
+
+            // Widen columns whose header doesn't fit (the theme's spaced
+            // capitals make "Down Speed" wider than Deluge's 80px), unless
+            // you've sized columns yourself. Name gives up the width.
+            var fitHeaders = function () {
+                for (i = 0; i < n; i++) {
+                    id = cm.getColumnId(i);
+                    if (cm.isHidden(i) || i === nameIndex || sized[id]) continue;
+                    var fit = headerWidth(view, i) - cm.getColumnWidth(i);
+                    if (fit > 0) {
+                        stretch[id] = (stretch[id] || 0) + fit;
+                        cm.setColumnWidth(i, cm.getColumnWidth(i) + fit, true);
+                    }
                 }
+            };
+
+            // Room Name would have with the full headers. A speed column
+            // showing its short header uses the width its full one needed
+            // (remembered from when it was shown), so deciding doesn't mean
+            // re-rendering the headers.
+            var others = 0;
+            for (i = 0; i < n; i++) {
+                if (cm.isHidden(i) || i === nameIndex) continue;
+                var c = cm.config[i], w = cm.getColumnWidth(i);
+                if (!sized[cm.getColumnId(i)]) {
+                    var short = SPEED_HEADERS[c.dataIndex] && c.dhHeader && c.header !== c.dhHeader;
+                    var need = short ? c.dhFullWidth || 0 : headerWidth(view, i);
+                    if (SPEED_HEADERS[c.dataIndex] && !short) c.dhFullWidth = need;
+                    w = Math.max(w, need);
+                }
+                others += w;
             }
+            var tight = inner - others < NAME_MIN;
+
+            // Tight: "↓ Speed" / "↑ Speed", and the other columns give up
+            // some width
+            setShortHeaders(view, cm, tight);
+            fitHeaders();
+            if (tight) giveNameRoom(view, cm, nameIndex, NAME_MIN - nameRoom(), sized);
         }
 
         // Ext widens Name up to its cap (until a column is resized by hand)
         view.autoExpand(true);
 
-        var spare = view.getGridInnerWidth() - cm.getTotalWidth(false);
+        var spare = inner - cm.getTotalWidth(false);
         if (spare >= 1) {
-            var nameIndex = cm.getIndexById(grid.autoExpandColumn);
             var cols = [], total = 0;
             for (i = 0; i < n; i++) {
                 if (cm.isHidden(i)) continue;
@@ -819,10 +906,12 @@ Ext.ns('Deluge.plugins.darkhand');
             busy = false;
         };
 
-        // After every layout of the grid (window and card resizes)
-        var layout = view.layout;
-        view.layout = function () {
-            var result = layout.apply(this, arguments);
+        // After every layout of the grid (window and card resizes). Hook
+        // onLayout, which ends each layout: some resizes (opening the right
+        // details card) reach the layout without going through view.layout.
+        var onLayout = view.onLayout;
+        view.onLayout = function () {
+            var result = onLayout.apply(this, arguments);
             restretch();
             return result;
         };
