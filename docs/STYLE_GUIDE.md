@@ -143,16 +143,18 @@ those in step when changing a token.
 | `--dh-frame-radius` | 10px | Frames inside windows (lists, Preferences pages), containers of controls (the header switches) |
 | `--dh-radius` | 8px | Buttons (toolbar, window footers), inputs, small elements |
 | `--dh-bar-radius` | 6px | Progress bars, the collapsed details strip, badges, and anything inside a frame with 4px around it (switch segments, Preferences rows) |
+| `--dh-inset` | 6px | How far the rows of lists in windows sit in from their frame (and apart); the plugin reads it |
+| `--dh-frame-clip` | `inset(1px round 9px)` | Clips a framed panel to its frame's outer edge (G19) |
 | `GAP` (plugin) | 16px | Between cards and around the window edge |
 | `SPLIT` (plugin) | 12px | Resize bar / collapsed strip thickness |
+| Nav width | 248px | `--dh-nav-width` and the plugin |
+| Brand height | 88px | Top of the nav card |
+| Header height | 92px | Page title row |
 
 Radii follow that scale everywhere; nothing is fully rounded except circular
 icons and legend dots. Something nested inside a rounded container with a
 gap around it takes the container's radius minus the gap, so the curves run
 parallel (switch segments: 10px − 4px = 6px).
-| Nav width | 248px | `--dh-nav-width` and the plugin |
-| Brand height | 88px | Top of the nav card |
-| Header height | 92px | Page title row |
 
 Cards have **no outer drop shadow**: `box-shadow: inset 0 0 0 1px
 var(--dh-border)` only (see gotcha G21). Windows do have one (they float over
@@ -336,14 +338,13 @@ separate title or body frame, outer outline + shadow (G20).
 - Body: 12px side padding; framed inner panels get 10px corners, drawn clip-
   safe (G19); windows that frame their whole body (Login, Remove...) keep
   that frame.
+- Lists, grids and tree grids in windows: see Inset lists, below.
 - Add Torrents: two framed sections 10px apart (`.dh-add-section`), the
   torrent list with its File / Url / Remove bar at the bottom, and the Files /
-  Options tabs at the top of the second. The Options section and the window
-  get 12px more height so the rounded corners don't clip the form's last row.
-  The torrent list is an inset list (`.dh-inset-list`: styled like
-  Preferences' page list, rows 6px apart), and the Files tab matches it: rows 6px in, no grid lines, rounded
-  hover/selected bars, Filename stretched to fill (`stretchFileNames`), Lucide
-  file icons, and CSS-drawn Download checkboxes like the Options tab's.
+  Options tabs at the top of the second, their strip `--dh-inset` in from the
+  frame. The Options section and the window get 12px more height so the
+  rounded corners don't clip the form's last row; the form is padded 15px at
+  the sides (set before render, G39), like the Preferences pages.
 - Footer: buttons with 8px corners; the last one (the main action: OK, Connect, Add,
   Move, Remove Torrent) accent-filled. Not in message boxes (G17).
 - Message boxes: Lucide circle-help / info (accent), triangle-alert (warn),
@@ -351,29 +352,39 @@ separate title or body frame, outer outline + shadow (G20).
 - Fixed-size windows are grown by 24×36px for the roomier chrome (G16).
 - About: logo (64px, glowing) as its hero, small uppercase caption title,
   version large, details muted, copyright faint, accent link, 300×412px.
-- Connection Manager: an inset list like Edit Trackers', columns sized to
-  their text (`fitListColumns`), window
-  widens up to 640px for long hosts; a lone host is pre-selected once its
+- Connection Manager: the window widens up to 640px to fit its hosts
+  (`fitListColumns` with a `maxWidth`); a lone host is pre-selected once its
   status arrives.
-- Edit Trackers: an inset list, headers lined up with the rows; the window
-  sizes to the longest tracker URL (`fitListColumns`), from its default width
-  up to 800px (or the viewport less 48px) and back, centred. Longer URLs end
-  in an ellipsis, with the full URL as a tooltip.
-- Preferences: the page list is inset 6px in its frame, rows with 6px
-  corners, the current page filled with the soft accent. The Plugins page's
-  list is an inset list, its Enabled checkboxes CSS-drawn like the Files
-  tab's; Find More gets the Lucide search icon.
-- Every list and grid in a window is inset (`insetWindowLists`, hooked on
-  `Ext.list.ListView` / `Ext.grid.GridPanel` `afterRender`, so plugins' pages
-  such as AutoAdd, Execute, Blocklist and Notifications are included): lists
-  get `.dh-inset-list` and their columns fitted to their text in place
-  (`fitListInPlace`: the widest column stretches, cut-off text gets an
-  ellipsis and a tooltip); grids get `.dh-inset-grid`, the scroller padded
-  4px / 6px (Ext sizes it less its padding) and the view's `scrollOffset`
-  12px larger, so its auto-expanding column leaves room for the inset.
-  Preferences' page list (`.dh-pref-list`) is excluded; the Connection
-  Manager and Edit Trackers size their window to their list instead
-  (`dhSizesWindow`).
+- Edit Trackers: the window sizes to the longest tracker URL, from its
+  default width up to 800px (or the viewport less 48px) and back, centred.
+- Preferences: the page list is a menu (`.dh-pref-list`): rows `--dh-inset`
+  in from its frame with 6px corners, the current page filled with the soft
+  accent. Find More (Plugins page) gets the Lucide search icon.
+
+### Inset lists
+
+Every list, grid and tree grid in a window, whichever dialog or plugin it
+belongs to, gets one design, the Preferences menu's: rows `--dh-inset` in
+from the frame, rounded (`--dh-bar-radius`), no stripes, grid lines or
+selection bar; the hovered / selected row filled (`--dh-bg-3` /
+`--dh-accent-soft`); column headers moved in with the rows; checkboxes drawn
+like the form's (a rounded box, accent-filled and ticked when on).
+
+Nothing is per dialog. `insetWindowLists` hooks the `afterRender` of Ext's
+three list components (`hookInset`), so plugins' pages (and plugins added
+later) are included; a component in a window gets `.dh-inset` (the shared
+rules: checkboxes, header divider) and its kind:
+
+| Component | Class | Fitting the width |
+| --- | --- | --- |
+| `Ext.list.ListView` | `.dh-inset-list` | `fitListInPlace`: columns fitted to their text, the widest stretching; text still too long ends in an ellipsis, with a tooltip. `fitListColumns` with a `maxWidth` also sizes the window (Connection Manager, Edit Trackers: `dhSizesWindow`) |
+| `Ext.grid.GridPanel` (and `EditorGridPanel`) | `.dh-inset-grid` | Scroller padded `--dh-inset` (Ext sizes it less its padding, G39); the view's `scrollOffset` twice the inset larger, so its auto-expanding column leaves room |
+| `Ext.ux.tree.TreeGrid` | `.dh-inset-tree` | `stretchTreeColumn`: the widest column takes what the others leave, less the inset; row colour on the cells, which take the rounding |
+
+Preferences' page list is excluded (it's the menu, above). Lists outside
+windows (the sidebar, the torrent list, the details tabs) aren't touched. A
+plugin drawing a list some other way (its own HTML, a plain tree) keeps the
+theme's colours and fonts, without the inset.
 
 ### Status bar
 
