@@ -496,7 +496,11 @@ Each learned the hard way. Symptom → cause → what the code does.
   the panel's wrapper (`.x-panel-bwrap:has(> .x-panel-body...)`), `inset:
   1px`, `z-index: 2`. Not an `outline` (it paints under positioned children,
   e.g. the Preferences pages) and not in the body (it would scroll with the
-  content). Windows laid out in regions get `overflow: visible` on the body.
+  content). With the frame 1px in, the lines inside (toolbars, grid headers,
+  tab strips) would run 1px past it, so the wrapper is clipped to the
+  frame's outer edge: `clip-path: var(--dh-frame-clip)`, i.e. `inset(1px
+  round <frame radius - 1px>)`. Windows laid out in regions get `overflow:
+  visible` on the body.
   A window that frames its whole body skips that frame when a framed panel
   inside already frames the contents (one frame, never two), and toolbars
   inside frames are transparent with a divider rather than a darker strip.
