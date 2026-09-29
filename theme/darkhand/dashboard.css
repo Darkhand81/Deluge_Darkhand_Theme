@@ -16,11 +16,15 @@
 /* Canvas                                                                   */
 /* ------------------------------------------------------------------------ */
 
+/* The layout containers show the window background, so the cards' rounded
+   corners sit on it rather than on the theme's lighter panel colour */
 html body.dh-dashboard,
 .dh-dashboard .x-viewport,
 .dh-dashboard #dh-shell,
 .dh-dashboard #dh-main,
-.dh-dashboard #dh-main > .x-panel-bwrap > .x-panel-body {
+.dh-dashboard #dh-main > .x-panel-bwrap > .x-panel-body,
+.dh-dashboard #dh-list-column,
+.dh-dashboard #dh-list-column > .x-panel-bwrap > .x-panel-body {
     background: var(--dh-bg-0);
 }
 
