@@ -1291,7 +1291,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 }
 
 /* Preferences' page list, and the lists inset the same way (Add Torrents'
-   torrents, Edit Trackers): rows in from their frame, rounded, the current
+   torrents, Edit Trackers, the Connection Manager): rows in from their frame, rounded, the current
    one filled with the soft accent */
 .dh-dashboard .dh-pref-list .x-list-body-inner,
 .dh-dashboard .dh-inset-list .x-list-body-inner {
@@ -1317,7 +1317,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     text-overflow: ellipsis;
 }
 
-/* Column headers (Edit Trackers) moved in with the rows, their text lined
+/* Column headers (Edit Trackers, the Connection Manager) moved in with the rows, their text lined
    up with the rows' */
 .dh-dashboard .dh-inset-list .x-list-header-inner {
     padding: 0 6px;

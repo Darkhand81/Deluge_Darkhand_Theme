@@ -351,7 +351,8 @@ separate title or body frame, outer outline + shadow (G20).
 - Fixed-size windows are grown by 24×36px for the roomier chrome (G16).
 - About: logo (64px, glowing) as its hero, small uppercase caption title,
   version large, details muted, copyright faint, accent link, 300×412px.
-- Connection Manager: columns sized to their text (`fitListColumns`), window
+- Connection Manager: an inset list like Edit Trackers', columns sized to
+  their text (`fitListColumns`), window
   widens up to 640px for long hosts; a lone host is pre-selected once its
   status arrives.
 - Edit Trackers: an inset list, headers lined up with the rows; the window
