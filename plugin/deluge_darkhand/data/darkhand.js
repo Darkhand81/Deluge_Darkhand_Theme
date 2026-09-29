@@ -1315,6 +1315,8 @@ Ext.ns('Deluge.plugins.darkhand');
         styleAboutWindow();
         setUpBrand();
         setUpConnectionManager();
+        // Preferences' page list, styled as a menu (dashboard.css)
+        if (deluge.preferences && deluge.preferences.list) deluge.preferences.list.addClass('dh-pref-list');
         rememberDetailsSize(mode, details);
 
         var refit = function () {

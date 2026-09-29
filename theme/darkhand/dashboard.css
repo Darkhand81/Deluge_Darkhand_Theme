@@ -1135,6 +1135,25 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     pointer-events: none;
 }
 
+/* Preferences' page list: inset from its frame, with rounded rows and
+   the current page as a soft accent pill */
+.dh-dashboard .dh-pref-list .x-list-body-inner {
+    padding: 6px 0;
+}
+
+.dh-dashboard .dh-pref-list dl {
+    margin: 0 6px 2px;
+    border-radius: 8px;
+}
+
+.dh-dashboard .dh-pref-list dt em {
+    padding: 5px 8px;
+}
+
+.dh-dashboard .dh-pref-list .x-list-selected {
+    box-shadow: none;
+}
+
 /* Windows laid out in regions (Preferences: the page list and the page)
    end their panels right at the bottom of the window body, and some
    browsers put them a pixel or two past it, where the body cut off their
