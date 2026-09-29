@@ -12,9 +12,9 @@
  *   |  brand  |  +--------------------------------------+  | details |
  *   |         |  | toolbar                              |  | (right, |
  *   | filters |  | torrent list                         |  | or below|
- *   |  (nav)  |  +--------------------------------------+  | the     |
- *   +---------+  status bar                                | list)   |
- *                                                          +---------+
+ *   |  (nav)  |  |                                      |  | the     |
+ *   +---------+  +--------------------------------------+  +---------+
+ *   status bar (full width)
  *
  * The navigation, torrent list and details are floating cards. The details
  * card sits on the right (opening when a torrent is selected) or below the
@@ -186,14 +186,23 @@ Ext.ns('Deluge.plugins.darkhand');
             layout: 'border',
             border: false,
             items: mainItems,
-            bbar: deluge.statusbar,
         });
         viewportItems.push(main);
         if (mode === 'right') viewportItems.push(details);
 
-        var viewport = new Viewport({
+        // The status bar runs along the bottom of the whole window, below
+        // all the cards, which each end the same distance above it.
+        var shell = new Ext.Panel({
+            id: 'dh-shell',
             layout: 'border',
+            border: false,
             items: viewportItems,
+            bbar: deluge.statusbar,
+        });
+
+        var viewport = new Viewport({
+            layout: 'fit',
+            items: [shell],
         });
 
         state.active = true;

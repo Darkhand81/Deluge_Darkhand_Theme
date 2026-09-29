@@ -18,6 +18,7 @@
 
 html body.dh-dashboard,
 .dh-dashboard .x-viewport,
+.dh-dashboard #dh-shell,
 .dh-dashboard #dh-main,
 .dh-dashboard #dh-main > .x-panel-bwrap > .x-panel-body {
     background: var(--dh-bg-0);
@@ -400,10 +401,19 @@ html body.dh-dashboard,
 /* Status bar                                                               */
 /* ------------------------------------------------------------------------ */
 
+/* Full-width bar along the bottom of the window */
+.dh-dashboard #dh-shell > .x-panel-bwrap > .x-panel-body {
+    background: var(--dh-bg-0);
+}
+
+.dh-dashboard #dh-shell > .x-panel-bwrap > .x-panel-bbar {
+    border-top: 1px solid var(--dh-border);
+}
+
 .dh-dashboard #deluge-statusbar {
-    background: transparent;
+    background: var(--dh-bg-1);
     border: 0 none;
-    padding: 2px 20px 6px;
+    padding: 4px 20px;
 }
 
 /* Deluge fixes the Status tab at 1000px and floats its four columns side by
