@@ -1101,10 +1101,38 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 }
 
 /* Panels framed inside a window (lists, the Preferences pages...) get
-   rounded corners, like the cards */
+   rounded corners, like the cards. Their right and bottom edges sit
+   exactly on the edges of the containers that clip them, so at some
+   display scalings the border's last pixel was cut off. Draw the frame
+   just inside instead: the border stays (Ext sizes the panels with it)
+   but is transparent, and a layer over the panel's wrapper, 1px in, draws
+   the line. (An outline would sit under the Preferences pages' own
+   panels, and a layer in the body would scroll away with a long list;
+   the wrapper doesn't scroll, and also holds a panel's toolbar, like the
+   Connection Manager's, which the frame then takes in.) */
 .dh-dashboard .x-window-body .x-panel-body:not(.x-panel-body-noborder),
 .dh-dashboard .x-window-body .x-tab-panel-body:not(.x-tab-panel-body-noborder) {
+    border-color: transparent;
     border-radius: 10px;
+}
+
+.dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder)),
+.dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder)),
+.dh-dashboard .x-window:not(.dh-about) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)) {
+    position: relative;
+}
+
+.dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder))::after,
+.dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder))::after,
+/* Some windows frame their whole body (Login, Add Torrents, Remove...) */
+.dh-dashboard .x-window:not(.dh-about) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder))::after {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    inset: 1px;
+    border: 1px solid var(--dh-border);
+    border-radius: 9px;
+    pointer-events: none;
 }
 
 /* Buttons along the bottom: pills, the last one (the window's main
