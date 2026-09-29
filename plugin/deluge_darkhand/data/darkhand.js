@@ -260,11 +260,45 @@ Ext.ns('Deluge.plugins.darkhand');
             stats.dht_nodes || 0,
             stats.has_incoming_connections ? 'Incoming OK' : 'No incoming'
         );
-        setStat(
-            'space',
-            stats.free_space >= 0 ? fsize(stats.free_space, true) : 'n/a',
-            'Download folder'
-        );
+        setFreeSpace(stats.free_space);
+    }
+
+    // Preferences, on the Downloads page (Download to)
+    function openDownloadPrefs(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        deluge.preferences.show();
+        Ext.defer(function () {
+            try {
+                deluge.preferences.selectPage(_('Downloads'));
+            } catch (err) {}
+        }, 50);
+        return false;
+    }
+
+    // Deluge reports -1 when the daemon can't find the download folder
+    // (Preferences > Downloads > Download to): it doesn't exist, or the
+    // user deluged runs as can't reach it. Its status bar just says "Error".
+    function setFreeSpace(space) {
+        var card = Ext.get(document.querySelector('.dh-stat-space'));
+        var missing = typeof space === 'number' && space < 0;
+        if (card) {
+            card[missing ? 'addClass' : 'removeClass']('dh-stat-warn');
+            card.dom.title = missing
+                ? "Deluge can't find the download folder: it doesn't exist, or the user " +
+                  'deluged runs as can’t reach it. Check Preferences › Downloads › Download to.'
+                : '';
+        }
+        if (missing) {
+            var sub = document.getElementById('dh-stat-space-sub');
+            var value = document.getElementById('dh-stat-space');
+            if (value) value.innerHTML = 'Folder not found';
+            if (sub && !sub.querySelector('.dh-stat-link')) {
+                sub.innerHTML = '<a href="#" class="dh-stat-link">Open Preferences</a>';
+                sub.firstChild.onclick = openDownloadPrefs;
+            }
+        } else {
+            setStat('space', typeof space === 'number' ? fsize(space, true) : '–', 'Download folder');
+        }
     }
 
     // -----------------------------------------------------------------------

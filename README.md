@@ -20,6 +20,10 @@ The stats card shows download and upload speed (with their limits), active
 torrents (downloading and seeding), connections, DHT nodes (and whether incoming
 connections work), and free space in the download folder. The values refresh
 with Deluge's regular two-second update, so the card adds no extra requests.
+If the daemon can't find the download folder (it doesn't exist, or the user
+`deluged` runs as can't reach it), Free space says **Folder not found** with a
+link to **Preferences → Downloads**, where Deluge's own status bar just says
+"Error".
 
 The speed chart plots download and upload over the last five minutes from the
 same updates. Deluge's web API keeps no speed history, so the chart starts
