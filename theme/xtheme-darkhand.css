@@ -1144,13 +1144,19 @@ html body .x-progress-wrap .x-progress-inner .x-progress-text {
     top: 0;
     height: 100%;
     margin-top: 0;
-    padding-top: 0;
-    padding-bottom: 0;
+    padding: 0;
     line-height: 18px;
 }
 
 html body .x-progress-wrap .x-progress-inner .x-progress-text > div {
     line-height: inherit;
+}
+
+/* Deluge's rendered bars (torrent list, Files tab) size the label to the
+   bar's outer width, border included; shift it back over the 1px border
+   so the text is centred on the track. */
+html body .x-progress-renderered .x-progress-inner .x-progress-text > div {
+    margin-left: -1px;
 }
 
 html body .x-tree .x-progress-wrap .x-progress-inner .x-progress-text {
