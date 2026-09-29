@@ -1345,11 +1345,11 @@ Ext.ns('Deluge.plugins.darkhand');
         }
     }
 
-    // Toolbar buttons shown as labelled pills, or round icon buttons when
+    // Toolbar buttons shown with their labels, or as icon-only buttons when
     // the labels don't fit; keep their labels as tooltips.
     var ICON_BUTTONS = ['preferences', 'connectionman', 'help', 'logout'];
 
-    // Show the pills' labels only while the whole toolbar fits
+    // Show the buttons' labels only while the whole toolbar fits
     function fitToolbar() {
         var card = Ext.get('dh-torrents-card');
         var ct = card && card.child('.x-toolbar-ct');

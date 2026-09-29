@@ -8,7 +8,13 @@
  */
 
 .dh-dashboard {
+    /* Corner radii, largest to smallest: cards and windows; frames inside
+       them (and containers of controls); buttons and inputs (the theme's
+       --dh-radius); bars, badges and anything sitting inside a frame with
+       4px around it (so its corners run parallel to the frame's) */
     --dh-card-radius: 18px;
+    --dh-frame-radius: 10px;
+    --dh-bar-radius: 6px;
     --dh-nav-width: 248px;
 }
 
@@ -200,7 +206,7 @@ html body.dh-dashboard,
     display: inline-block;
     margin-left: 10px;
     padding: 3px 11px;
-    border-radius: 999px;
+    border-radius: var(--dh-bar-radius);
     background: var(--dh-bg-2);
     box-shadow: inset 0 0 0 1px var(--dh-border);
     color: var(--dh-text-muted);
@@ -262,7 +268,7 @@ html body.dh-dashboard,
 .dh-seg {
     display: flex;
     padding: 4px;
-    border-radius: 999px;
+    border-radius: var(--dh-frame-radius);
     background: var(--dh-bg-1);
     box-shadow: inset 0 0 0 1px var(--dh-border);
 }
@@ -270,7 +276,7 @@ html body.dh-dashboard,
 .dh-seg-btn {
     padding: 6px 14px;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--dh-bar-radius);
     background: transparent;
     color: var(--dh-text-muted);
     font: 600 12px var(--dh-font);
@@ -652,15 +658,15 @@ html body.dh-dashboard,
     display: none;
 }
 
-/* Preferences, Connection Manager, Help and Logout as pill buttons with a
+/* Preferences, Connection Manager, Help and Logout as buttons with a
    label; when the toolbar is too narrow for the labels (the plugin adds
-   dh-toolbar-compact), round icon buttons. */
+   dh-toolbar-compact), icon-only buttons. */
 .dh-dashboard #preferences,
 .dh-dashboard #connectionman,
 .dh-dashboard #help,
 .dh-dashboard #logout {
     margin-left: 6px;
-    border-radius: 999px;
+    border-radius: var(--dh-radius);
     background: var(--dh-bg-2);
     box-shadow: inset 0 0 0 1px var(--dh-border);
 }
@@ -826,7 +832,7 @@ html body.dh-dashboard,
 
 .dh-dashboard .x-progress-wrap,
 .dh-dashboard .x-progress-inner {
-    border-radius: 6px;
+    border-radius: var(--dh-bar-radius);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -945,7 +951,7 @@ html body.dh-dashboard,
 
 .dh-details-right .x-layout-cmini-east,
 .dh-details-bottom .x-layout-cmini-south {
-    border-radius: 999px;
+    border-radius: var(--dh-bar-radius);
     background: var(--dh-bg-1);
     box-shadow: inset 0 0 0 1px var(--dh-border);
     cursor: pointer;
@@ -1084,7 +1090,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     width: 24px;
     height: 24px;
     margin: -4px -4px 0 0;
-    border-radius: 6px;
+    border-radius: var(--dh-bar-radius);
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a94a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E")
         center / 16px 16px no-repeat;
     filter: none;
@@ -1109,7 +1115,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 .dh-dashboard .x-window-body .x-panel-body:not(.x-panel-body-noborder),
 .dh-dashboard .x-window-body .x-tab-panel-body:not(.x-tab-panel-body-noborder) {
     border-color: transparent;
-    border-radius: 10px;
+    border-radius: var(--dh-frame-radius);
 }
 
 .dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder)),
@@ -1127,19 +1133,19 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     z-index: 2;
     inset: 1px;
     border: 1px solid var(--dh-border);
-    border-radius: 9px;
+    border-radius: calc(var(--dh-frame-radius) - 1px);
     pointer-events: none;
 }
 
 /* Preferences' page list: inset from its frame, with rounded rows and
-   the current page as a soft accent pill */
+   the current page filled with the soft accent */
 .dh-dashboard .dh-pref-list .x-list-body-inner {
     padding: 6px 0;
 }
 
 .dh-dashboard .dh-pref-list dl {
     margin: 0 6px 2px;
-    border-radius: 8px;
+    border-radius: var(--dh-bar-radius);
 }
 
 .dh-dashboard .dh-pref-list dt em {
@@ -1159,7 +1165,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     overflow: visible;
 }
 
-/* Buttons along the bottom: pills, the last one (the window's main
+/* Buttons along the bottom: the last one (the window's main
    action: OK, Connect, Add...) in the accent colour. Message boxes keep
    hidden buttons in the row, so theirs are all plain. */
 .dh-dashboard .x-window-footer {
@@ -1167,7 +1173,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 }
 
 .dh-dashboard .x-window-footer table.x-btn {
-    border-radius: 999px;
+    border-radius: var(--dh-radius);
 }
 
 .dh-dashboard .x-window-footer table.x-btn button {
