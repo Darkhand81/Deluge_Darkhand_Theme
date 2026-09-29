@@ -9,6 +9,10 @@
 
 .dh-dashboard {
     --dh-card-radius: 18px;
+    /* No drop shadow under the cards: in the 16px gaps it only showed as a
+       darker band, which Ext's layout regions clipped square at their
+       edges. The outline and the lighter surface set the cards apart. */
+    --dh-card-shadow: 0 0 0 transparent;
     --dh-nav-width: 248px;
 }
 
@@ -53,7 +57,7 @@ html body.dh-dashboard,
 .dh-dashboard #dh-nav {
     border-radius: var(--dh-card-radius);
     overflow: hidden;
-    box-shadow: inset 0 0 0 1px var(--dh-border), 0 10px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 0 0 1px var(--dh-border), var(--dh-card-shadow);
 }
 
 .dh-brand {
@@ -330,7 +334,7 @@ html body.dh-dashboard,
     grid-template-columns: repeat(6, minmax(0, 1fr));
     border-radius: var(--dh-card-radius);
     background: var(--dh-bg-1);
-    box-shadow: inset 0 0 0 1px var(--dh-border), 0 10px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 0 0 1px var(--dh-border), var(--dh-card-shadow);
 }
 
 .dh-stat {
@@ -504,7 +508,7 @@ html body.dh-dashboard,
     padding: 14px 18px 12px;
     border-radius: var(--dh-card-radius);
     background: var(--dh-bg-1);
-    box-shadow: inset 0 0 0 1px var(--dh-border), 0 10px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 0 0 1px var(--dh-border), var(--dh-card-shadow);
 }
 
 /* Below the stats it is a strip; beside them it matches their height */
@@ -624,7 +628,7 @@ html body.dh-dashboard,
     border-radius: var(--dh-card-radius);
     overflow: hidden;
     background: var(--dh-bg-1);
-    box-shadow: inset 0 0 0 1px var(--dh-border), 0 10px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 0 0 1px var(--dh-border), var(--dh-card-shadow);
 }
 
 .dh-dashboard #dh-torrents-card .x-panel-body,
