@@ -569,6 +569,10 @@ Ext.ns('Deluge.plugins.darkhand');
     // reduced so the visible gap is still GAP.
     var GAP = 16;
     var SPLIT = 5;
+    // With the details card on the right, the bar between it and the list
+    // (and the strip left when it's closed) is wider, so it's easy to see
+    // and grab; dashboard.css sets the same width.
+    var SPLIT_RIGHT = 12;
 
     function margins(top, right, bottom, left) {
         return [top, right, bottom, left].join(' ');
@@ -673,7 +677,7 @@ Ext.ns('Deluge.plugins.darkhand');
             margins:
                 mode === 'bottom'
                     ? margins(0, GAP, 0, GAP)
-                    : margins(0, GAP - SPLIT, GAP, GAP),
+                    : margins(0, GAP - SPLIT_RIGHT, GAP, GAP),
             items: [overviewBox, tableCard],
         });
 
@@ -705,6 +709,8 @@ Ext.ns('Deluge.plugins.darkhand');
                 collapsed: true,
                 collapseMode: 'mini',
                 animCollapse: false,
+                useSplitTips: true,
+                collapsibleSplitTip: 'Drag to resize. Double-click to close.',
             });
         }
 
