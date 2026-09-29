@@ -771,6 +771,36 @@ html body.dh-dashboard,
     padding: 4px 20px;
 }
 
+/* Deluge fixes the Status tab at 1000px, so in the wide bottom card its four
+   columns bunched up on the left. Spread them across the card instead,
+   wrapping to fewer per row when the card is narrow. */
+.dh-details-bottom #deluge-details-status,
+.dh-details-bottom #deluge-details-status > .x-panel-bwrap,
+.dh-details-bottom #deluge-details-status > .x-panel-bwrap > .x-panel-body {
+    width: auto !important;
+}
+
+.dh-details-bottom #deluge-details-status > .x-panel-bwrap > .x-panel-body {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 24px;
+}
+
+.dh-details-bottom #deluge-details-status dl {
+    float: none;
+    flex: 1 1 220px;
+    min-width: 0;
+    width: auto;
+}
+
+.dh-details-bottom #deluge-details-status dd {
+    width: auto;
+}
+
+.dh-details-bottom #deluge-details-status br {
+    display: none;
+}
+
 /* Deluge fixes the Status tab at 1000px and floats its four columns side by
    side; in the narrow right-hand card, fit it to the card and stack them. */
 .dh-details-right #deluge-details-status,

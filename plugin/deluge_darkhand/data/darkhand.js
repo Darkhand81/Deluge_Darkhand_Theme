@@ -51,6 +51,48 @@ Ext.ns('Deluge.plugins.darkhand');
         } catch (e) {}
     }
 
+    // Details card size, saved per layout when the divider is dragged:
+    // { bottom: height, right: width }
+    var SIZE_KEY = 'darkhand.detailsSize';
+
+    function getSavedSize(mode) {
+        try {
+            var v = JSON.parse(window.localStorage.getItem(SIZE_KEY) || '{}')[mode];
+            return typeof v === 'number' && v > 0 ? v : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function saveSize(mode, size) {
+        try {
+            var sizes = JSON.parse(window.localStorage.getItem(SIZE_KEY) || '{}');
+            sizes[mode] = Math.round(size);
+            window.localStorage.setItem(SIZE_KEY, JSON.stringify(sizes));
+        } catch (e) {}
+    }
+
+    function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+    }
+
+    // Default details size scales with the window: 30% of the height at the
+    // bottom (250-600px), 25% of the width on the right (400-640px). A size
+    // you've dragged it to is used instead, within sensible limits.
+    function detailsHeight() {
+        var h = window.innerHeight || 860;
+        var saved = getSavedSize('bottom');
+        return saved
+            ? clamp(saved, 140, Math.round(h * 0.6))
+            : clamp(Math.round(h * 0.3), 250, 600);
+    }
+
+    function detailsWidth() {
+        var w = window.innerWidth || 1440;
+        var saved = getSavedSize('right');
+        return saved ? clamp(saved, 320, 720) : clamp(Math.round(w * 0.25), 400, 640);
+    }
+
     // Stats and speed chart above or below the torrent list
     var STATS_KEY = 'darkhand.statsPosition';
 
@@ -552,8 +594,11 @@ Ext.ns('Deluge.plugins.darkhand');
             },
         });
 
-        // Let the Name column take up the spare width in the wider card.
+        // Let the Name column take up the spare width in the wider card, up
+        // to 1600px (Ext's default cap is 1000px); stretchColumns() shares out
+        // anything beyond that on very wide screens.
         deluge.torrents.autoExpandColumn = 'name';
+        deluge.torrents.autoExpandMax = 1600;
 
         var tableCard = new Ext.Panel({
             id: 'dh-torrents-card',
@@ -584,7 +629,7 @@ Ext.ns('Deluge.plugins.darkhand');
         if (mode === 'bottom') {
             configure(details, {
                 region: 'south',
-                height: 250,
+                height: detailsHeight(),
                 minSize: 140,
                 split: true,
                 collapsible: true,
@@ -595,7 +640,7 @@ Ext.ns('Deluge.plugins.darkhand');
         } else {
             configure(details, {
                 region: 'east',
-                width: 400,
+                width: detailsWidth(),
                 minSize: 320,
                 maxSize: 720,
                 margins: margins(GAP, GAP, GAP, 0),
@@ -638,11 +683,135 @@ Ext.ns('Deluge.plugins.darkhand');
         return viewport;
     }
 
+    // -----------------------------------------------------------------------
+    // Very wide screens: once Name has reached its cap, share the remaining
+    // width among the other visible columns in proportion to their widths,
+    // so the columns always fill the torrent list.
+    //
+    // The extra is for display only. Deluge saves the grid's column widths
+    // in a cookie (sorting or resizing a column saves them), so getState()
+    // is wrapped to save the widths without the extra; otherwise a big
+    // screen's widths would follow you to a small one.
+    // -----------------------------------------------------------------------
+
+    var stretch = {}; // column id -> px added for display
+
+    function stretchColumns(grid) {
+        try {
+            doStretchColumns(grid);
+        } catch (e) {
+            if (window.console) console.error('Darkhand: column layout failed', e);
+        }
+    }
+
+    function doStretchColumns(grid) {
+        var view = grid.getView();
+        var cm = grid.getColumnModel();
+        if (!view.mainBody) return;
+        var i, id, n = cm.getColumnCount();
+
+        // Back to the normal widths
+        for (i = 0; i < n; i++) {
+            id = cm.getColumnId(i);
+            if (stretch[id]) cm.setColumnWidth(i, cm.getColumnWidth(i) - stretch[id], true);
+        }
+        stretch = {};
+
+        // Ext widens Name up to its cap (until a column is resized by hand)
+        view.autoExpand(true);
+
+        var spare = view.getGridInnerWidth() - cm.getTotalWidth(false);
+        if (spare >= 1) {
+            var nameIndex = cm.getIndexById(grid.autoExpandColumn);
+            var cols = [], total = 0;
+            for (i = 0; i < n; i++) {
+                if (cm.isHidden(i)) continue;
+                // Name already has its share, unless it's no longer
+                // auto-expanding because you resized a column
+                if (i === nameIndex && !view.userResized) continue;
+                cols.push(i);
+                total += cm.getColumnWidth(i);
+            }
+            var given = 0;
+            Ext.each(cols, function (i, k) {
+                var add =
+                    k === cols.length - 1
+                        ? spare - given
+                        : Math.floor((spare * cm.getColumnWidth(i)) / total);
+                given += add;
+                stretch[cm.getColumnId(i)] = add;
+                cm.setColumnWidth(i, cm.getColumnWidth(i) + add, true);
+            });
+        }
+        view.updateAllColumnWidths();
+    }
+
+    function setUpColumnStretch(grid) {
+        var view = grid.getView();
+        var cm = grid.getColumnModel();
+        var busy = false;
+        var restretch = function () {
+            if (busy) return;
+            busy = true;
+            stretchColumns(grid);
+            busy = false;
+        };
+
+        // After every layout of the grid (window and card resizes)
+        var layout = view.layout;
+        view.layout = function () {
+            var result = layout.apply(this, arguments);
+            restretch();
+            return result;
+        };
+
+        // Dragging a column's edge: the width you choose becomes that
+        // column's normal width. Forget its extra before Ext saves the state.
+        var splitterMoved = view.onColumnSplitterMoved;
+        view.onColumnSplitterMoved = function (cellIndex) {
+            delete stretch[cm.getColumnId(cellIndex)];
+            var result = splitterMoved.apply(this, arguments);
+            restretch();
+            return result;
+        };
+
+        cm.on('hiddenchange', restretch);
+
+        var getState = grid.getState;
+        grid.getState = function () {
+            var st = getState.apply(this, arguments);
+            Ext.each((st && st.columns) || [], function (c) {
+                if (stretch[c.id]) c.width -= stretch[c.id];
+            });
+            return st;
+        };
+
+        restretch();
+    }
+
+    // Remember the details card's size when you drag its divider. The
+    // region's split handler cancels the bar's own events, but it records
+    // the new size and calls the panel's saveState, so hook that.
+    function rememberDetailsSize(mode, details) {
+        var original = details.saveState;
+        details.saveState = function () {
+            var layout = details.ownerCt && details.ownerCt.layout;
+            var region = layout && layout[mode === 'bottom' ? 'south' : 'east'];
+            if (region && region.lastSplitSize) {
+                saveSize(mode, region.lastSplitSize);
+            }
+            return original.apply(this, arguments);
+        };
+    }
+
     // Toolbar buttons shown as round icon buttons; keep their labels as
     // tooltips.
     var ICON_BUTTONS = ['preferences', 'connectionman', 'help', 'logout'];
 
     function wireUp(mode, details, box) {
+        setUpColumnStretch(deluge.torrents);
+        rememberDetailsSize(mode, details);
+
         var refit = function () {
             fitOverview(box);
         };
