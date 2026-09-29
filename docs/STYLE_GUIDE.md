@@ -652,8 +652,12 @@ Each learned the hard way. Symptom → cause → what the code does.
 
 ## 9. Testing
 
-Tests are ad-hoc Playwright scripts against a real Deluge (daemon + web in a
-virtualenv, a few small torrents). Things that proved useful:
+Tests are Playwright scripts against a real Deluge (daemon + web in a
+virtualenv, a few small torrents). `tools/test/` has the standing checks
+(see its README): screenshots of the dashboard, its menu and every window,
+compared pixel by pixel before and after a change, and an audit for cut-off
+text at normal and wider font rendering. Run both for any CSS change; a
+refactor should compare identical. Things that proved useful beyond them:
 
 - **Measure, don't eyeball.** Compare element rects (gaps between cards,
   header vs card edges, column total vs grid width, label centre vs track
