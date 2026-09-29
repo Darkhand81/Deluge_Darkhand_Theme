@@ -1100,10 +1100,37 @@ Ext.ns('Deluge.plugins.darkhand');
         new Deluge.about.AboutWindow().show();
     }
 
+    // Windows are cards in the dashboard (dashboard.css), with a roomier
+    // title bar, footer and side padding than Ext's frame. Deluge gives most
+    // of its windows a fixed size, so grow them by that much, or their
+    // contents get squashed. Windows are sized when first shown, so the ones
+    // Deluge creates before this script loads can still be adjusted.
+    var WINDOW_EXTRA_W = 24;
+    var WINDOW_EXTRA_H = 36;
+
+    function growWindow(win) {
+        if (win.dhSized || win.rendered) return;
+        win.dhSized = true;
+        if (typeof win.width === 'number') win.width += WINDOW_EXTRA_W;
+        if (typeof win.height === 'number') win.height += WINDOW_EXTRA_H;
+    }
+
+    function sizeWindows() {
+        var initComponent = Ext.Window.prototype.initComponent;
+        Ext.Window.prototype.initComponent = function () {
+            growWindow(this);
+            return initComponent.apply(this, arguments);
+        };
+        Ext.each([deluge.moveStorage, deluge.removeWindow, deluge.copyMagnetWindow], function (win) {
+            if (win) growWindow(win);
+        });
+    }
+
     function styleAboutWindow() {
         var About = Deluge.about && Deluge.about.AboutWindow;
         if (!About) return;
-        Ext.apply(About.prototype, { width: 300, height: 412 });
+        // Sized for the dashboard already
+        Ext.apply(About.prototype, { width: 300, height: 412, dhSized: true });
         var initComponent = About.prototype.initComponent;
         About.prototype.initComponent = function () {
             initComponent.apply(this, arguments);
@@ -1297,6 +1324,11 @@ Ext.ns('Deluge.plugins.darkhand');
         var initialize = deluge.ui.initialize;
         deluge.ui.initialize = function () {
             var ui = this;
+            try {
+                sizeWindows(); // before Deluge creates its windows
+            } catch (e) {
+                if (window.console) console.error('Darkhand: window sizing failed', e);
+            }
             var RealViewport = Ext.Viewport;
             Ext.Viewport = function () {
                 Ext.Viewport = RealViewport;
