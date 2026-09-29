@@ -1175,16 +1175,19 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     pointer-events: none;
 }
 
-/* The tab strip on the section's own surface; its bottom line divides it
-   from the tab below */
+/* The tab strip on the section's own surface, 6px in from the frame. The
+   line dividing it from the tab below is the header's, which runs the full
+   width (the strip's own starts 6px in). */
 .dh-dashboard .dh-add-section .x-tab-panel-header {
     padding: 6px 6px 0;
     background: transparent;
     border-color: transparent;
+    border-bottom-color: var(--dh-border);
 }
 
 .dh-dashboard .dh-add-section ul.x-tab-strip-top {
     background: transparent;
+    border-bottom-color: transparent;
 }
 
 /* The Files tab in the torrent list's design: rows 6px in from the frame
