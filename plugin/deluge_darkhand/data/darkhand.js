@@ -699,7 +699,8 @@ Ext.ns('Deluge.plugins.darkhand');
                 useSplitTips: true,
                 collapsibleSplitTip: 'Drag to resize. Double-click to close.',
                 margins: margins(GAP - SPLIT, GAP, GAP, GAP),
-                cmargins: margins(GAP - SPLIT, GAP, GAP, GAP),
+                // Closed, the strip keeps a full gap from the cards above
+                cmargins: margins(GAP, GAP, GAP, GAP),
             });
             mainItems.push(details);
         } else {
