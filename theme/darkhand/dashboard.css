@@ -472,6 +472,26 @@ html body.dh-dashboard,
     color: var(--dh-text-faint);
 }
 
+/* A stat Deluge couldn't work out (the download folder is missing): a
+   smaller amber message, on the same line height so the card keeps its
+   size */
+.dh-stat-warn .dh-stat-value {
+    font-size: 15px;
+    line-height: 25px;
+    letter-spacing: 0;
+    color: var(--dh-warn);
+}
+
+.dh-stat-link,
+.dh-stat-link:visited {
+    color: var(--dh-accent);
+    text-decoration: none;
+}
+
+.dh-stat-link:hover {
+    text-decoration: underline;
+}
+
 /* ------------------------------------------------------------------------ */
 /* Speed chart                                                              */
 /* ------------------------------------------------------------------------ */
