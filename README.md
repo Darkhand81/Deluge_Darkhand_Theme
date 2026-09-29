@@ -27,17 +27,21 @@ filling when the page loads. It sits beside the stats when the column is wide
 and below them when it's narrower. When the window is too short for the chart
 without squeezing the torrent list, it's hidden until there's room again.
 
-The details card sits either on the right, opening when you select a torrent
-and folding away when nothing is selected, or below the list. Switch between
-the two with the **Details** control in the header. The **Stats** control puts
-the stats and speed chart above or below the torrent list. Both choices are
-remembered per browser.
+By default the stats and speed chart sit below the torrent list, with the
+torrent details at the bottom:
 
-![Stats and speed chart below the torrent list](screenshots/dashboard-stats-below.png)
+![Dashboard in its default layout](screenshots/dashboard-default.png)
 
-| Details on the right | Details at the bottom |
+Two switches in the header change that, and your choices are remembered per
+browser:
+
+- **Details: Right** moves the details card to the right. It opens when you
+  select a torrent and folds away when nothing is selected.
+- **Stats: Above** puts the stats and speed chart above the torrent list.
+
+| Details on the right | Stats above the list |
 | --- | --- |
-| ![Dashboard with the details card on the right](screenshots/dashboard-right.png) | ![Dashboard with the details card at the bottom](screenshots/dashboard-bottom.png) |
+| ![Dashboard with the details card on the right](screenshots/dashboard-right.png) | ![Dashboard with the stats above the torrent list](screenshots/dashboard-stats-above.png) |
 
 The transfer speeds in the dashboard screenshots are simulated; the test
 setup they were taken on has no peers.

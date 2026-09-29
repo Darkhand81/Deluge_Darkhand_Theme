@@ -40,8 +40,9 @@ Ext.ns('Deluge.plugins.darkhand');
         try {
             mode = window.localStorage.getItem(MODE_KEY);
         } catch (e) {}
-        // "card" was the earlier name of the bottom layout
-        return mode === 'bottom' || mode === 'card' ? 'bottom' : 'right';
+        // Bottom unless the right-hand layout was chosen ("drawer" was its
+        // earlier name)
+        return mode === 'right' || mode === 'drawer' ? 'right' : 'bottom';
     }
 
     function setMode(mode) {
@@ -58,7 +59,8 @@ Ext.ns('Deluge.plugins.darkhand');
         try {
             pos = window.localStorage.getItem(STATS_KEY);
         } catch (e) {}
-        return pos === 'below' ? 'below' : 'above';
+        // Below the list unless above was chosen
+        return pos === 'above' ? 'above' : 'below';
     }
 
     function setStatsPosition(pos) {
