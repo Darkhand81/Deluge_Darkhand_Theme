@@ -13,16 +13,24 @@ that installs and uninstalls it on Linux.
 
 This branch adds an optional **Darkhand plugin** that rebuilds the Web UI as a
 dashboard of floating cards: a navigation card with the torrent filters, a page
-header, a live stats card, the torrent list, and the torrent details.
+header, a live stats card, a transfer speed chart, the torrent list, and the
+torrent details.
 
 The stats card shows download and upload speed (with their limits), active
 torrents (downloading and seeding), connections, DHT nodes (and whether incoming
 connections work), and free space in the download folder. The values refresh
 with Deluge's regular two-second update, so the card adds no extra requests.
 
+The speed chart plots download and upload over the last five minutes from the
+same updates. Deluge's web API keeps no speed history, so the chart starts
+filling when the page loads. It sits beside the stats when the column is wide
+and below them when it's narrower. When the window is too short for the chart
+without squeezing the torrent list, it's hidden until there's room again.
+
 The details card sits either on the right, opening when you select a torrent
-and folding away when nothing is selected, or below the list. Switch between the two with the **Details**
-control in the header; your choice is remembered per browser.
+and folding away when nothing is selected, or below the list. Switch between
+the two with the **Details** control in the header; your choice is remembered
+per browser.
 
 | Details on the right | Details at the bottom |
 | --- | --- |
