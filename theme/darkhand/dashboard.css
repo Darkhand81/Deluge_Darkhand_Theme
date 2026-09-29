@@ -152,8 +152,14 @@ html body.dh-dashboard,
     gap: 24px;
     height: 100%;
     box-sizing: border-box;
-    padding: 0 28px 20px;
+    /* Line up with the torrent list card's edges */
+    padding: 0 16px 20px;
     font-family: var(--dh-font);
+}
+
+/* On the right-hand layout the list card stops at the 5px resize bar */
+.dh-details-right .dh-header-inner {
+    padding-right: 11px;
 }
 
 .dh-breadcrumb {
