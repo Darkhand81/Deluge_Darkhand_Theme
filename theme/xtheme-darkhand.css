@@ -38,6 +38,7 @@
     --dh-accent-soft: color-mix(in srgb, var(--dh-accent) 16%, transparent);
     --dh-accent-softer: color-mix(in srgb, var(--dh-accent) 8%, transparent);
     --dh-accent-ring: color-mix(in srgb, var(--dh-accent) 45%, transparent);
+    --dh-accent-glow: var(--dh-accent-ring); /* glow round the logo */
     --dh-on-accent: #fff; /* text and marks on the accent */
     --dh-good: #3ecf8e;
     --dh-warn: #f5b84b;
@@ -47,9 +48,7 @@
     --dh-upload: #5b9dff;
     --dh-purple: #b197fc;
     --dh-icon: #b4bccb;
-    /* Hover on a button's ring and on scrollbars */
-    --dh-border-hover: #414a5a;
-    --dh-scroll-hover: #465062;
+    --dh-border-hover: #414a5a; /* a button's ring, a scrollbar, on hover */
     /* Corner radii, largest to smallest: the dashboard's cards and windows;
        frames inside them, containers of controls, the plain theme's panels;
        buttons, inputs' containers, menus, the plain theme's windows; bars,
@@ -62,6 +61,9 @@
     --dh-bar-radius: 6px;
     --dh-small-radius: 4px;
     --dh-ease: 0.12s ease; /* hover and state transitions */
+    /* Shadows: menus, drop-down lists, tooltips and other pop-ups; windows */
+    --dh-shadow-pop: 0 12px 30px rgba(0, 0, 0, 0.5);
+    --dh-shadow-window: 0 24px 60px rgba(0, 0, 0, 0.6);
     --dh-font: 'Darkhand Inter', 'Inter Variable', Inter, system-ui,
         -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --dh-mono: 'Darkhand Mono', 'JetBrains Mono', 'SFMono-Regular', Menlo,
@@ -193,7 +195,7 @@ a {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--dh-scroll-hover);
+    background-color: var(--dh-border-hover);
 }
 
 /* Masks and loading */
@@ -205,7 +207,7 @@ a {
     background: var(--dh-bg-2);
     border: 1px solid var(--dh-border-strong);
     border-radius: var(--dh-radius);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--dh-shadow-pop);
     padding: 3px;
 }
 
@@ -1132,7 +1134,7 @@ html input[type='radio'] {
     background-color: var(--dh-bg-2);
     border-color: var(--dh-border-strong);
     border-radius: 0 0 var(--dh-radius) var(--dh-radius);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--dh-shadow-pop);
 }
 
 .x-combo-list-inner {
@@ -1228,7 +1230,7 @@ html body .x-tree .x-progress-wrap .x-progress-inner .x-progress-text {
 
 .x-window {
     border-radius: var(--dh-radius);
-    box-shadow: 0 0 0 1px var(--dh-border-strong), 0 24px 60px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 0 1px var(--dh-border-strong), var(--dh-shadow-window);
 }
 
 .x-window-tl,
@@ -1337,7 +1339,7 @@ body.x-body-masked .x-window-plain .x-window-mc {
     background: var(--dh-bg-2) !important;
     border-color: var(--dh-border-strong);
     border-radius: var(--dh-radius);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--dh-shadow-pop);
     padding: 3px 0;
 }
 
@@ -1419,7 +1421,7 @@ a.x-menu-item-arrow::after {
 
 .x-tip {
     border-radius: var(--dh-radius);
-    box-shadow: 0 0 0 1px var(--dh-border-strong), 0 10px 24px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 1px var(--dh-border-strong), var(--dh-shadow-pop);
     overflow: hidden;
 }
 
@@ -1540,5 +1542,5 @@ dl.singleline dd,
 
 /* About window */
 .x-deluge-logo {
-    filter: drop-shadow(0 4px 16px color-mix(in srgb, var(--dh-accent) 35%, transparent));
+    filter: drop-shadow(0 4px 16px var(--dh-accent-glow));
 }
