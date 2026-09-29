@@ -1135,6 +1135,15 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     pointer-events: none;
 }
 
+/* Windows laid out in regions (Preferences: the page list and the page)
+   end their panels right at the bottom of the window body, and some
+   browsers put them a pixel or two past it, where the body cut off their
+   frames' bottom edge. Nothing in these windows needs the body to clip;
+   any overhang falls in the footer's spacing. */
+.dh-dashboard .x-window-body.x-border-layout-ct {
+    overflow: visible;
+}
+
 /* Buttons along the bottom: pills, the last one (the window's main
    action: OK, Connect, Add...) in the accent colour. Message boxes keep
    hidden buttons in the row, so theirs are all plain. */
