@@ -23,10 +23,10 @@
     --dh-text-strong: #f2f4f8;
     --dh-text-muted: #8a94a6;
     --dh-text-faint: #5a6373;
-    --dh-accent: #4c8dff;
-    --dh-accent-2: #7a5cff;
-    --dh-accent-soft: rgba(76, 141, 255, 0.16);
-    --dh-accent-softer: rgba(76, 141, 255, 0.08);
+    --dh-accent: #4c90e8;
+    --dh-accent-2: #094491;
+    --dh-accent-soft: rgba(76, 144, 232, 0.16);
+    --dh-accent-softer: rgba(76, 144, 232, 0.08);
     --dh-good: #3ecf8e;
     --dh-warn: #f5b84b;
     --dh-bad: #ff5f6d;
@@ -406,7 +406,7 @@ table.x-btn.x-btn-disabled {
 .x-toolbar table.x-btn.x-btn-pressed,
 .x-toolbar table.x-btn.x-btn-menu-active {
     background: var(--dh-accent-soft);
-    box-shadow: inset 0 0 0 1px rgba(76, 141, 255, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(76, 144, 232, 0.45);
 }
 
 .x-toolbar table.x-btn.x-btn-disabled {
@@ -886,7 +886,7 @@ textarea.x-form-field,
 textarea.x-form-focus,
 .x-trigger-wrap-focus .x-form-text {
     border-color: var(--dh-accent);
-    box-shadow: 0 0 0 2px rgba(76, 141, 255, 0.2);
+    box-shadow: 0 0 0 2px rgba(76, 144, 232, 0.2);
     outline: none;
 }
 
@@ -1404,5 +1404,5 @@ dl.singleline dd,
 
 /* About window */
 .x-deluge-logo {
-    filter: drop-shadow(0 4px 16px rgba(76, 141, 255, 0.35));
+    filter: drop-shadow(0 4px 16px rgba(76, 144, 232, 0.35));
 }
