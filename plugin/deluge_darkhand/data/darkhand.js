@@ -1491,13 +1491,46 @@ Ext.ns('Deluge.plugins.darkhand');
         });
     }
 
+    // Enabling the plugin means you want the dashboard, so reload into it
+    // (the layout is built when the page loads). Deluge loads a newly
+    // enabled plugin into the running page: after installing, or when you
+    // tick it in Preferences > Plugins.
+    var RELOAD_KEY = 'darkhand.reloadedAt';
+
+    function reloadIntoDashboard() {
+        // If this page was reloaded for the dashboard moments ago and still
+        // didn't get it, ask rather than reload again (and again...)
+        var last;
+        try {
+            last = +window.sessionStorage.getItem(RELOAD_KEY) || 0;
+        } catch (e) {
+            last = null;
+        }
+        if (last === null || new Date().getTime() - last < 60 * 1000) {
+            askReload('Reload the page to switch to the dashboard layout?');
+            return;
+        }
+        var reload = function () {
+            try {
+                window.sessionStorage.setItem(RELOAD_KEY, String(new Date().getTime()));
+            } catch (e) {}
+            window.location.reload();
+        };
+        // Enabled from Preferences: reload once you close it, so any other
+        // changes you've made there aren't lost
+        var prefs = deluge.preferences;
+        if (prefs && prefs.isVisible && prefs.isVisible()) {
+            prefs.on('hide', reload, null, { single: true });
+        } else {
+            reload();
+        }
+    }
+
     Deluge.plugins.darkhand.Plugin = Ext.extend(Deluge.Plugin, {
         name: 'Darkhand',
 
         onEnable: function () {
-            if (!state.active) {
-                askReload('Reload the page to switch to the dashboard layout?');
-            }
+            if (!state.active) reloadIntoDashboard();
         },
 
         onDisable: function () {
