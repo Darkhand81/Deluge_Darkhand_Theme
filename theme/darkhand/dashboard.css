@@ -632,12 +632,14 @@ html body.dh-dashboard,
     display: none;
 }
 
-/* Preferences, Connection Manager, Help and Logout as round icon buttons */
+/* Preferences, Connection Manager, Help and Logout as pill buttons with a
+   label; when the toolbar is too narrow for the labels (the plugin adds
+   dh-toolbar-compact), round icon buttons. */
 .dh-dashboard #preferences,
 .dh-dashboard #connectionman,
 .dh-dashboard #help,
 .dh-dashboard #logout {
-    margin-left: 4px;
+    margin-left: 6px;
     border-radius: 999px;
     background: var(--dh-bg-2);
     box-shadow: inset 0 0 0 1px var(--dh-border);
@@ -650,19 +652,57 @@ html body.dh-dashboard,
     background: var(--dh-bg-3);
 }
 
+/* Drop Ext's corner cells so the button is just its middle cell */
+.dh-dashboard #preferences tr:first-child,
+.dh-dashboard #connectionman tr:first-child,
+.dh-dashboard #help tr:first-child,
+.dh-dashboard #logout tr:first-child,
+.dh-dashboard #preferences tr:last-child,
+.dh-dashboard #connectionman tr:last-child,
+.dh-dashboard #help tr:last-child,
+.dh-dashboard #logout tr:last-child,
+.dh-dashboard #preferences .x-btn-ml,
+.dh-dashboard #connectionman .x-btn-ml,
+.dh-dashboard #help .x-btn-ml,
+.dh-dashboard #logout .x-btn-ml,
+.dh-dashboard #preferences .x-btn-mr,
+.dh-dashboard #connectionman .x-btn-mr,
+.dh-dashboard #help .x-btn-mr,
+.dh-dashboard #logout .x-btn-mr {
+    display: none;
+}
+
 .dh-dashboard #preferences .x-btn-mc,
 .dh-dashboard #connectionman .x-btn-mc,
 .dh-dashboard #help .x-btn-mc,
 .dh-dashboard #logout .x-btn-mc {
-    padding: 4px 3px;
+    padding: 5px 12px 5px 10px !important; /* beats Ext's .x-btn td */
 }
 
 .dh-dashboard #preferences button,
 .dh-dashboard #connectionman button,
 .dh-dashboard #help button,
 .dh-dashboard #logout button {
+    height: 18px;
+    line-height: 18px;
+    background-position: 0 center !important;
+}
+
+.dh-dashboard .dh-toolbar-compact #preferences .x-btn-mc,
+.dh-dashboard .dh-toolbar-compact #connectionman .x-btn-mc,
+.dh-dashboard .dh-toolbar-compact #help .x-btn-mc,
+.dh-dashboard .dh-toolbar-compact #logout .x-btn-mc {
+    padding: 6px !important;
+}
+
+.dh-dashboard .dh-toolbar-compact #preferences button,
+.dh-dashboard .dh-toolbar-compact #connectionman button,
+.dh-dashboard .dh-toolbar-compact #help button,
+.dh-dashboard .dh-toolbar-compact #logout button {
+    display: block;
     width: 16px;
-    padding-left: 16px !important;
+    height: 16px;
+    padding: 0 !important;
     font-size: 0;
     background-position: center !important;
 }

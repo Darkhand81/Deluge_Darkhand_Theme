@@ -869,9 +869,21 @@ Ext.ns('Deluge.plugins.darkhand');
         };
     }
 
-    // Toolbar buttons shown as round icon buttons; keep their labels as
-    // tooltips.
+    // Toolbar buttons shown as labelled pills, or round icon buttons when
+    // the labels don't fit; keep their labels as tooltips.
     var ICON_BUTTONS = ['preferences', 'connectionman', 'help', 'logout'];
+
+    // Show the pills' labels only while the whole toolbar fits
+    function fitToolbar() {
+        var card = Ext.get('dh-torrents-card');
+        var ct = card && card.child('.x-toolbar-ct');
+        var left = ct && ct.child('.x-toolbar-left > table');
+        var right = ct && ct.child('.x-toolbar-right > table');
+        if (!left || !right) return;
+        card.removeClass('dh-toolbar-compact');
+        var needed = left.dom.offsetWidth + right.dom.offsetWidth + 16;
+        card[needed > ct.dom.offsetWidth ? 'addClass' : 'removeClass']('dh-toolbar-compact');
+    }
 
     function wireUp(mode, details, box) {
         setUpColumnStretch(deluge.torrents);
@@ -906,6 +918,11 @@ Ext.ns('Deluge.plugins.darkhand');
             var btn = deluge.toolbar.items.get(id);
             if (btn && btn.setTooltip) btn.setTooltip(btn.text);
         });
+        var toolbar = deluge.toolbar.getEl();
+        if (toolbar && window.ResizeObserver) {
+            new ResizeObserver(fitToolbar).observe(toolbar.dom);
+        }
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitToolbar);
 
         // The Stats and Details switches in the header. The layout is built
         // once at startup, so a change reloads the page.
