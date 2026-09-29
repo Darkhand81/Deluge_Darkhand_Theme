@@ -1229,6 +1229,20 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 }
 
 /* ------------------------------------------------------------------------ */
+/* Disabled panels                                                          */
+/* ------------------------------------------------------------------------ */
+
+/* Ext greys out a disabled panel (the details card with no torrent
+   selected, Add Torrents' options with no file...) with a half-black
+   mask, far darker than the cards. Fade the contents into the card's own
+   surface instead. The page-wide mask behind open windows stays dark. */
+.dh-dashboard .x-panel .ext-el-mask,
+.dh-dashboard .x-window .ext-el-mask {
+    background-color: var(--dh-bg-1);
+    opacity: 0.6;
+}
+
+/* ------------------------------------------------------------------------ */
 /* Status bar                                                               */
 /* ------------------------------------------------------------------------ */
 
