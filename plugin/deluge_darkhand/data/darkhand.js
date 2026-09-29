@@ -72,6 +72,25 @@ Ext.ns('Deluge.plugins.darkhand');
         } catch (e) {}
     }
 
+    // Whether the details card is open, remembered across reloads (and so
+    // across the Stats and Details switches, which reload the page). Open
+    // unless you've closed it.
+    var OPEN_KEY = 'darkhand.detailsOpen';
+
+    function isDetailsOpen() {
+        try {
+            return window.localStorage.getItem(OPEN_KEY) !== '0';
+        } catch (e) {
+            return true;
+        }
+    }
+
+    function saveDetailsOpen(open) {
+        try {
+            window.localStorage.setItem(OPEN_KEY, open ? '1' : '0');
+        } catch (e) {}
+    }
+
     function clamp(v, min, max) {
         return Math.max(min, Math.min(max, v));
     }
@@ -694,6 +713,7 @@ Ext.ns('Deluge.plugins.darkhand');
                 // Closed, the card leaves a slim strip like the right-hand
                 // card's, and clicking it opens the card (Ext's default
                 // collapse floats the card over the list instead)
+                collapsed: !isDetailsOpen(),
                 collapseMode: 'mini',
                 animCollapse: false,
                 useSplitTips: true,
@@ -713,7 +733,7 @@ Ext.ns('Deluge.plugins.darkhand');
                 cmargins: margins(GAP, GAP, GAP, 0),
                 split: true,
                 collapsible: true,
-                collapsed: true,
+                collapsed: !isDetailsOpen(),
                 collapseMode: 'mini',
                 animCollapse: false,
                 useSplitTips: true,
@@ -1371,18 +1391,13 @@ Ext.ns('Deluge.plugins.darkhand');
             window.location.reload();
         });
 
-        if (mode === 'right') {
-            // Open the details card when a torrent is selected, close it when
-            // the selection is cleared.
-            var sm = deluge.torrents.getSelectionModel();
-            sm.on('selectionchange', function (sm) {
-                if (sm.getCount() > 0) {
-                    if (details.collapsed) details.expand(false);
-                } else if (!details.collapsed) {
-                    details.collapse(false);
-                }
-            });
-        }
+        // Remember whether you left the details card open or closed
+        details.on('expand', function () {
+            saveDetailsOpen(true);
+        });
+        details.on('collapse', function () {
+            saveDetailsOpen(false);
+        });
 
         // Keep the page title in step with the selected filters.
         var onUpdate = deluge.ui.onUpdate;
