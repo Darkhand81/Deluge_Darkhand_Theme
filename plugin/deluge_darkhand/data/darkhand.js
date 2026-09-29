@@ -1009,6 +1009,27 @@ Ext.ns('Deluge.plugins.darkhand');
         };
     }
 
+    // Hide the Owner column by default, to leave Name more room. Done once
+    // per browser; after that, showing it from the column menu sticks (Ext
+    // saves the grid's state when a column is shown or hidden).
+    var OWNER_KEY = 'darkhand.ownerHidden';
+
+    function hideOwnerOnce(grid) {
+        try {
+            if (window.localStorage.getItem(OWNER_KEY)) return;
+            window.localStorage.setItem(OWNER_KEY, '1');
+        } catch (e) {
+            return;
+        }
+        var cm = grid.getColumnModel();
+        var i = cm.findColumnIndex('owner');
+        if (i >= 0 && !cm.isHidden(i)) {
+            cm.setHidden(i, true);
+            // Ext saves it 100ms later; save now in case the page is left
+            grid.saveState();
+        }
+    }
+
     // Toolbar buttons shown as labelled pills, or round icon buttons when
     // the labels don't fit; keep their labels as tooltips.
     var ICON_BUTTONS = ['preferences', 'connectionman', 'help', 'logout'];
@@ -1027,6 +1048,7 @@ Ext.ns('Deluge.plugins.darkhand');
 
     function wireUp(mode, details, box) {
         setUpColumnStretch(deluge.torrents);
+        hideOwnerOnce(deluge.torrents);
         rememberDetailsSize(mode, details);
 
         var refit = function () {
