@@ -204,7 +204,7 @@ see into other users' processes or config directories, so it may report less.
 | `--no-activate` | Only copy the stylesheet; leave `web.conf` alone. |
 | `--no-restart` | Don't stop/start `deluge-web` systemd units. |
 | `--dashboard` | Install the theme and the dashboard plugin without asking (the default with `-y`). |
-| `--theme-only` | Install just the theme without asking; removes the dashboard plugin if installed. `--no-plugin` is an alias. |
+| `--theme-only` | Install just the theme without asking; removes the dashboard plugin if installed. |
 | `-y, --yes` | Don't prompt. |
 
 Examples:

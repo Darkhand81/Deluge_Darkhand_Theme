@@ -9,10 +9,6 @@
 
 .dh-dashboard {
     --dh-card-radius: 18px;
-    /* No drop shadow under the cards: in the 16px gaps it only showed as a
-       darker band, which Ext's layout regions clipped square at their
-       edges. The outline and the lighter surface set the cards apart. */
-    --dh-card-shadow: 0 0 0 transparent;
     --dh-nav-width: 248px;
 }
 
@@ -57,7 +53,7 @@ html body.dh-dashboard,
 .dh-dashboard #dh-nav {
     border-radius: var(--dh-card-radius);
     overflow: hidden;
-    box-shadow: inset 0 0 0 1px var(--dh-border), var(--dh-card-shadow);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
 }
 
 .dh-brand {
@@ -161,9 +157,9 @@ html body.dh-dashboard,
     font-family: var(--dh-font);
 }
 
-/* On the right-hand layout the list card stops at the 5px resize bar */
+/* On the right-hand layout the list card stops at the 12px resize bar */
 .dh-details-right .dh-header-wrap {
-    padding-right: 11px;
+    padding-right: 4px;
 }
 
 .dh-header-inner {
@@ -334,7 +330,7 @@ html body.dh-dashboard,
     grid-template-columns: repeat(6, minmax(0, 1fr));
     border-radius: var(--dh-card-radius);
     background: var(--dh-bg-1);
-    box-shadow: inset 0 0 0 1px var(--dh-border), var(--dh-card-shadow);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
 }
 
 .dh-stat {
@@ -508,7 +504,7 @@ html body.dh-dashboard,
     padding: 14px 18px 12px;
     border-radius: var(--dh-card-radius);
     background: var(--dh-bg-1);
-    box-shadow: inset 0 0 0 1px var(--dh-border), var(--dh-card-shadow);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
 }
 
 /* Below the stats it is a strip; beside them it matches their height */
@@ -628,7 +624,7 @@ html body.dh-dashboard,
     border-radius: var(--dh-card-radius);
     overflow: hidden;
     background: var(--dh-bg-1);
-    box-shadow: inset 0 0 0 1px var(--dh-border), var(--dh-card-shadow);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
 }
 
 .dh-dashboard #dh-torrents-card .x-panel-body,
@@ -650,7 +646,7 @@ html body.dh-dashboard,
     padding: 12px 14px 10px;
 }
 
-/* The "Deluge" label and its separator; the brand is in the nav now */
+/* The "Deluge" label and its separator; the brand is in the nav */
 .dh-dashboard td:has(> #tbar-deluge-text),
 .dh-dashboard td:has(> #tbar-deluge-text) + td {
     display: none;
@@ -1102,10 +1098,10 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 
 /* Panels framed inside a window (lists, the Preferences pages...) get
    rounded corners, like the cards. Their right and bottom edges sit
-   exactly on the edges of the containers that clip them, so at some
-   display scalings the border's last pixel was cut off. Draw the frame
-   just inside instead: the border stays (Ext sizes the panels with it)
-   but is transparent, and a layer over the panel's wrapper, 1px in, draws
+   exactly on the edges of the containers that clip them, where at some
+   display scalings a border would lose its last pixel, so the frame is
+   drawn just inside: the border stays (Ext sizes the panels with it) but
+   is transparent, and a layer over the panel's wrapper, 1px in, draws
    the line. (An outline would sit under the Preferences pages' own
    panels, and a layer in the body would scroll away with a long list;
    the wrapper doesn't scroll, and also holds a panel's toolbar, like the
@@ -1156,9 +1152,9 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 
 /* Windows laid out in regions (Preferences: the page list and the page)
    end their panels right at the bottom of the window body, and some
-   browsers put them a pixel or two past it, where the body cut off their
-   frames' bottom edge. Nothing in these windows needs the body to clip;
-   any overhang falls in the footer's spacing. */
+   browsers put them a pixel or two past it. Nothing in these windows
+   needs the body to clip, so it doesn't cut off their frames' bottom
+   edge; any overhang falls in the footer's spacing. */
 .dh-dashboard .x-window-body.x-border-layout-ct {
     overflow: visible;
 }
@@ -1317,8 +1313,8 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     padding: 4px 20px;
 }
 
-/* Deluge fixes the Status tab at 1000px, so in the wide bottom card its four
-   columns bunched up on the left. Spread them across the card instead,
+/* Deluge fixes the Status tab at 1000px, which would bunch its four columns
+   up on the left of the wide bottom card. Spread them across the card,
    wrapping to fewer per row when the card is narrow. */
 .dh-details-bottom #deluge-details-status,
 .dh-details-bottom #deluge-details-status > .x-panel-bwrap,
