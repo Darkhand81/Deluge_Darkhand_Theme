@@ -411,7 +411,7 @@ html body.dh-dashboard,
 }
 
 .dh-dashboard #deluge-statusbar {
-    background: var(--dh-bg-1);
+    background: var(--dh-bg-0);
     border: 0 none;
     padding: 4px 20px;
 }
