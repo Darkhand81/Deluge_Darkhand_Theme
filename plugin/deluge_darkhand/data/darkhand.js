@@ -565,14 +565,13 @@ Ext.ns('Deluge.plugins.darkhand');
     }
 
     // Spacing between cards and around the window edge. Where a resize bar
-    // (Ext's 5px split bar) sits between two cards, the margin next to it is
+    // (SPLIT px wide) sits between two cards, the margin next to it is
     // reduced so the visible gap is still GAP.
     var GAP = 16;
-    var SPLIT = 5;
-    // With the details card on the right, the bar between it and the list
-    // (and the strip left when it's closed) is wider, so it's easy to see
-    // and grab; dashboard.css sets the same width.
-    var SPLIT_RIGHT = 12;
+    // The bar between the torrent list and the details card, and the strip
+    // the card leaves when it's closed, are wider than Ext's 5px so they're
+    // easy to see and grab; dashboard.css sets the same size.
+    var SPLIT = 12;
 
     function margins(top, right, bottom, left) {
         return [top, right, bottom, left].join(' ');
@@ -677,7 +676,7 @@ Ext.ns('Deluge.plugins.darkhand');
             margins:
                 mode === 'bottom'
                     ? margins(0, GAP, 0, GAP)
-                    : margins(0, GAP - SPLIT_RIGHT, GAP, GAP),
+                    : margins(0, GAP - SPLIT, GAP, GAP),
             items: [overviewBox, tableCard],
         });
 
@@ -692,6 +691,13 @@ Ext.ns('Deluge.plugins.darkhand');
                 minSize: 140,
                 split: true,
                 collapsible: true,
+                // Closed, the card leaves a slim strip like the right-hand
+                // card's, and clicking it opens the card (Ext's default
+                // collapse floats the card over the list instead)
+                collapseMode: 'mini',
+                animCollapse: false,
+                useSplitTips: true,
+                collapsibleSplitTip: 'Drag to resize. Double-click to close.',
                 margins: margins(GAP - SPLIT, GAP, GAP, GAP),
                 cmargins: margins(GAP - SPLIT, GAP, GAP, GAP),
             });
