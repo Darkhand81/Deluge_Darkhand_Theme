@@ -695,6 +695,14 @@ ul.x-tab-strip-bottom {
     font-weight: 600;
 }
 
+/* Without the plugin, Deluge's fixed column widths are all the room there
+   is: 2px less padding each side keeps labels like "Down Speed" whole where
+   fonts render a little wider. (The dashboard sizes its columns to fit.) */
+body:not(.dh-dashboard) .x-grid3-hd-inner {
+    padding-left: 3px;
+    padding-right: 1px;
+}
+
 td.x-grid3-hd-over,
 td.sort-desc,
 td.sort-asc,
