@@ -1119,15 +1119,12 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 }
 
 .dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder)),
-.dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder)),
-.dh-dashboard .x-window:not(.dh-about) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)) {
+.dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder)) {
     position: relative;
 }
 
 .dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder))::after,
-.dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder))::after,
-/* Some windows frame their whole body (Login, Add Torrents, Remove...) */
-.dh-dashboard .x-window:not(.dh-about) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder))::after {
+.dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder))::after {
     content: '';
     position: absolute;
     z-index: 2;
@@ -1135,6 +1132,41 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     border: 1px solid var(--dh-border);
     border-radius: calc(var(--dh-frame-radius) - 1px);
     pointer-events: none;
+}
+
+/* Some windows frame their whole body (Login, Add Torrents, Remove...),
+   unless a framed panel inside already frames the contents (Connection
+   Manager, Edit Trackers): one frame, not two. (Kept in their own rules:
+   an invalid selector drops its whole rule.) */
+.dh-dashboard .x-window:not(.dh-about) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)):not(:has(.x-panel-body:not(.x-panel-body-noborder))):not(:has(.x-tab-panel-body:not(.x-tab-panel-body-noborder))) {
+    position: relative;
+}
+
+.dh-dashboard .x-window:not(.dh-about) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)):not(:has(.x-panel-body:not(.x-panel-body-noborder))):not(:has(.x-tab-panel-body:not(.x-tab-panel-body-noborder)))::after {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    inset: 1px;
+    border: 1px solid var(--dh-border);
+    border-radius: calc(var(--dh-frame-radius) - 1px);
+    pointer-events: none;
+}
+
+/* Toolbars inside window frames (Connection Manager's Add / Edit / Remove,
+   Add Torrents' File / Url / Remove) sit on the frame's own surface, set
+   off from the list by a divider, rather than on a square darker strip */
+.dh-dashboard .x-window-body .x-panel-bbar .x-toolbar,
+.dh-dashboard .x-window-body .x-panel-tbar .x-toolbar {
+    background: transparent;
+    border-color: transparent;
+}
+
+.dh-dashboard .x-window-body .x-panel-bbar .x-toolbar {
+    border-top: 1px solid var(--dh-border);
+}
+
+.dh-dashboard .x-window-body .x-panel-tbar .x-toolbar {
+    border-bottom: 1px solid var(--dh-border);
 }
 
 /* Preferences' page list: inset from its frame, with rounded rows and
