@@ -312,7 +312,7 @@ html body.dh-dashboard,
 }
 
 .dh-overview-side {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 /* Not enough height for the chart without squeezing the torrent list */
@@ -714,7 +714,7 @@ html body.dh-dashboard,
 
 .dh-dashboard .x-progress-wrap,
 .dh-dashboard .x-progress-inner {
-    border-radius: 999px;
+    border-radius: 6px;
 }
 
 /* ------------------------------------------------------------------------ */
