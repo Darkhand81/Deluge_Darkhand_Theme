@@ -99,7 +99,7 @@ html body.dh-dashboard,
     width: 30px;
     height: 30px;
     background: url('../../icons/deluge-192.png') center / contain no-repeat;
-    filter: drop-shadow(0 4px 14px var(--dh-accent-ring));
+    filter: drop-shadow(0 4px 14px var(--dh-accent-glow));
 }
 
 .dh-brand:hover .dh-brand-mark {
@@ -135,7 +135,7 @@ html body.dh-dashboard,
     color: var(--dh-text-faint);
     font-size: 10.5px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
 }
 
 .dh-dashboard #sidebar .x-panel-header .x-tool {
@@ -980,7 +980,7 @@ html body.dh-dashboard,
     border-radius: var(--dh-card-radius);
     overflow: hidden;
     /* the outline outside: the window's own parts would cover an inset one */
-    box-shadow: 0 0 0 1px var(--dh-border), 0 24px 60px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 0 0 1px var(--dh-border), var(--dh-shadow-window);
 }
 
 .dh-dashboard .x-window-tl,
@@ -1367,7 +1367,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 
 .dh-dashboard .dh-about-logo {
     background: url('../../icons/deluge-192.png') center / 64px no-repeat !important;
-    filter: drop-shadow(0 8px 22px color-mix(in srgb, var(--dh-accent) 50%, transparent));
+    filter: drop-shadow(0 8px 22px var(--dh-accent-glow));
 }
 
 .dh-dashboard .dh-about-title {
