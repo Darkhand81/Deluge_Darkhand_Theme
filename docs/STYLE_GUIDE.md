@@ -489,6 +489,14 @@ Each learned the hard way. Symptom → cause → what the code does.
   1px`, `z-index: 2`. Not an `outline` (it paints under positioned children,
   e.g. the Preferences pages) and not in the body (it would scroll with the
   content). Windows laid out in regions get `overflow: visible` on the body.
+  A window that frames its whole body skips that frame when a framed panel
+  inside already frames the contents (one frame, never two), and toolbars
+  inside frames are transparent with a divider rather than a darker strip.
+- **G37. `:has()` can't be nested.** `:has(... :not(:has(...)))` is invalid,
+  and an invalid selector drops the *whole rule*, taking every other
+  selector in it along. Write such conditions as sibling `:has()` /
+  `:not(:has())` checks, and keep experimental selectors in rules of their
+  own.
 - **G20. Inset shadows on windows vanish.** The window's own frame cells
   paint over an inset outline → windows use an outer `0 0 0 1px` ring.
 - **G24. ListView columns are fractions.** Change `columns[i].width`
