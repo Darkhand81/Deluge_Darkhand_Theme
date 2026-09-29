@@ -29,12 +29,13 @@ DAEMON_DIRS=() # config dirs of the daemon (core.conf), where plugins live
 DELUGE_PY=""   # a Python interpreter that can import deluge
 PYTHONS=()
 ACTIVATE=1
-PLUGIN=1
+PLUGIN="" # 1 theme + dashboard plugin, 0 theme only; empty: ask
 RESTART=1
 ASSUME_YES=0
 
 STOPPED_UNITS=()
 PLUGIN_ENABLED=0
+REMOVE_PLUGIN=0 # theme only chosen over an installed dashboard plugin
 
 # ---------------------------------------------------------------------------
 # Output helpers
@@ -62,8 +63,9 @@ ${C_BOLD}Darkhand${C_RESET} - dark theme for the Deluge 2.x Web UI
 ${C_BOLD}Usage:${C_RESET} $(basename "$0") <install|uninstall|status> [options]
 
 ${C_BOLD}Commands:${C_RESET}
-  install      Copy the theme into Deluge, set it as the Web UI theme and
-               enable the Darkhand dashboard plugin (root)
+  install      Install the theme, and optionally the Darkhand dashboard layout
+               plugin (asks which). The theme is set as the Web UI theme
+               either way, and is the fallback if the plugin is disabled. (root)
   uninstall    Remove the theme and plugin, and restore the previous theme (root)
   status       Show detected Deluge installs and the active theme
 
@@ -78,12 +80,17 @@ ${C_BOLD}Options:${C_RESET}
                          On Deluge 2.2+ you can then pick "Darkhand" under
                          Preferences > Interface > Theme.
       --no-restart       Do not stop/start deluge-web systemd services.
-      --no-plugin        Theme only: skip the Darkhand dashboard layout plugin.
+      --dashboard        Install the theme and the dashboard layout plugin
+                         without asking (the default with --yes).
+      --theme-only       Install just the theme, without asking; removes the
+                         dashboard plugin if an earlier install added it.
+                         (--no-plugin is an alias.)
   -y, --yes              Do not ask for confirmation.
   -h, --help             Show this help.
 
 ${C_BOLD}Examples:${C_RESET}
   sudo ./$(basename "$0") install
+  sudo ./$(basename "$0") install --theme-only -y
   sudo ./$(basename "$0") install -c /var/lib/deluged/config
   sudo ./$(basename "$0") install -w ~/.local/lib/python3.12/site-packages/deluge/ui/web
   sudo ./$(basename "$0") uninstall
@@ -121,7 +128,8 @@ parse_args() {
             --python=*) PYTHONS+=("${1#*=}") ;;
             --no-activate) ACTIVATE=0 ;;
             --no-restart) RESTART=0 ;;
-            --no-plugin) PLUGIN=0 ;;
+            --dashboard | --with-plugin) PLUGIN=1 ;;
+            --theme-only | --no-plugin) PLUGIN=0 ;;
             -y | --yes) ASSUME_YES=1 ;;
             -h | --help)
                 usage
@@ -650,6 +658,33 @@ confirm() {
     [[ -z "$reply" || "$reply" =~ ^[Yy] ]]
 }
 
+# Ask whether to install the dashboard plugin along with the theme, unless
+# --dashboard/--theme-only said so. Without a terminal, or with --yes,
+# install both.
+choose_components() {
+    [[ -n "$PLUGIN" ]] && return 0
+    if ((ASSUME_YES)) || [[ ! -t 0 ]]; then
+        PLUGIN=1
+        return 0
+    fi
+    info "What would you like to install?"
+    printf '    %s1)%s Theme + dashboard %s(recommended)%s\n' "$C_BOLD" "$C_RESET" "$C_GREEN" "$C_RESET"
+    printf '       %sThe Darkhand dashboard layout plugin, with the theme as its fallback%s\n' "$C_DIM" "$C_RESET"
+    printf '    %s2)%s Theme only\n' "$C_BOLD" "$C_RESET"
+    printf '       %sDeluge'"'"'s standard layout in the Darkhand colours%s\n' "$C_DIM" "$C_RESET"
+    local reply
+    while :; do
+        printf '  Choose [1]: '
+        read -r reply || die "aborted"
+        case "$reply" in
+            "" | 1) PLUGIN=1 && break ;;
+            2) PLUGIN=0 && break ;;
+            *) warn "please enter 1 or 2" ;;
+        esac
+    done
+    printf '\n'
+}
+
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
@@ -675,17 +710,36 @@ check_writable() {
 cmd_install() {
     [[ -f "$SRC_CSS" ]] || die "theme file not found: $SRC_CSS"
     require_web_dirs
-    ((ACTIVATE)) && detect_config_dirs
+    detect_config_dirs
+    choose_components
 
-    ((PLUGIN)) && [[ ! -d "$SRC_PLUGIN" ]] && PLUGIN=0
-    ((PLUGIN)) && ! ((ACTIVATE)) && detect_config_dirs
-
-    info "Installing Darkhand theme"
-    local d c
-    for d in "${WEB_DIRS[@]}"; do printf '    web UI:  %s\n' "$d"; done
-    if ((PLUGIN)); then
-        for c in "${DAEMON_DIRS[@]}"; do printf '    plugin:  %s/plugins\n' "$c"; done
+    if ((PLUGIN)) && [[ ! -d "$SRC_PLUGIN" ]]; then
+        warn "the dashboard plugin isn't in this copy ($SRC_PLUGIN); installing the theme only"
+        PLUGIN=0
     fi
+
+    local d c
+    # Theme only over an earlier dashboard install: take the plugin out, so
+    # what's installed matches the choice.
+    if ((!PLUGIN)); then
+        for c in "${DAEMON_DIRS[@]}"; do
+            compgen -G "$c/plugins/${PLUGIN_NAME}-*.egg" >/dev/null && REMOVE_PLUGIN=1
+        done
+    fi
+
+    if ((PLUGIN)); then
+        info "Installing the Darkhand theme and dashboard"
+    else
+        info "Installing the Darkhand theme"
+    fi
+    for d in "${WEB_DIRS[@]}"; do printf '    web UI:  %s\n' "$d"; done
+    for c in "${DAEMON_DIRS[@]}"; do
+        if ((PLUGIN)); then
+            printf '    plugin:  %s/plugins\n' "$c"
+        elif ((REMOVE_PLUGIN)) && compgen -G "$c/plugins/${PLUGIN_NAME}-*.egg" >/dev/null; then
+            printf '    plugin:  %s/plugins %s(removing the dashboard plugin)%s\n' "$c" "$C_DIM" "$C_RESET"
+        fi
+    done
     if ((ACTIVATE)); then
         if ((${#CONFIG_DIRS[@]})); then
             for c in "${CONFIG_DIRS[@]}"; do printf '    config:  %s/web.conf\n' "$c"; done
@@ -703,7 +757,7 @@ cmd_install() {
     if ((ACTIVATE)); then
         for c in "${CONFIG_DIRS[@]}"; do check_writable "$c/web.conf" "$c"; done
     fi
-    if ((PLUGIN)); then
+    if ((PLUGIN || REMOVE_PLUGIN)); then
         for c in "${DAEMON_DIRS[@]}"; do check_writable "$c"; done
     fi
 
@@ -719,10 +773,10 @@ cmd_install() {
         fi
     done
 
-    # deluge-web has to restart to pick up a new plugin, and must be stopped
-    # while web.conf is edited.
+    # deluge-web has to restart to pick up (or drop) the plugin, and must be
+    # stopped while web.conf is edited.
     local web_stopped=0
-    if { ((ACTIVATE)) && ((${#CONFIG_DIRS[@]})); } || ((PLUGIN)); then
+    if { ((ACTIVATE)) && ((${#CONFIG_DIRS[@]})); } || ((PLUGIN || REMOVE_PLUGIN)); then
         stop_web
         ensure_web_stopped && web_stopped=1
     fi
@@ -742,7 +796,11 @@ cmd_install() {
         done
     fi
 
-    ((PLUGIN)) && install_plugin
+    if ((PLUGIN)); then
+        install_plugin
+    elif ((REMOVE_PLUGIN)); then
+        uninstall_plugin
+    fi
     start_web
 
     printf '\n'
@@ -756,8 +814,9 @@ cmd_install() {
         printf '    Reload the Web UI in your browser (Ctrl+Shift+R to bypass the cache).\n'
     fi
     if ((PLUGIN_ENABLED)); then
-        printf '    The Darkhand dashboard layout is enabled; disable it any time under\n'
-        printf '    Preferences > Plugins, or reinstall with --no-plugin.\n'
+        printf '    The Darkhand dashboard layout is enabled. If you disable the Darkhand\n'
+        printf '    plugin (Preferences > Plugins), the Web UI falls back to the Darkhand\n'
+        printf '    theme with Deluge'"'"'s standard layout.\n'
     fi
 }
 

@@ -86,6 +86,18 @@ cd deluge_darkhand_theme
 sudo ./darkhand.sh install
 ```
 
+The script asks what to install:
+
+1. **Theme + dashboard** (recommended, and the default): the dashboard layout
+   plugin, with the theme set as the Web UI theme. If you disable the plugin
+   under **Preferences → Plugins**, the Web UI falls back to the theme with
+   Deluge's standard layout.
+2. **Theme only**: Deluge's standard layout in the Darkhand colours. If an
+   earlier install added the dashboard plugin, it's removed.
+
+Pass `--dashboard` or `--theme-only` to choose without the menu. With `-y`, or
+when there's no terminal to ask on, it installs both.
+
 Then reload the Web UI in your browser. Use Ctrl+Shift+R so the browser doesn't
 serve the old stylesheet from its cache.
 
@@ -103,13 +115,11 @@ The script:
 4. Stops any active `deluge-web` systemd unit before editing `web.conf`, then
    starts it again. `deluge-web` writes `web.conf` when it exits, so an edit
    made while it's running would be lost.
-5. Installs the dashboard plugin into the daemon's `plugins/` folder (next to
+5. If you chose the dashboard, installs the plugin into the daemon's `plugins/` folder (next to
    `core.conf`) and enables it. It asks the running daemon to rescan and
    enable it over Deluge's local connection, using the `localclient` account
    from the daemon's `auth` file, so the daemon and your torrents keep
    running. `deluge-web` is restarted so it loads the plugin.
-
-Use `--no-plugin` to install just the theme with Deluge's standard layout.
 
 If the daemon runs on a different machine from `deluge-web`, the plugin must be
 installed on both: run the script on each machine, or enable **Darkhand** under
@@ -160,7 +170,8 @@ see into other users' processes or config directories, so it may report less.
 | `-p, --python PATH` | Python interpreter Deluge is installed under (venv, pipx…). |
 | `--no-activate` | Only copy the stylesheet; leave `web.conf` alone. |
 | `--no-restart` | Don't stop/start `deluge-web` systemd units. |
-| `--no-plugin` | Theme only: skip the dashboard layout plugin. |
+| `--dashboard` | Install the theme and the dashboard plugin without asking (the default with `-y`). |
+| `--theme-only` | Install just the theme without asking; removes the dashboard plugin if installed. `--no-plugin` is an alias. |
 | `-y, --yes` | Don't prompt. |
 
 Examples:
