@@ -79,6 +79,16 @@ Ext.ns('Deluge.plugins.darkhand');
         );
     }
 
+    // Spacing between cards and around the window edge. Where a resize bar
+    // (Ext's 5px split bar) sits between two cards, the margin next to it is
+    // reduced so the visible gap is still GAP.
+    var GAP = 16;
+    var SPLIT = 5;
+
+    function margins(top, right, bottom, left) {
+        return [top, right, bottom, left].join(' ');
+    }
+
     /**
      * Change a component's layout settings before it is rendered. Ext's
      * BorderLayout reads region options (margins, split, collapseMode...)
@@ -111,7 +121,7 @@ Ext.ns('Deluge.plugins.darkhand');
             id: 'dh-nav',
             region: 'west',
             width: 248,
-            margins: '16 0 16 16',
+            margins: margins(GAP, 0, GAP, GAP),
             border: false,
             layout: 'border',
             items: [
@@ -144,7 +154,10 @@ Ext.ns('Deluge.plugins.darkhand');
             region: 'center',
             layout: 'fit',
             border: false,
-            margins: mode === 'bottom' ? '0 24 0 24' : '0 12 16 24',
+            margins:
+                mode === 'bottom'
+                    ? margins(0, GAP, 0, GAP)
+                    : margins(0, GAP - SPLIT, GAP, GAP),
             tbar: deluge.toolbar,
             items: [deluge.torrents],
         });
@@ -160,8 +173,8 @@ Ext.ns('Deluge.plugins.darkhand');
                 minSize: 140,
                 split: true,
                 collapsible: true,
-                margins: '0 24 16 24',
-                cmargins: '0 24 16 24',
+                margins: margins(GAP - SPLIT, GAP, GAP, GAP),
+                cmargins: margins(GAP - SPLIT, GAP, GAP, GAP),
             });
             mainItems.push(details);
         } else {
@@ -170,8 +183,8 @@ Ext.ns('Deluge.plugins.darkhand');
                 width: 400,
                 minSize: 320,
                 maxSize: 720,
-                margins: '16 16 16 0',
-                cmargins: '16 16 16 0',
+                margins: margins(GAP, GAP, GAP, 0),
+                cmargins: margins(GAP, GAP, GAP, 0),
                 split: true,
                 collapsible: true,
                 collapsed: true,
