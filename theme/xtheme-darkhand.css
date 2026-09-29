@@ -68,7 +68,15 @@
         -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --dh-mono: 'Darkhand Mono', 'JetBrains Mono', 'SFMono-Regular', Menlo,
         Consolas, monospace;
-    --dh-font-size: 12px;
+    /* Type scale: every font size is one of these */
+    --dh-text-caption: 10.5px; /* uppercase captions: column headers, section labels, chart axis */
+    --dh-text-small: 11.5px;   /* captions under values, mono hashes, dialog forms, window list headers */
+    --dh-text-base: 12px;      /* body text */
+    --dh-text-body: 13px;      /* nav filters, breadcrumb, chart title, About text */
+    --dh-text-title: 14px;     /* window titles, the torrent count, the stat warning */
+    --dh-text-value: 20px;     /* stat values, the brand, the About title */
+    --dh-text-display: 30px;   /* page title */
+    --dh-font-size: var(--dh-text-base);
     /* Recolours dark-on-light ExtJS sprites (arrows, tools) to light-on-dark */
     --dh-sprite-filter: invert(0.86) hue-rotate(180deg) brightness(1.1);
     --dh-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23aab3c2' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -155,7 +163,7 @@ html body button,
 .x-deluge-peers .x-grid3-col-address .x-grid3-cell-inner,
 .x-deluge-peers .x-grid3-col-client .x-grid3-cell-inner {
     font-family: var(--dh-mono);
-    font-size: 11.5px;
+    font-size: var(--dh-text-small);
 }
 
 html input {
@@ -311,7 +319,7 @@ a {
     background: var(--dh-bg-2);
     border-color: var(--dh-border);
     color: var(--dh-text-muted);
-    font-size: 10.5px;
+    font-size: var(--dh-text-caption);
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -680,7 +688,7 @@ ul.x-tab-strip-bottom {
 .x-grid3-hd-inner,
 .x-list-header-inner div em,
 .x-tree-hd {
-    font-size: 11px;
+    font-size: var(--dh-text-small);
 }
 
 .x-grid3-hd-inner {
@@ -1266,7 +1274,7 @@ html body .x-tree .x-progress-wrap .x-progress-inner .x-progress-text {
 .x-window-tl .x-window-header,
 .x-window-header-text {
     color: var(--dh-text-strong);
-    font-size: 12.5px;
+    font-size: var(--dh-text-body);
     font-weight: 600;
 }
 
@@ -1325,7 +1333,7 @@ body.x-body-masked .x-window-plain .x-window-mc {
 .x-window .x-list-body dt em,
 #detailsPanel .x-form-item,
 #detailsPanel .x-form-cb-label {
-    font-size: 11.5px;
+    font-size: var(--dh-text-small);
     letter-spacing: -0.005em;
 }
 
