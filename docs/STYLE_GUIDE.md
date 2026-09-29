@@ -135,19 +135,23 @@ into a stylesheet.
   and paths.
 - Numbers: `font-variant-numeric: tabular-nums` so they line up. Not on names:
   Inter's tabular forms also widen hyphens.
-- Scale used in the dashboard:
+- Type scale: every font size is one of seven tokens (`:root` in
+  `xtheme-darkhand.css`); never a literal size.
 
-| Text | Size / weight | Colour |
+| Token | Size | Used for |
 | --- | --- | --- |
-| Page title | 30px, 700, -0.02em | strong |
-| Brand ("DELUGE") | 21px, 800, uppercase, 0.08em | strong |
-| Stat value | 20px, 700, -0.01em | strong |
-| Stat label | 12px | muted |
-| Stat caption | 11.5px | faint |
-| Column headers (torrent list) | 10.5px, 700, uppercase, 0.08em | faint |
-| Nav section labels (States, Trackers...) | 10.5px, 700, uppercase, 0.08em | faint |
-| Window title | 14px, 600 | strong |
-| About caption | 12px, 600, uppercase, 0.08em | faint |
+| `--dh-text-caption` | 10.5px | Uppercase captions: torrent list headers, nav section labels, panel headers, chart axis |
+| `--dh-text-small` | 11.5px | Stat captions, monospace hashes and paths, dialog forms, column headers in windows and the plain theme, About copyright |
+| `--dh-text-base` | 12px | Body text (`--dh-font-size`), stat labels, chart legend, switches |
+| `--dh-text-body` | 13px | Nav filters, breadcrumb, chart title, About text, plain theme window titles |
+| `--dh-text-title` | 14px | Dashboard window titles, the torrent count, the Free space warning |
+| `--dh-text-value` | 20px | Stat values, the brand, the About title |
+| `--dh-text-display` | 30px | Page title |
+
+Weights and spacing by role: page title 700, -0.02em; brand 800,
+uppercase, 0.08em; stat value 700, -0.01em; uppercase captions 700 (600 in
+the plain theme), 0.08em; window titles 600. Colours: titles and values
+strong, labels muted, captions faint.
 
 ### Shape and spacing
 

@@ -863,7 +863,18 @@ Ext.ns('Deluge.plugins.darkhand');
     // torrent becomes Seeding at 100%.
     var PROGRESS_STATES = ['Downloading', 'Seeding', 'Paused', 'Checking', 'Queued', 'Error', 'Allocating', 'Moving'];
     var PROGRESS_PAD = 12; // around the label, inside the bar
+
+    // The width of text as it would be drawn in el: its font and letter
+    // spacing (which the canvas doesn't apply)
     var measureCanvas;
+
+    function textWidth(el, text) {
+        var s = window.getComputedStyle(el);
+        measureCanvas = measureCanvas || document.createElement('canvas');
+        var ctx = measureCanvas.getContext('2d');
+        ctx.font = s.fontWeight + ' ' + s.fontSize + ' ' + s.fontFamily;
+        return ctx.measureText(text).width + (parseFloat(s.letterSpacing) || 0) * text.length;
+    }
 
     function progressMinWidth(view, i) {
         if (!view.hasRows()) return 0;
@@ -871,14 +882,10 @@ Ext.ns('Deluge.plugins.darkhand');
         var wrap = cell && Ext.fly(cell).child('.x-progress-wrap', true);
         var label = wrap && Ext.fly(wrap).child('.x-progress-text-back > div', true);
         if (!label) return 0;
-        var style = window.getComputedStyle(label);
-        measureCanvas = measureCanvas || document.createElement('canvas');
-        var ctx = measureCanvas.getContext('2d');
-        ctx.font = style.fontWeight + ' ' + style.fontSize + ' ' + style.fontFamily;
         var widest = 0;
         Ext.each(PROGRESS_STATES, function (s) {
             var pct = s === 'Downloading' ? ' 99.99%' : ' 100.00%';
-            widest = Math.max(widest, ctx.measureText(_(s) + pct).width);
+            widest = Math.max(widest, textWidth(label, _(s) + pct));
         });
         // plus the room between the cell's edges and the bar's track
         return Math.ceil(widest + PROGRESS_PAD + (cell.offsetWidth - wrap.clientWidth));
@@ -1246,24 +1253,16 @@ Ext.ns('Deluge.plugins.darkhand');
         var rows = list.innerBody.dom.querySelectorAll('dl');
         if (headers.length !== cols.length) return;
 
-        measureCanvas = measureCanvas || document.createElement('canvas');
-        var ctx = measureCanvas.getContext('2d');
-        var measure = function (el, text) {
-            var s = window.getComputedStyle(el);
-            ctx.font = s.fontWeight + ' ' + s.fontSize + ' ' + s.fontFamily;
-            return ctx.measureText(text).width;
-        };
-
         // Widest text in each column, header included
         var need = [], total = 0, stretch = -1;
         Ext.each(cols, function (col, i) {
             if (col.dataIndex === opts.stretch) stretch = i;
-            var w = measure(headers[i], headers[i].textContent);
+            var w = textWidth(headers[i], headers[i].textContent);
             Ext.each(Ext.toArray(rows), function (dl) {
                 var dt = dl.querySelectorAll('dt')[i];
                 // the text is in the cell's <em>, which has the theme's font
                 var text = dt && (dt.querySelector('em') || dt);
-                if (text) w = Math.max(w, measure(text, text.textContent));
+                if (text) w = Math.max(w, textWidth(text, text.textContent));
             });
             need[i] = Math.ceil(w) + LIST_CELL_PAD;
             total += need[i];
@@ -1476,9 +1475,10 @@ Ext.ns('Deluge.plugins.darkhand');
     }
 
     // A tree grid's widest column (Add Torrents' Filename) takes whatever
-    // width the others leave, less the inset, so its rows fill it. The tree
-    // grid sizes its columns (on resize, and when its scrollbar comes or
-    // goes) through updateColumnWidths.
+    // width the others leave, less the inset, so its rows fill it; the
+    // others are at least as wide as their header. The tree grid sizes its
+    // columns (on resize, and when its scrollbar comes or goes) through
+    // updateColumnWidths.
     function stretchTreeColumn(tree) {
         var cols = tree.columns;
         var stretch = 0;
@@ -1488,10 +1488,18 @@ Ext.ns('Deluge.plugins.darkhand');
         var update = tree.updateColumnWidths;
         tree.updateColumnWidths = function () {
             var body = this.innerBody && this.innerBody.dom;
+            var headers = this.innerHd ? this.innerHd.dom.querySelectorAll('.x-treegrid-hd-inner') : [];
             if (body && body.clientWidth) {
                 var others = 0;
                 for (var i = 0; i < cols.length; i++) {
-                    if (i !== stretch && !cols[i].hidden) others += cols[i].width;
+                    if (i === stretch || cols[i].hidden) continue;
+                    var hd = headers[i];
+                    if (hd && hd.offsetWidth) {
+                        var s = window.getComputedStyle(hd);
+                        var need = Math.ceil(textWidth(hd, hd.textContent) + parseFloat(s.paddingLeft) + parseFloat(s.paddingRight)) + 2;
+                        cols[i].width = Math.max(cols[i].width, need);
+                    }
+                    others += cols[i].width;
                 }
                 cols[stretch].width = Math.max(120, body.clientWidth - 2 * insetOf(body) - others);
             }
