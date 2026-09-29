@@ -1,0 +1,453 @@
+/*
+ * Darkhand dashboard layout styles.
+ *
+ * Only active when the Darkhand plugin is enabled: its script rebuilds the
+ * window and puts "dh-dashboard" (plus "dh-details-drawer" or
+ * "dh-details-card") on <body>. Without the plugin none of this applies and
+ * the theme looks as usual.
+ */
+
+.dh-dashboard {
+    --dh-card-radius: 18px;
+    --dh-nav-width: 248px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Canvas                                                                   */
+/* ------------------------------------------------------------------------ */
+
+html body.dh-dashboard,
+.dh-dashboard .x-viewport,
+.dh-dashboard #dh-main,
+.dh-dashboard #dh-main > .x-panel-bwrap > .x-panel-body {
+    background: var(--dh-bg-0);
+}
+
+.dh-dashboard .x-layout-split {
+    background: transparent;
+}
+
+/* The standalone theme's card styling for these regions doesn't apply here */
+.dh-dashboard #sidebar.x-border-panel,
+.dh-dashboard #torrentGrid,
+.dh-dashboard #detailsPanel.x-border-panel {
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Navigation column: brand + torrent filters                               */
+/* ------------------------------------------------------------------------ */
+
+.dh-dashboard #dh-nav,
+.dh-dashboard #dh-nav > .x-panel-bwrap > .x-panel-body {
+    background: var(--dh-bg-1);
+}
+
+.dh-dashboard #dh-nav {
+    box-shadow: inset -1px 0 0 var(--dh-border);
+}
+
+.dh-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 88px;
+    box-sizing: border-box;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--dh-border);
+}
+
+.dh-brand-mark {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    background: url('../../icons/deluge-192.png') center / contain no-repeat;
+    filter: drop-shadow(0 4px 14px rgba(76, 144, 232, 0.45));
+}
+
+.dh-brand-name {
+    font-family: var(--dh-font);
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dh-text-strong);
+}
+
+.dh-dashboard #sidebar,
+.dh-dashboard #sidebar .x-panel-body,
+.dh-dashboard #sidebar .x-panel-bwrap {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* The "Filters" title bar; the brand replaces it */
+.dh-dashboard #sidebar > .x-panel-header {
+    display: none;
+}
+
+/* Section labels: States, Trackers, Owner, Labels */
+.dh-dashboard #sidebar .x-panel-header {
+    background: transparent;
+    border: 0 none;
+    padding: 20px 28px 8px;
+    color: var(--dh-text-faint);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
+.dh-dashboard #sidebar .x-panel-header .x-tool {
+    margin-top: -1px;
+}
+
+/* Filters as navigation items */
+.dh-dashboard #sidebar .x-list-body dl {
+    padding: 0 20px 0 28px;
+    transition: background-color 0.12s ease;
+}
+
+.dh-dashboard #sidebar .x-list-body dt em {
+    padding: 8px 0 !important;
+    font-size: 13.5px;
+    color: var(--dh-text-muted);
+}
+
+.dh-dashboard #sidebar .x-deluge-filter {
+    padding-left: 32px !important;
+    line-height: 20px !important;
+    height: 20px !important;
+    background-size: 18px 18px !important;
+    background-position: 0 center !important;
+}
+
+.dh-dashboard #sidebar .x-list-over {
+    background: var(--dh-bg-2);
+}
+
+.dh-dashboard #sidebar .x-list-selected {
+    background: linear-gradient(90deg, transparent, var(--dh-accent-softer));
+    box-shadow: inset -4px 0 0 var(--dh-accent);
+}
+
+.dh-dashboard #sidebar .x-list-selected dt em,
+.dh-dashboard #sidebar .x-list-selected em {
+    color: var(--dh-text-strong);
+    font-weight: 700;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Page header                                                              */
+/* ------------------------------------------------------------------------ */
+
+.dh-header-inner {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 0 28px 20px;
+    font-family: var(--dh-font);
+}
+
+.dh-breadcrumb {
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--dh-text-muted);
+}
+
+.dh-breadcrumb span {
+    color: var(--dh-text);
+}
+
+.dh-breadcrumb > span:first-child {
+    margin: 0 4px;
+    color: var(--dh-text-faint);
+}
+
+#dh-title {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--dh-text-strong);
+}
+
+.dh-title-count {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 3px 11px;
+    border-radius: 999px;
+    background: var(--dh-bg-2);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
+    color: var(--dh-text-muted);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0;
+    vertical-align: 5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.dh-header-tools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 4px;
+}
+
+.dh-seg-label {
+    font-size: 12px;
+    color: var(--dh-text-muted);
+}
+
+.dh-seg {
+    display: flex;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--dh-bg-1);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
+}
+
+.dh-seg-btn {
+    padding: 6px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--dh-text-muted);
+    font: 600 12px var(--dh-font);
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.dh-seg-btn:hover {
+    color: var(--dh-text-strong);
+}
+
+.dh-seg-btn.dh-seg-active {
+    background: var(--dh-accent);
+    color: #fff;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Cards                                                                    */
+/* ------------------------------------------------------------------------ */
+
+.dh-dashboard #dh-torrents-card,
+.dh-details-card #detailsPanel.x-border-panel {
+    border-radius: var(--dh-card-radius);
+    overflow: hidden;
+    background: var(--dh-bg-1);
+    box-shadow: inset 0 0 0 1px var(--dh-border), 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.dh-dashboard #dh-torrents-card .x-panel-body,
+.dh-dashboard #dh-torrents-card .x-grid3,
+.dh-dashboard #dh-torrents-card .x-grid3-scroller,
+.dh-dashboard #dh-torrents-card .x-grid3-body {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* Toolbar becomes the card header */
+.dh-dashboard #dh-torrents-card .x-panel-tbar,
+.dh-dashboard #dh-torrents-card .x-toolbar {
+    background: transparent;
+    border: 0 none;
+}
+
+.dh-dashboard #dh-torrents-card .x-toolbar {
+    padding: 12px 14px 10px;
+}
+
+/* The "Deluge" label and its separator; the brand is in the nav now */
+.dh-dashboard td:has(> #tbar-deluge-text),
+.dh-dashboard td:has(> #tbar-deluge-text) + td {
+    display: none;
+}
+
+/* Preferences, Connection Manager, Help and Logout as round icon buttons */
+.dh-dashboard #preferences,
+.dh-dashboard #connectionman,
+.dh-dashboard #help,
+.dh-dashboard #logout {
+    margin-left: 4px;
+    border-radius: 999px;
+    background: var(--dh-bg-2);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
+}
+
+.dh-dashboard #preferences.x-btn-over,
+.dh-dashboard #connectionman.x-btn-over,
+.dh-dashboard #help.x-btn-over,
+.dh-dashboard #logout.x-btn-over {
+    background: var(--dh-bg-3);
+}
+
+.dh-dashboard #preferences .x-btn-mc,
+.dh-dashboard #connectionman .x-btn-mc,
+.dh-dashboard #help .x-btn-mc,
+.dh-dashboard #logout .x-btn-mc {
+    padding: 4px 3px;
+}
+
+.dh-dashboard #preferences button,
+.dh-dashboard #connectionman button,
+.dh-dashboard #help button,
+.dh-dashboard #logout button {
+    width: 16px;
+    padding-left: 16px !important;
+    font-size: 0;
+    background-position: center !important;
+}
+
+/* Torrent list */
+.dh-dashboard #torrentGrid .x-grid3-header {
+    background: transparent;
+    border-bottom: 1px solid var(--dh-border);
+}
+
+.dh-dashboard #torrentGrid .x-grid3-hd-row td {
+    border-right-color: transparent;
+}
+
+.dh-dashboard #torrentGrid .x-grid3-hd-inner {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    color: var(--dh-text-faint);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dh-dashboard #torrentGrid td.x-grid3-hd-over .x-grid3-hd-inner,
+.dh-dashboard #torrentGrid td.sort-asc .x-grid3-hd-inner,
+.dh-dashboard #torrentGrid td.sort-desc .x-grid3-hd-inner {
+    background: transparent;
+    color: var(--dh-text);
+}
+
+.dh-dashboard #torrentGrid .x-grid3-row {
+    border-bottom: 1px solid var(--dh-border);
+}
+
+.dh-dashboard #torrentGrid .x-grid3-row-alt {
+    background-color: transparent;
+}
+
+.dh-dashboard #torrentGrid .x-grid3-row-over {
+    background: var(--dh-bg-2);
+}
+
+.dh-dashboard #torrentGrid .x-grid3-cell-inner {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.dh-dashboard #torrentGrid .x-grid3-td-name .x-grid3-cell-inner {
+    color: var(--dh-text-strong);
+    font-weight: 500;
+}
+
+.dh-dashboard .x-progress-wrap,
+.dh-dashboard .x-progress-inner {
+    border-radius: 999px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Details: card below the list, or drawer on the right                     */
+/* ------------------------------------------------------------------------ */
+
+.dh-dashboard #detailsPanel .x-panel-body,
+.dh-dashboard #detailsPanel .x-tab-panel-body,
+.dh-dashboard #detailsPanel .x-tab-panel-header,
+.dh-dashboard #detailsPanel ul.x-tab-strip-top {
+    background: transparent;
+    border-color: transparent;
+}
+
+.dh-dashboard #detailsPanel .x-tab-panel-header {
+    padding: 8px 12px 0;
+    border-bottom: 1px solid var(--dh-border);
+}
+
+/* Deluge pins the collapse button to the window corner; keep it on the panel */
+.dh-dashboard #detailsPanel .x-tool {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    margin: 0;
+}
+
+.dh-details-drawer #detailsPanel {
+    background: var(--dh-bg-1);
+    box-shadow: inset 1px 0 0 var(--dh-border), -24px 0 48px rgba(0, 0, 0, 0.35);
+}
+
+.dh-details-drawer .x-layout-split-east {
+    background: transparent;
+}
+
+.dh-details-drawer .x-layout-cmini-east {
+    background: var(--dh-bg-1);
+    box-shadow: inset 1px 0 0 var(--dh-border);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Status bar                                                               */
+/* ------------------------------------------------------------------------ */
+
+.dh-dashboard #deluge-statusbar {
+    background: transparent;
+    border: 0 none;
+    padding: 2px 20px 6px;
+}
+
+/* Deluge fixes the Status tab at 1000px and floats its four columns side by
+   side; in the narrow drawer, fit it to the drawer and stack the columns. */
+.dh-details-drawer #deluge-details-status,
+.dh-details-drawer #deluge-details-status > .x-panel-bwrap,
+.dh-details-drawer #deluge-details-status > .x-panel-bwrap > .x-panel-body {
+    width: auto !important;
+}
+
+.dh-details-drawer #deluge-details-status dl {
+    float: none;
+    width: auto;
+    min-height: 0;
+    margin: 0 0 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--dh-border);
+}
+
+.dh-details-drawer #deluge-details-status dl:last-child {
+    border-bottom: 0 none;
+}
+
+.dh-details-drawer #deluge-details-status dd {
+    width: auto;
+    margin-left: 130px;
+}
+
+.dh-details-drawer #deluge-details-status dt {
+    width: 130px;
+}
+
+/* Details tab: Deluge fixes each value at one line's height, so long paths
+   and hashes spill over the next rows. Let values wrap and grow. */
+.dh-dashboard #torrentDetails dl dt {
+    clear: left;
+}
+
+.dh-dashboard #torrentDetails dl dd {
+    height: auto;
+    min-height: 19px;
+    overflow-wrap: anywhere;
+}
+
+.dh-dashboard #torrentDetails dd.hash {
+    width: auto;
+}
