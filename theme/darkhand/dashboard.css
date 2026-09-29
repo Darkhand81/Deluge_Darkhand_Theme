@@ -145,21 +145,28 @@ html body.dh-dashboard,
 /* Page header                                                              */
 /* ------------------------------------------------------------------------ */
 
+/* Title row and stat cards. The header region is sized to this wrapper by
+   the plugin; its bottom padding is the gap to the torrent list. */
+.dh-header-wrap {
+    box-sizing: border-box;
+    /* Line up with the torrent list card's edges */
+    padding: 0 16px 16px;
+    font-family: var(--dh-font);
+}
+
+/* On the right-hand layout the list card stops at the 5px resize bar */
+.dh-details-right .dh-header-wrap {
+    padding-right: 11px;
+}
+
 .dh-header-inner {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 24px;
-    height: 100%;
+    height: 92px;
     box-sizing: border-box;
-    /* Line up with the torrent list card's edges */
-    padding: 0 16px 20px;
-    font-family: var(--dh-font);
-}
-
-/* On the right-hand layout the list card stops at the 5px resize bar */
-.dh-details-right .dh-header-inner {
-    padding-right: 11px;
+    padding-bottom: 16px;
 }
 
 .dh-breadcrumb {
@@ -239,6 +246,124 @@ html body.dh-dashboard,
 .dh-seg-btn.dh-seg-active {
     background: var(--dh-accent);
     color: #fff;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Stat cards                                                               */
+/* ------------------------------------------------------------------------ */
+
+.dh-stats {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.dh-stat {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 14px 16px;
+    border-radius: var(--dh-card-radius);
+    background: var(--dh-bg-1);
+    box-shadow: inset 0 0 0 1px var(--dh-border), 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.dh-stat-icon {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--dh-bg-2);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 22px 22px;
+}
+
+/* Soft tint behind each icon in its own colour */
+.dh-stat-download .dh-stat-icon {
+    background-color: rgba(62, 207, 142, 0.12);
+}
+
+.dh-stat-upload .dh-stat-icon {
+    background-color: rgba(91, 157, 255, 0.12);
+}
+
+.dh-stat-active .dh-stat-icon {
+    background-color: rgba(76, 144, 232, 0.14);
+}
+
+.dh-stat-connections .dh-stat-icon {
+    background-color: rgba(177, 151, 252, 0.12);
+}
+
+.dh-stat-dht .dh-stat-icon {
+    background-color: rgba(180, 188, 203, 0.1);
+}
+
+.dh-stat-space .dh-stat-icon {
+    background-color: rgba(245, 184, 75, 0.12);
+}
+
+.dh-stat-text {
+    min-width: 0;
+}
+
+/* Narrow cards: a small icon beside the label, the value on its own line
+   underneath so large numbers keep the full card width */
+.dh-stats-compact .dh-stat {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 10px;
+    padding: 12px 14px;
+}
+
+.dh-stats-compact .dh-stat-text {
+    display: contents;
+}
+
+.dh-stats-compact .dh-stat-icon {
+    width: 28px;
+    height: 28px;
+    background-size: 15px 15px;
+}
+
+.dh-stats-compact .dh-stat-value,
+.dh-stats-compact .dh-stat-sub {
+    grid-column: 1 / -1;
+}
+
+.dh-stats-compact .dh-stat-value {
+    margin-top: 6px;
+}
+
+.dh-stat-label {
+    font-size: 12px;
+    color: var(--dh-text-muted);
+}
+
+.dh-stat-value,
+.dh-stat-sub,
+.dh-stat-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.dh-stat-value {
+    margin: 1px 0;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--dh-text-strong);
+    font-variant-numeric: tabular-nums;
+}
+
+.dh-stat-sub {
+    font-size: 11.5px;
+    color: var(--dh-text-faint);
 }
 
 /* ------------------------------------------------------------------------ */
