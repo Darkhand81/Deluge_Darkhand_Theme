@@ -1,21 +1,23 @@
-# Darkhand: a dark theme for the Deluge Web UI
+# Darkhand: a dashboard and dark theme for the Deluge Web UI
 
-A modern dark theme for the **Deluge 2.x Web UI** (`deluge-web`), plus a script
-that installs and uninstalls it on Linux.
+A modern dashboard layout and dark theme for the **Deluge 2.x Web UI**
+(`deluge-web`), plus a script that installs and uninstalls them on Linux.
 
-![Main window](screenshots/main.png)
+It comes in two parts:
 
-| Context menu | Preferences |
-| --- | --- |
-| ![Context menu](screenshots/menu.png) | ![Preferences](screenshots/preferences.png) |
+- The **dashboard**, a Deluge plugin that rearranges the Web UI into floating
+  cards with live stats and a speed chart.
+- The **theme**, which gives Deluge the same dark look. It's what the
+  dashboard is built on, and what you see with Deluge's standard layout if the
+  plugin is disabled or you install the theme on its own.
 
-## Dashboard layout (experimental)
+![The Darkhand dashboard](screenshots/dashboard-default.png)
 
-This branch adds an optional **Darkhand plugin** that rebuilds the Web UI as a
-dashboard of floating cards: a navigation card with the torrent filters, a page
-header, a live stats card, a transfer speed chart, the torrent list, and the
-torrent details. Click the Deluge logo at the top of the navigation card for
-the About window.
+## Dashboard
+
+The dashboard rebuilds the Web UI from Deluge's own components: a navigation
+card with the torrent filters, a page header, a live stats card, a transfer
+speed chart, the torrent list, and the torrent details.
 
 The stats card shows download and upload speed (with their limits), active
 torrents (downloading and seeding), connections, DHT nodes (and whether incoming
@@ -33,19 +35,11 @@ and below them when it's narrower. When the window is too short for the chart
 without squeezing the torrent list, it's hidden until there's room again.
 
 By default the stats and speed chart sit below the torrent list, with the
-torrent details at the bottom:
-
-![Dashboard in its default layout](screenshots/dashboard-default.png)
-
-Two switches in the header change that, and your choices are remembered per
-browser:
+torrent details at the bottom, as above. Two switches in the header change
+that, and your choices are remembered per browser:
 
 - **Details: Right** moves the details card to the right.
 - **Stats: Above** puts the stats and speed chart above the torrent list.
-
-The details card can be closed down to a slim strip and opened again from
-it; it stays open or closed as you left it, and remembers the size you drag
-it to.
 
 | Details on the right | Stats above the list |
 | --- | --- |
@@ -54,18 +48,48 @@ it to.
 The transfer speeds in the dashboard screenshots are simulated; the test
 setup they were taken on has no peers.
 
-A stylesheet can only restyle Deluge. It can't move panels, because Deluge's
-ExtJS layout places them in JavaScript. The plugin's script runs just before
-Deluge builds its window and arranges Deluge's own components (toolbar,
-filters, torrent list, details tabs, status bar) differently, so everything
-keeps working as before. The dashboard styles live in the theme and only apply
-while the plugin is enabled. Disable the plugin under **Preferences → Plugins**
-and the standard layout returns after a page reload.
+Also in the dashboard:
 
-## Features
+- The details card can be closed down to a slim strip and opened again from
+  it. It stays open or closed as you left it, and remembers the size you drag
+  it to. By default it takes about 30% of the window's height.
+- The torrent list's columns always fit the card. Name takes the spare width
+  (up to 1600px; very wide screens share the rest among the other columns),
+  headers are never cut off, and when space is tight Name gets priority: the
+  speed headers become **↓ Speed** and **↑ Speed** and the other columns give
+  up a little width. Hovering the header row shows grab handles for resizing
+  columns, and a width you set is kept. Owner is hidden by default; show it
+  from any column's menu.
+- Preferences, Connection Manager, Add Torrents and Deluge's other windows are
+  styled as cards to match. The Connection Manager sizes its columns to fit,
+  and when there's only one host it selects it for you, so connecting is a
+  single click on **Connect**.
+- Click the Deluge logo at the top of the navigation card for the About
+  window.
+- The Preferences, Connection Manager, Help and Logout buttons show their
+  labels when the toolbar has room, and fold to round icon buttons when it
+  doesn't.
 
-- Flat, low-glare near-black palette with blue accents from the Deluge logo, and panels that
-  float as rounded cards
+Enabling the plugin reloads the page into the dashboard (after you close
+Preferences, if you enabled it there). Disable it under **Preferences →
+Plugins** and the standard layout, in the Darkhand theme, returns after a
+page reload.
+
+The dashboard has been tested on Deluge 2.2.
+
+## Theme
+
+The theme restyles Deluge's standard layout, and is what the Web UI falls back
+to without the plugin:
+
+![The Darkhand theme with Deluge's standard layout](screenshots/main.png)
+
+| Context menu | Preferences |
+| --- | --- |
+| ![Context menu](screenshots/menu.png) | ![Preferences](screenshots/preferences.png) |
+
+- Flat, low-glare near-black palette with blue accents from the Deluge logo,
+  and panels that float as rounded cards
 - Bundled [Inter](https://rsms.me/inter/) and
   [JetBrains Mono](https://www.jetbrains.com/lp/mono/) fonts, served by
   `deluge-web` itself, so nothing is fetched from the internet. Latin, Cyrillic,
@@ -82,7 +106,7 @@ and the standard layout returns after a page reload.
   default theme, so nothing gets clipped
 - Doesn't modify any Deluge file. The theme is one extra stylesheet that
   Deluge's own theme mechanism loads, plus a `themes/darkhand/` folder holding
-  the fonts and icons
+  the fonts, icons and the dashboard's styles
 - Works on Deluge 2.0, 2.1 and 2.2. On 2.2 and later it also appears under
   **Preferences → Interface → Theme**
 
@@ -96,11 +120,11 @@ sudo ./darkhand.sh install
 
 The script asks what to install:
 
-1. **Theme + dashboard** (recommended, and the default): the dashboard layout
-   plugin, with the theme set as the Web UI theme. If you disable the plugin
-   under **Preferences → Plugins**, the Web UI falls back to the theme with
-   Deluge's standard layout.
-2. **Theme only**: Deluge's standard layout in the Darkhand colours. If an
+1. **Theme + dashboard** (recommended, and the default): the dashboard plugin,
+   with the theme set as the Web UI theme as its fallback. If you disable the
+   plugin under **Preferences → Plugins**, the Web UI falls back to the theme
+   with Deluge's standard layout.
+2. **Theme only**: Deluge's standard layout in the Darkhand theme. If an
    earlier install added the dashboard plugin, it's removed.
 
 Pass `--dashboard` or `--theme-only` to choose without the menu. With `-y`, or
@@ -162,8 +186,9 @@ Deluge falls back to its default theme on the next start anyway.
 ```
 
 Shows the detected web UI directories and whether the theme is installed in
-each, every `web.conf` with its active theme, and any running `deluge-web`
-units or processes.
+each, every `web.conf` with its active theme, whether the dashboard plugin is
+installed and enabled for each daemon, and any running `deluge-web` units or
+processes.
 
 `install` and `uninstall` need root and exit with a hint to use `sudo` when run
 as a regular user. `status` is read-only and runs without `sudo`, but it can't
@@ -194,9 +219,10 @@ sudo ./darkhand.sh install -p ~/.local/share/pipx/venvs/deluge/bin/python
 
 ### Docker
 
-For containers such as `linuxserver/deluge`, copy the script and theme into the
-container and point it at the container's paths, or just copy the stylesheet
-and the `darkhand` folder:
+For containers such as `linuxserver/deluge`, copy the script, theme and plugin
+into the container and run the installer there with the container's paths.
+For just the theme, copying the stylesheet and the `darkhand` folder is
+enough:
 
 ```sh
 docker cp theme deluge:/tmp/darkhand-theme
@@ -213,10 +239,24 @@ steps after pulling a new image.
 ## Upgrading Deluge
 
 Package upgrades replace the `deluge/ui/web` directory, which removes the
-stylesheet. Deluge then falls back to its default theme. Run
-`sudo ./darkhand.sh install` again after upgrading.
+stylesheet (and with it the dashboard's styles). Deluge then falls back to its
+default theme. Run `sudo ./darkhand.sh install` again after upgrading.
 
 ## How it works
+
+### Dashboard
+
+A stylesheet can only restyle Deluge. It can't move panels, because Deluge's
+ExtJS layout places them in JavaScript. The plugin's script runs just before
+Deluge builds its window and arranges Deluge's own components (toolbar,
+filters, torrent list, details tabs, status bar) differently, so everything
+keeps working as before. The plugin itself is a small Python package in
+`plugin/`, which the installer zips into a Deluge plugin egg; its script is
+`plugin/deluge_darkhand/data/darkhand.js`. The dashboard's styles live in the
+theme, in `theme/darkhand/dashboard.css`, and only apply while the plugin is
+enabled.
+
+### Theme
 
 Deluge's Web UI is built on ExtJS 3, and Deluge loads one ExtJS "xtheme"
 stylesheet from `deluge/ui/web/themes/css/xtheme-<name>.css`, chosen by the
