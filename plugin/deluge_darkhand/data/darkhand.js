@@ -1213,25 +1213,28 @@ Ext.ns('Deluge.plugins.darkhand');
     }
 
     // -----------------------------------------------------------------------
-    // Connection Manager: columns sized to their text (Deluge's are fixed
-    // proportions, which cut off "Connected" and the host), and when there's
-    // only one host, select it so Connect is one click.
+    // Lists in windows (Connection Manager, Edit Trackers): columns sized to
+    // their text (Deluge's are fixed proportions, which cut it off), the
+    // window as wide as that needs, within limits.
     // -----------------------------------------------------------------------
 
-    var CM_MAX_WIDTH = 640; // the window widens up to this to fit the hosts
-    var CM_CELL_PAD = 16; // around each column's text
+    var LIST_CELL_PAD = 16; // around each column's text
+    var LIST_INSET = 12; // an inset list's rows sit 6px in each side (dashboard.css)
 
-    function fitConnectionColumns(cm) {
+    // opts.stretch: the dataIndex of the column that takes the rest of the
+    // width. opts.maxWidth: the widest the window gets; text wider than that
+    // allows is cut off, with the full text as the cell's tooltip. It never
+    // gets narrower than it first opened.
+    function fitListColumns(win, list, opts) {
         try {
-            doFitConnectionColumns(cm);
+            doFitListColumns(win, list, opts);
         } catch (e) {
-            if (window.console) console.error('Darkhand: connection list layout failed', e);
+            if (window.console) console.error('Darkhand: list layout failed', e);
         }
     }
 
-    function doFitConnectionColumns(cm) {
-        var list = cm.list;
-        if (!list || !list.innerHd || !list.innerBody || !cm.isVisible()) return;
+    function doFitListColumns(win, list, opts) {
+        if (!list || !list.innerHd || !list.innerBody || !win.isVisible()) return;
         var cols = list.columns;
         var headers = list.innerHd.dom.querySelectorAll('em');
         var rows = list.innerBody.dom.querySelectorAll('dl');
@@ -1246,9 +1249,9 @@ Ext.ns('Deluge.plugins.darkhand');
         };
 
         // Widest text in each column, header included
-        var need = [], total = 0, host = -1;
+        var need = [], total = 0, stretch = -1;
         Ext.each(cols, function (col, i) {
-            if (col.dataIndex === 'host') host = i;
+            if (col.dataIndex === opts.stretch) stretch = i;
             var w = measure(headers[i], headers[i].textContent);
             Ext.each(Ext.toArray(rows), function (dl) {
                 var dt = dl.querySelectorAll('dt')[i];
@@ -1256,41 +1259,60 @@ Ext.ns('Deluge.plugins.darkhand');
                 var text = dt && (dt.querySelector('em') || dt);
                 if (text) w = Math.max(w, measure(text, text.textContent));
             });
-            need[i] = Math.ceil(w) + CM_CELL_PAD;
+            need[i] = Math.ceil(w) + LIST_CELL_PAD;
             total += need[i];
         });
+        var inset = list.el.hasClass('dh-inset-list') ? LIST_INSET : 0;
 
-        // Widen the window if the text doesn't fit (the list fills it)
-        var avail = list.innerHd.getWidth();
-        if (total > avail && cm.getWidth() < CM_MAX_WIDTH) {
-            cm.setWidth(Math.min(CM_MAX_WIDTH, cm.getWidth() + total - avail));
-            cm.doLayout();
-            avail = list.innerHd.getWidth();
+        // Size the window to the text (the list fills it)
+        var avail = list.innerHd.getWidth() - inset;
+        win.dhBaseWidth = win.dhBaseWidth || win.getWidth();
+        var maxWidth = Math.max(win.dhBaseWidth, Math.min(opts.maxWidth, Ext.lib.Dom.getViewWidth() - 48));
+        var width = Math.max(win.dhBaseWidth, Math.min(maxWidth, win.getWidth() + total - avail));
+        if (Math.abs(width - win.getWidth()) > 1) {
+            win.setWidth(width);
+            win.doLayout();
+            win.center();
+            avail = list.innerHd.getWidth() - inset;
         }
-        if (!avail) return;
+        if (avail <= 0) return;
 
-        // Each column gets its width; the host column the rest (Ext's list
+        // Each column gets its width, the stretch column the rest (Ext's list
         // columns are fractions of its width)
         var widths = [], used = 0, changed = false;
         Ext.each(cols, function (col, i) {
-            if (i === host) return;
+            if (i === stretch) return;
             widths[i] = Math.round((need[i] / avail) * 1000) / 1000;
             used += widths[i];
         });
-        if (host >= 0) widths[host] = Math.max(0.2, Math.round((1 - used) * 1000) / 1000);
+        if (stretch >= 0) widths[stretch] = Math.max(0.2, Math.round((1 - used) * 1000) / 1000);
         Ext.each(cols, function (col, i) {
             if (Math.abs(col.width - widths[i]) > 0.002) changed = true;
         });
-        if (!changed) return;
+        if (changed) {
+            Ext.each(cols, function (col, i) {
+                col.width = widths[i];
+            });
+            // Redrawing the list clears its selection: keep it
+            var selected = list.getSelectedIndexes();
+            list.setHdWidths();
+            list.refresh();
+            if (selected.length) list.select(selected, false, true);
+        }
 
-        Ext.each(cols, function (col, i) {
-            col.width = widths[i];
+        // Text still cut off shows in full as a tooltip
+        Ext.each(Ext.toArray(list.innerBody.dom.querySelectorAll('dt em')), function (em) {
+            if (em.scrollWidth > em.clientWidth) em.title = em.textContent;
+            else em.removeAttribute('title');
         });
-        // Redrawing the list clears its selection: keep it
-        var selected = list.getSelectedIndexes();
-        list.setHdWidths();
-        list.refresh();
-        if (selected.length) list.select(selected, false, true);
+    }
+
+    // Connection Manager: sized to its hosts, and when there's only one
+    // host, select it so Connect is one click.
+    var CM_MAX_WIDTH = 640;
+
+    function fitConnectionColumns(cm) {
+        fitListColumns(cm, cm.list, { stretch: 'host', maxWidth: CM_MAX_WIDTH });
     }
 
     function setUpConnectionManager() {
@@ -1322,6 +1344,25 @@ Ext.ns('Deluge.plugins.darkhand');
             fitConnectionColumns(this);
             return result;
         };
+    }
+
+    // Edit Trackers: its list inset like Add Torrents' (dashboard.css), and
+    // the window as wide as the longest tracker URL, up to 800px.
+    var TRACKERS_MAX_WIDTH = 800;
+
+    function setUpEditTrackers() {
+        var win = deluge.editTrackers;
+        if (!win || !win.list) return;
+        win.list.addClass('dh-inset-list');
+        // The trackers load after the window opens, and change as they're
+        // added, edited, moved and removed
+        win.list.getStore().on('datachanged', fit);
+        win.list.getStore().on('add', fit);
+        win.list.getStore().on('update', fit);
+        win.list.getStore().on('remove', fit);
+        function fit() {
+            Ext.defer(fitListColumns, 1, null, [win, win.list, { stretch: 'url', maxWidth: TRACKERS_MAX_WIDTH }]);
+        }
     }
 
     // Hide the Owner column by default, to leave Name more room. Done once
@@ -1388,6 +1429,7 @@ Ext.ns('Deluge.plugins.darkhand');
         styleAboutWindow();
         setUpBrand();
         setUpConnectionManager();
+        setUpEditTrackers();
         // Add Torrents as two framed sections, the torrent list with its
         // File / Url / Remove bar and the Files / Options tabs, with a gap
         // between (dashboard.css frames them). Its regions are laid out when
@@ -1397,7 +1439,7 @@ Ext.ns('Deluge.plugins.darkhand');
             add.addClass('dh-add');
             add.items.get(0).addClass('dh-add-section');
             add.optionsPanel.addClass('dh-add-section');
-            if (add.list) add.list.addClass('dh-add-list');
+            if (add.list) add.list.addClass('dh-inset-list');
             if (add.optionsPanel.files) {
                 add.optionsPanel.files.addClass('dh-add-files');
                 stretchFileNames(add.optionsPanel.files);
