@@ -1206,6 +1206,11 @@ html input[type='radio'] {
 html body .x-progress-bar {
     position: relative;
     z-index: 1;
+    /* Clicks go through to the "back" label: Ext finds the row a click is in
+       by looking at most 10 elements up, and the bar's own label is one
+       level too deep, so a click on it (selecting, right-clicking) found no
+       row. */
+    pointer-events: none;
     min-height: 100%;
     background: linear-gradient(90deg, var(--dh-accent-2), var(--dh-accent));
     border: 0 none;
