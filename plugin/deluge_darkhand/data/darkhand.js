@@ -979,6 +979,17 @@ Ext.ns('Deluge.plugins.darkhand');
             });
         }
         view.updateAllColumnWidths();
+
+        // The last visible column's grab handle sits inside its edge (the
+        // others sit just past theirs, over the next column), so mark it.
+        // Hidden columns follow it, so CSS can't tell which it is.
+        var last = -1;
+        for (i = 0; i < n; i++) {
+            var cell = view.getHeaderCell(i);
+            if (cell) Ext.fly(cell).removeClass('dh-hd-last');
+            if (!cm.isHidden(i)) last = i;
+        }
+        if (last >= 0 && view.getHeaderCell(last)) Ext.fly(view.getHeaderCell(last)).addClass('dh-hd-last');
     }
 
     function setUpColumnStretch(grid) {

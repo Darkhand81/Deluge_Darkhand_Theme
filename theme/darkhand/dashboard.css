@@ -737,6 +737,59 @@ html body.dh-dashboard,
     border-right-color: transparent;
 }
 
+/* Grab handles at the columns' edges while the pointer is over the
+   header row, so it's clear they can be resized. On the cell rather than
+   its inner div, which carries the hover and sort backgrounds. Name has
+   none: it takes up whatever the other columns leave. */
+.dh-dashboard #torrentGrid .x-grid3-hd-row td {
+    position: relative;
+}
+
+/* Just past the cell's edge: Ext starts a resize from the first few pixels
+   of the next cell, while the edge's own side is taken by the column menu
+   button when the cell is hovered */
+.dh-dashboard #torrentGrid .x-grid3-hd-row td::after {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: -2px;
+    width: 2px;
+    height: 14px;
+    margin-top: -7px;
+    border-radius: 1px;
+    background: var(--dh-border-strong);
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    pointer-events: none;
+}
+
+/* No column after the last one: its handle sits on its own border, beside
+   the menu button (the plugin marks the last visible column) */
+.dh-dashboard #torrentGrid .x-grid3-hd-row td.dh-hd-last::after {
+    right: 0;
+    width: 1px;
+}
+
+.dh-dashboard #torrentGrid .x-grid3-header:hover .x-grid3-hd-row td::after {
+    opacity: 1;
+}
+
+.dh-dashboard #torrentGrid .x-grid3-header:hover .x-grid3-hd-row td.x-grid3-hd-over::after {
+    background: var(--dh-text-faint);
+}
+
+.dh-dashboard #torrentGrid .x-grid3-hd-row td.x-grid3-td-name::after {
+    display: none;
+}
+
+/* The line Ext draws while you drag a column's edge */
+.dh-dashboard #torrentGrid .x-grid3-resize-proxy {
+    width: 2px;
+    background: var(--dh-accent);
+    border: 0 none;
+}
+
 .dh-dashboard #torrentGrid .x-grid3-hd-inner {
     padding-top: 8px;
     padding-bottom: 8px;
