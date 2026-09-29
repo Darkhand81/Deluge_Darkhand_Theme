@@ -15,6 +15,8 @@
     --dh-card-radius: 18px;
     --dh-frame-radius: 10px;
     --dh-bar-radius: 6px;
+    /* Framed panels clip to their frame's outer edge, 1px in (see the frames) */
+    --dh-frame-clip: inset(1px round calc(var(--dh-frame-radius) - 1px));
     --dh-nav-width: 248px;
 }
 
@@ -1111,7 +1113,10 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
    the line. (An outline would sit under the Preferences pages' own
    panels, and a layer in the body would scroll away with a long list;
    the wrapper doesn't scroll, and also holds a panel's toolbar, like the
-   Connection Manager's, which the frame then takes in.) */
+   Connection Manager's, which the frame then takes in.) The wrapper is
+   clipped to the frame's outer edge, so the lines inside it (toolbars,
+   grid headers, tab strips) stop at the frame instead of running 1px past
+   it. */
 .dh-dashboard .x-window-body .x-panel-body:not(.x-panel-body-noborder),
 .dh-dashboard .x-window-body .x-tab-panel-body:not(.x-tab-panel-body-noborder) {
     border-color: transparent;
@@ -1121,6 +1126,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 .dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder)),
 .dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder)) {
     position: relative;
+    clip-path: var(--dh-frame-clip);
 }
 
 .dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder))::after,
@@ -1156,8 +1162,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
    Remove bar at the bottom, and the Files / Options tabs, 10px apart (the
    plugin sets the gap) */
 .dh-dashboard .dh-add-section {
-    overflow: hidden;
-    border-radius: var(--dh-frame-radius);
+    clip-path: var(--dh-frame-clip);
 }
 
 .dh-dashboard .dh-add-section::after {
@@ -1173,6 +1178,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 /* The tab strip on the section's own surface; its bottom line divides it
    from the tab below */
 .dh-dashboard .dh-add-section .x-tab-panel-header {
+    padding: 6px 6px 0;
     background: transparent;
     border-color: transparent;
 }
