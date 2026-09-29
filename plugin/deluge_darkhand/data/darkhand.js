@@ -8,14 +8,17 @@
  * wraps initialize() and, at the moment Deluge creates its Viewport, builds a
  * dashboard layout from the same components instead:
  *
- *   +---------+------------------------------------------+
- *   |  brand  |  breadcrumb / page title        controls |
- *   |         |  +------------------------------------+  |  +--------+
- *   | filters |  | toolbar                            |  |  |details |
- *   |  (nav)  |  | torrent list                       |  |  |drawer  |
- *   |         |  +------------------------------------+  |  |(or card|
- *   |         |  status bar                              |  | below) |
- *   +---------+------------------------------------------+  +--------+
+ *   +---------+  breadcrumb / page title          controls  +---------+
+ *   |  brand  |  +--------------------------------------+  | details |
+ *   |         |  | toolbar                              |  | (right, |
+ *   | filters |  | torrent list                         |  | or below|
+ *   |  (nav)  |  +--------------------------------------+  | the     |
+ *   +---------+  status bar                                | list)   |
+ *                                                          +---------+
+ *
+ * The navigation, torrent list and details are floating cards. The details
+ * card sits on the right (opening when a torrent is selected) or below the
+ * list; the header switch flips between the two.
  *
  * Only the arrangement changes; every component keeps its own behaviour.
  * Styling lives in the Darkhand theme (themes/darkhand/dashboard.css), scoped
@@ -36,7 +39,8 @@ Ext.ns('Deluge.plugins.darkhand');
         try {
             mode = window.localStorage.getItem(MODE_KEY);
         } catch (e) {}
-        return mode === 'card' ? 'card' : 'drawer';
+        // "card" was the earlier name of the bottom layout
+        return mode === 'bottom' || mode === 'card' ? 'bottom' : 'right';
     }
 
     function setMode(mode) {
@@ -67,8 +71,8 @@ Ext.ns('Deluge.plugins.darkhand');
             '<div class="dh-header-tools">' +
             '<span class="dh-seg-label">Details</span>' +
             '<div class="dh-seg">' +
-            btn('drawer', 'Drawer') +
-            btn('card', 'Card') +
+            btn('right', 'Right') +
+            btn('bottom', 'Bottom') +
             '</div>' +
             '</div>' +
             '</div>'
@@ -107,6 +111,7 @@ Ext.ns('Deluge.plugins.darkhand');
             id: 'dh-nav',
             region: 'west',
             width: 248,
+            margins: '16 0 16 16',
             border: false,
             layout: 'border',
             items: [
@@ -139,7 +144,7 @@ Ext.ns('Deluge.plugins.darkhand');
             region: 'center',
             layout: 'fit',
             border: false,
-            margins: mode === 'card' ? '0 24 0 24' : '0 24 16 24',
+            margins: mode === 'bottom' ? '0 24 0 24' : '0 12 16 24',
             tbar: deluge.toolbar,
             items: [deluge.torrents],
         });
@@ -148,7 +153,7 @@ Ext.ns('Deluge.plugins.darkhand');
         var mainItems = [header, tableCard];
         var viewportItems = [nav];
 
-        if (mode === 'card') {
+        if (mode === 'bottom') {
             configure(details, {
                 region: 'south',
                 height: 250,
@@ -165,6 +170,8 @@ Ext.ns('Deluge.plugins.darkhand');
                 width: 400,
                 minSize: 320,
                 maxSize: 720,
+                margins: '16 16 16 0',
+                cmargins: '16 16 16 0',
                 split: true,
                 collapsible: true,
                 collapsed: true,
@@ -182,7 +189,7 @@ Ext.ns('Deluge.plugins.darkhand');
             bbar: deluge.statusbar,
         });
         viewportItems.push(main);
-        if (mode === 'drawer') viewportItems.push(details);
+        if (mode === 'right') viewportItems.push(details);
 
         var viewport = new Viewport({
             layout: 'border',
@@ -215,9 +222,9 @@ Ext.ns('Deluge.plugins.darkhand');
             }
         });
 
-        if (mode === 'drawer') {
-            // Open the drawer when a torrent is selected, close it when the
-            // selection is cleared.
+        if (mode === 'right') {
+            // Open the details card when a torrent is selected, close it when
+            // the selection is cleared.
             var sm = deluge.torrents.getSelectionModel();
             sm.on('selectionchange', function (sm) {
                 if (sm.getCount() > 0) {

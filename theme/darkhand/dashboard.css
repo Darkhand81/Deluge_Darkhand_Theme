@@ -2,8 +2,8 @@
  * Darkhand dashboard layout styles.
  *
  * Only active when the Darkhand plugin is enabled: its script rebuilds the
- * window and puts "dh-dashboard" (plus "dh-details-drawer" or
- * "dh-details-card") on <body>. Without the plugin none of this applies and
+ * window and puts "dh-dashboard" (plus "dh-details-right" or
+ * "dh-details-bottom") on <body>. Without the plugin none of this applies and
  * the theme looks as usual.
  */
 
@@ -44,8 +44,11 @@ html body.dh-dashboard,
     background: var(--dh-bg-1);
 }
 
+/* Navigation is a floating card like the others */
 .dh-dashboard #dh-nav {
-    box-shadow: inset -1px 0 0 var(--dh-border);
+    border-radius: var(--dh-card-radius);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px var(--dh-border), 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .dh-brand {
@@ -236,7 +239,7 @@ html body.dh-dashboard,
 /* ------------------------------------------------------------------------ */
 
 .dh-dashboard #dh-torrents-card,
-.dh-details-card #detailsPanel.x-border-panel {
+.dh-dashboard #detailsPanel.x-border-panel {
     border-radius: var(--dh-card-radius);
     overflow: hidden;
     background: var(--dh-bg-1);
@@ -358,7 +361,7 @@ html body.dh-dashboard,
 }
 
 /* ------------------------------------------------------------------------ */
-/* Details: card below the list, or drawer on the right                     */
+/* Details: card on the right, or below the list                           */
 /* ------------------------------------------------------------------------ */
 
 .dh-dashboard #detailsPanel .x-panel-body,
@@ -382,18 +385,15 @@ html body.dh-dashboard,
     margin: 0;
 }
 
-.dh-details-drawer #detailsPanel {
-    background: var(--dh-bg-1);
-    box-shadow: inset 1px 0 0 var(--dh-border), -24px 0 48px rgba(0, 0, 0, 0.35);
-}
-
-.dh-details-drawer .x-layout-split-east {
+.dh-details-right .x-layout-split-east {
     background: transparent;
 }
 
-.dh-details-drawer .x-layout-cmini-east {
+/* The closed details card leaves a slim rounded handle on the right */
+.dh-details-right .x-layout-cmini-east {
+    border-radius: 999px;
     background: var(--dh-bg-1);
-    box-shadow: inset 1px 0 0 var(--dh-border);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -407,14 +407,14 @@ html body.dh-dashboard,
 }
 
 /* Deluge fixes the Status tab at 1000px and floats its four columns side by
-   side; in the narrow drawer, fit it to the drawer and stack the columns. */
-.dh-details-drawer #deluge-details-status,
-.dh-details-drawer #deluge-details-status > .x-panel-bwrap,
-.dh-details-drawer #deluge-details-status > .x-panel-bwrap > .x-panel-body {
+   side; in the narrow right-hand card, fit it to the card and stack them. */
+.dh-details-right #deluge-details-status,
+.dh-details-right #deluge-details-status > .x-panel-bwrap,
+.dh-details-right #deluge-details-status > .x-panel-bwrap > .x-panel-body {
     width: auto !important;
 }
 
-.dh-details-drawer #deluge-details-status dl {
+.dh-details-right #deluge-details-status dl {
     float: none;
     width: auto;
     min-height: 0;
@@ -423,16 +423,16 @@ html body.dh-dashboard,
     border-bottom: 1px solid var(--dh-border);
 }
 
-.dh-details-drawer #deluge-details-status dl:last-child {
+.dh-details-right #deluge-details-status dl:last-child {
     border-bottom: 0 none;
 }
 
-.dh-details-drawer #deluge-details-status dd {
+.dh-details-right #deluge-details-status dd {
     width: auto;
     margin-left: 130px;
 }
 
-.dh-details-drawer #deluge-details-status dt {
+.dh-details-right #deluge-details-status dt {
     width: 130px;
 }
 

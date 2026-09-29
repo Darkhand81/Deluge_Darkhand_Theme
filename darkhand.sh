@@ -495,20 +495,41 @@ sys.exit(status["code"])
 PY
 }
 
-# Is the plugin listed in enabled_plugins in the daemon config at $1?
-plugin_enabled_in() {
-    "$(find_python)" - "$1/core.conf" "$PLUGIN_NAME" 2>/dev/null <<'PY'
+# conf_plugin <daemon config dir> <check|add|remove>
+# Check, add or remove the plugin in enabled_plugins in core.conf. The
+# daemon only writes core.conf on a clean shutdown, so after enabling or
+# disabling it over RPC the file is updated too, to match either way.
+conf_plugin() {
+    "$(find_python)" - "$1/core.conf" "$2" "$PLUGIN_NAME" 2>/dev/null <<'PY'
 import json, sys
 
-data, idx, objs = open(sys.argv[1], encoding="utf8").read(), 0, []
-decoder = json.JSONDecoder()
+path, action, name = sys.argv[1:4]
+with open(path, encoding="utf8") as f:
+    data = f.read()
+decoder, objs, idx = json.JSONDecoder(), [], 0
 while idx < len(data):
     while idx < len(data) and data[idx].isspace():
         idx += 1
     if idx < len(data):
         obj, idx = decoder.raw_decode(data, idx)
         objs.append(obj)
-sys.exit(0 if objs and sys.argv[2] in objs[-1].get("enabled_plugins", []) else 1)
+if not objs:
+    sys.exit(1)
+plugins = objs[-1].setdefault("enabled_plugins", [])
+if action == "check":
+    sys.exit(0 if name in plugins else 1)
+if action == "add" and name not in plugins:
+    plugins.append(name)
+elif action == "remove" and name in plugins:
+    plugins.remove(name)
+else:
+    sys.exit(0)
+out = "".join(json.dumps(o, indent=4, sort_keys=True, ensure_ascii=False) for o in objs)
+# Rewrite in place so ownership and permissions are preserved.
+with open(path, "r+", encoding="utf8") as f:
+    f.seek(0)
+    f.write(out)
+    f.truncate()
 PY
 }
 
@@ -535,14 +556,16 @@ install_plugin() {
         ok "installed the dashboard plugin to $c/plugins/$egg"
 
         if daemon_plugin "$c" enable; then
+            conf_plugin "$c" add || true
             ok "enabled the $PLUGIN_NAME plugin in the running daemon"
             PLUGIN_ENABLED=1
-        elif plugin_enabled_in "$c"; then
-            ok "$PLUGIN_NAME is enabled in $c/core.conf"
+        elif [[ -z "$(deluged_pids)" ]] && conf_plugin "$c" add; then
+            ok "enabled $PLUGIN_NAME in $c/core.conf; it loads when deluged starts"
             PLUGIN_ENABLED=1
         else
             warn "couldn't reach the daemon for $c to enable the plugin."
-            warn "Restart deluged, then enable \"$PLUGIN_NAME\" in Preferences > Plugins."
+            warn "Enable \"$PLUGIN_NAME\" in Preferences > Plugins (restart deluged"
+            warn "first if it isn't listed there)."
         fi
     done
 }
@@ -553,10 +576,11 @@ uninstall_plugin() {
         compgen -G "$c/plugins/${PLUGIN_NAME}-*.egg" >/dev/null || continue
         if daemon_plugin "$c" disable; then
             ok "disabled the $PLUGIN_NAME plugin in the running daemon"
-        elif plugin_enabled_in "$c"; then
+        elif conf_plugin "$c" check && [[ -n "$(deluged_pids)" ]]; then
             warn "couldn't reach the daemon for $c to disable the plugin; Deluge"
             warn "will report it missing on next start and carry on without it."
         fi
+        conf_plugin "$c" remove || true
         rm -rf "$c/plugins/${PLUGIN_NAME}"-*.egg
         ok "removed the dashboard plugin from $c/plugins"
     done
@@ -827,7 +851,7 @@ cmd_status() {
     fi
     for c in "${DAEMON_DIRS[@]}"; do
         if compgen -G "$c/plugins/${PLUGIN_NAME}-*.egg" >/dev/null; then
-            if plugin_enabled_in "$c"; then
+            if conf_plugin "$c" check; then
                 ok "$c/plugins  ${C_GREEN}installed, enabled${C_RESET}"
             else
                 ok "$c/plugins  ${C_YELLOW}installed, not enabled${C_RESET}"
