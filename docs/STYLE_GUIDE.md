@@ -340,8 +340,8 @@ separate title or body frame, outer outline + shadow (G20).
   torrent list with its File / Url / Remove bar at the bottom, and the Files /
   Options tabs at the top of the second. The Options section and the window
   get 12px more height so the rounded corners don't clip the form's last row.
-  The torrent list is styled like Preferences' page list (rows 6px apart),
-  and the Files tab matches it: rows 6px in, no grid lines, rounded
+  The torrent list is an inset list (`.dh-inset-list`: styled like
+  Preferences' page list, rows 6px apart), and the Files tab matches it: rows 6px in, no grid lines, rounded
   hover/selected bars, Filename stretched to fill (`stretchFileNames`), Lucide
   file icons, and CSS-drawn Download checkboxes like the Options tab's.
 - Footer: buttons with 8px corners; the last one (the main action: OK, Connect, Add,
@@ -351,8 +351,13 @@ separate title or body frame, outer outline + shadow (G20).
 - Fixed-size windows are grown by 24×36px for the roomier chrome (G16).
 - About: logo (64px, glowing) as its hero, small uppercase caption title,
   version large, details muted, copyright faint, accent link, 300×412px.
-- Connection Manager: columns sized to their text, window widens up to
-  640px for long hosts; a lone host is pre-selected once its status arrives.
+- Connection Manager: columns sized to their text (`fitListColumns`), window
+  widens up to 640px for long hosts; a lone host is pre-selected once its
+  status arrives.
+- Edit Trackers: an inset list, headers lined up with the rows; the window
+  sizes to the longest tracker URL (`fitListColumns`), from its default width
+  up to 800px (or the viewport less 48px) and back, centred. Longer URLs end
+  in an ellipsis, with the full URL as a tooltip.
 - Preferences: the page list is inset 6px in its frame, rows with 6px
   corners, the current page filled with the soft accent.
 

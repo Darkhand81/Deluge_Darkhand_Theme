@@ -1290,32 +1290,46 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     border-bottom: 1px solid var(--dh-border);
 }
 
-/* Preferences' page list and Add Torrents' torrent list: inset from their
-   frame, with rounded rows and the current one filled with the soft accent */
+/* Preferences' page list, and the lists inset the same way (Add Torrents'
+   torrents, Edit Trackers): rows in from their frame, rounded, the current
+   one filled with the soft accent */
 .dh-dashboard .dh-pref-list .x-list-body-inner,
-.dh-dashboard .dh-add-list .x-list-body-inner {
+.dh-dashboard .dh-inset-list .x-list-body-inner {
     padding: 6px 0;
 }
 
 .dh-dashboard .dh-pref-list dl,
-.dh-dashboard .dh-add-list dl {
+.dh-dashboard .dh-inset-list dl {
     margin: 0 6px 2px;
     border-radius: var(--dh-bar-radius);
 }
 
 .dh-dashboard .dh-pref-list dt em,
-.dh-dashboard .dh-add-list dt em {
+.dh-dashboard .dh-inset-list dt em {
     padding: 5px 8px;
 }
 
-/* Torrent names 6px apart, like the list's inset */
-.dh-dashboard .dh-add-list dt em {
+/* An inset list's rows 6px apart, like its inset; text too long for its
+   column ends in an ellipsis */
+.dh-dashboard .dh-inset-list dt em {
     padding-top: 2px;
     padding-bottom: 2px;
+    text-overflow: ellipsis;
+}
+
+/* Column headers (Edit Trackers) moved in with the rows, their text lined
+   up with the rows' */
+.dh-dashboard .dh-inset-list .x-list-header-inner {
+    padding: 0 6px;
+}
+
+.dh-dashboard .dh-inset-list .x-list-header-inner em {
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 .dh-dashboard .dh-pref-list .x-list-selected,
-.dh-dashboard .dh-add-list .x-list-selected {
+.dh-dashboard .dh-inset-list .x-list-selected {
     box-shadow: none;
 }
 
