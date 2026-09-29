@@ -1276,7 +1276,10 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     border-color: transparent;
 }
 
+/* As much room below its buttons as above, past the frame, which takes
+   the panel's bottom 2px */
 .dh-dashboard .x-window-body .x-panel-bbar .x-toolbar {
+    padding-bottom: 5px;
     border-top: 1px solid var(--dh-border);
 }
 
