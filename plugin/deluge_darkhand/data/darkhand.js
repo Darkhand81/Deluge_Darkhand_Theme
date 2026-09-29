@@ -308,6 +308,7 @@ Ext.ns('Deluge.plugins.darkhand');
     // -----------------------------------------------------------------------
 
     var CHART_WINDOW = 5 * 60 * 1000; // ms of history shown
+    var CHART_GAP = 10 * 1000; // ms without updates that breaks the lines
     var samples = []; // { t: ms, down: bytes/s, up: bytes/s }
 
     function chartHtml() {
@@ -448,10 +449,30 @@ Ext.ns('Deluge.plugins.darkhand');
                 '" y="' + (gy + 3.5) + '">' + (f ? fspeed(max * f, true) : '0') + '</text>';
         });
 
-        if (samples.length > 1) {
+        // Updates stop while the tab is in the background or the computer
+        // sleeps. Break the lines at such gaps rather than drawing a ramp
+        // across time nobody measured.
+        var runs = [], run = [];
+        Ext.each(samples, function (s, i) {
+            if (i && s.t - samples[i - 1].t > CHART_GAP) {
+                runs.push(run);
+                run = [];
+            }
+            run.push(s);
+        });
+        runs.push(run);
+
+        // The lines stay inside the plot, right of the axis labels: the
+        // sample kept from just before the window starts left of it.
+        svg +=
+            '<clipPath id="dh-chart-clip"><rect x="' + gutter + '" y="0" width="' +
+            (w - gutter) + '" height="' + h + '"/></clipPath>' +
+            '<g clip-path="url(#dh-chart-clip)">';
+        Ext.each(runs, function (run) {
+            if (run.length < 2) return;
             Ext.each(['up', 'down'], function (key) {
                 var pts = [];
-                Ext.each(samples, function (s) {
+                Ext.each(run, function (s) {
                     pts.push([x(s.t), y(s[key])]);
                 });
                 var line = smoothPath(pts);
@@ -461,9 +482,9 @@ Ext.ns('Deluge.plugins.darkhand');
                     line + 'L' + last + ',' + bottom + 'L' + first + ',' + bottom + 'Z"/>' +
                     '<path class="dh-chart-line dh-chart-' + key + '" d="' + line + '"/>';
             });
-        }
+        });
 
-        plot.innerHTML = svg + '</svg>';
+        plot.innerHTML = svg + '</g></svg>';
     }
 
     /**
