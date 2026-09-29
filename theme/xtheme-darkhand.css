@@ -785,6 +785,24 @@ td.sort-asc .x-grid3-hd-inner {
     color: var(--dh-text-strong);
 }
 
+/* Grid cells are top-aligned, and text lines are shorter than the 20px
+   progress bars, so text and bars sat at different heights in a row. Give
+   every cell a line as tall as a bar so text, state icons and bars share
+   one centre line whatever the cell padding. */
+html body .deluge-torrents .x-grid3-row td,
+html body .deluge-torrents .x-grid3-cell-inner {
+    line-height: 20px;
+}
+
+html body .deluge-torrents .x-grid3-cell-inner {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+html body .deluge-torrents .torrent-name {
+    background-position: 0 center;
+}
+
 /* ListView (sidebar filters, preference categories) */
 .x-list-body dt,
 .x-list-body dt em {
