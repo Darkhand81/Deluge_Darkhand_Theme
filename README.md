@@ -40,9 +40,12 @@ torrent details at the bottom:
 Two switches in the header change that, and your choices are remembered per
 browser:
 
-- **Details: Right** moves the details card to the right. It opens when you
-  select a torrent and folds away when nothing is selected.
+- **Details: Right** moves the details card to the right.
 - **Stats: Above** puts the stats and speed chart above the torrent list.
+
+The details card can be closed down to a slim strip and opened again from
+it; it stays open or closed as you left it, and remembers the size you drag
+it to.
 
 | Details on the right | Stats above the list |
 | --- | --- |
