@@ -621,7 +621,7 @@ Ext.ns('Deluge.plugins.darkhand');
                     region: 'north',
                     height: 88,
                     html:
-                        '<div class="dh-brand">' +
+                        '<div class="dh-brand" role="button" tabindex="0" title="About Deluge">' +
                         '<span class="dh-brand-mark"></span>' +
                         '<span class="dh-brand-name">Deluge</span>' +
                         '</div>',
@@ -1086,6 +1086,46 @@ Ext.ns('Deluge.plugins.darkhand');
         };
     }
 
+    // The brand in the navigation card opens Deluge's About window, like the
+    // "Deluge" toolbar item it replaces. dashboard.css styles the window as
+    // a card; its parts are tagged here, since Deluge styles them inline.
+    var ABOUT_PARTS = ['logo', 'title', 'comment', 'copyright', 'link'];
+
+    function showAbout() {
+        var open = Ext.getCmp('AboutWindow');
+        if (open) {
+            open.toFront();
+            return;
+        }
+        new Deluge.about.AboutWindow().show();
+    }
+
+    function styleAboutWindow() {
+        var About = Deluge.about && Deluge.about.AboutWindow;
+        if (!About) return;
+        Ext.apply(About.prototype, { width: 300, height: 412 });
+        var initComponent = About.prototype.initComponent;
+        About.prototype.initComponent = function () {
+            initComponent.apply(this, arguments);
+            this.addClass('dh-about');
+            this.items.each(function (item, i) {
+                if (ABOUT_PARTS[i]) item.addClass('dh-about-' + ABOUT_PARTS[i]);
+            });
+        };
+    }
+
+    function setUpBrand() {
+        var brand = Ext.get(document.querySelector('.dh-brand'));
+        if (!brand) return;
+        brand.on('click', showAbout);
+        brand.on('keydown', function (e) {
+            if (e.getKey() === e.ENTER || e.getKey() === e.SPACE) {
+                e.preventDefault();
+                showAbout();
+            }
+        });
+    }
+
     // Hide the Owner column by default, to leave Name more room. Done once
     // per browser; after that, showing it from the column menu sticks (Ext
     // saves the grid's state when a column is shown or hidden).
@@ -1126,6 +1166,8 @@ Ext.ns('Deluge.plugins.darkhand');
     function wireUp(mode, details, box) {
         setUpColumnStretch(deluge.torrents);
         hideOwnerOnce(deluge.torrents);
+        styleAboutWindow();
+        setUpBrand();
         rememberDetailsSize(mode, details);
 
         var refit = function () {
