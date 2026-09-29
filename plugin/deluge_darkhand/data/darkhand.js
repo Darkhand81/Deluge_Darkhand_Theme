@@ -1138,14 +1138,50 @@ Ext.ns('Deluge.plugins.darkhand');
         if (typeof win.height === 'number') win.height += WINDOW_EXTRA_H;
     }
 
+    // Widen a window whose footer buttons don't fit (Remove Torrent's three,
+    // or any window in a browser whose fonts run a little wider): measured
+    // when it's shown, and again once the web fonts have loaded.
+    function fitWindowButtons(win) {
+        try {
+            var footer = win.el && win.el.child('.x-window-footer', true);
+            if (!footer || !win.isVisible()) return;
+            var row = footer.querySelector('.x-toolbar-ct');
+            if (!row) return;
+            var s = window.getComputedStyle(footer);
+            var room = footer.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight);
+            var need = 0;
+            Ext.each(Ext.toArray(row.querySelectorAll('.x-toolbar-left > table, .x-toolbar-right > table')), function (t) {
+                need += t.offsetWidth;
+            });
+            if (need > room) {
+                win.setWidth(win.getWidth() + Math.ceil(need - room));
+                win.doLayout();
+                win.center();
+            }
+        } catch (e) {}
+    }
+
     function sizeWindows() {
         var initComponent = Ext.Window.prototype.initComponent;
         Ext.Window.prototype.initComponent = function () {
             growWindow(this);
-            return initComponent.apply(this, arguments);
+            var result = initComponent.apply(this, arguments);
+            this.on('show', function (win) {
+                Ext.defer(fitWindowButtons, 1, null, [win]);
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(function () {
+                        fitWindowButtons(win);
+                    });
+                }
+            });
+            return result;
         };
         Ext.each([deluge.moveStorage, deluge.removeWindow, deluge.copyMagnetWindow], function (win) {
-            if (win) growWindow(win);
+            if (!win) return;
+            growWindow(win);
+            win.on('show', function () {
+                Ext.defer(fitWindowButtons, 1, null, [win]);
+            });
         });
     }
 
