@@ -1024,11 +1024,16 @@ Ext.ns('Deluge.plugins.darkhand');
 
         // Dragging a column's edge: the width you choose becomes that
         // column's normal width. Forget its extra before Ext saves the state.
+        // Ext also marks the grid "user resized", which stops Name filling
+        // the list for the rest of the session, so the columns no longer
+        // followed the window's width. Keep Name filling: it takes up
+        // whatever the other columns leave.
         var splitterMoved = view.onColumnSplitterMoved;
         view.onColumnSplitterMoved = function (cellIndex) {
             delete stretch[cm.getColumnId(cellIndex)];
             markColumnSized(cm.getColumnId(cellIndex));
             var result = splitterMoved.apply(this, arguments);
+            this.userResized = false;
             restretch();
             return result;
         };
