@@ -1222,9 +1222,9 @@ Ext.ns('Deluge.plugins.darkhand');
     var LIST_INSET = 12; // an inset list's rows sit 6px in each side (dashboard.css)
 
     // opts.stretch: the dataIndex of the column that takes the rest of the
-    // width. opts.maxWidth: the widest the window gets; text wider than that
-    // allows is cut off, with the full text as the cell's tooltip. It never
-    // gets narrower than it first opened.
+    // width. opts.maxWidth: the widest the window gets (never narrower than
+    // it first opened); without it the window keeps its size. Text wider
+    // than the list allows is cut off, with the full text as its tooltip.
     function fitListColumns(win, list, opts) {
         try {
             doFitListColumns(win, list, opts);
@@ -1234,7 +1234,7 @@ Ext.ns('Deluge.plugins.darkhand');
     }
 
     function doFitListColumns(win, list, opts) {
-        if (!list || !list.innerHd || !list.innerBody || !win.isVisible()) return;
+        if (!list || !list.innerHd || !list.innerBody || !list.el.isVisible(true)) return;
         var cols = list.columns;
         var headers = list.innerHd.dom.querySelectorAll('em');
         var rows = list.innerBody.dom.querySelectorAll('dl');
@@ -1266,14 +1266,16 @@ Ext.ns('Deluge.plugins.darkhand');
 
         // Size the window to the text (the list fills it)
         var avail = list.innerHd.getWidth() - inset;
-        win.dhBaseWidth = win.dhBaseWidth || win.getWidth();
-        var maxWidth = Math.max(win.dhBaseWidth, Math.min(opts.maxWidth, Ext.lib.Dom.getViewWidth() - 48));
-        var width = Math.max(win.dhBaseWidth, Math.min(maxWidth, win.getWidth() + total - avail));
-        if (Math.abs(width - win.getWidth()) > 1) {
-            win.setWidth(width);
-            win.doLayout();
-            win.center();
-            avail = list.innerHd.getWidth() - inset;
+        if (win && opts.maxWidth) {
+            win.dhBaseWidth = win.dhBaseWidth || win.getWidth();
+            var maxWidth = Math.max(win.dhBaseWidth, Math.min(opts.maxWidth, Ext.lib.Dom.getViewWidth() - 48));
+            var width = Math.max(win.dhBaseWidth, Math.min(maxWidth, win.getWidth() + total - avail));
+            if (Math.abs(width - win.getWidth()) > 1) {
+                win.setWidth(width);
+                win.doLayout();
+                win.center();
+                avail = list.innerHd.getWidth() - inset;
+            }
         }
         if (avail <= 0) return;
 
@@ -1318,7 +1320,7 @@ Ext.ns('Deluge.plugins.darkhand');
     function setUpConnectionManager() {
         var cm = deluge.connectionManager;
         if (!cm) return;
-        if (cm.list) cm.list.addClass('dh-inset-list');
+        if (cm.list) cm.list.dhSizesWindow = true;
         var autoSelect = false;
 
         // Each time the window opens it reloads the hosts
@@ -1347,14 +1349,14 @@ Ext.ns('Deluge.plugins.darkhand');
         };
     }
 
-    // Edit Trackers: its list inset like Add Torrents' (dashboard.css), and
-    // the window as wide as the longest tracker URL, up to 800px.
+    // Edit Trackers: the window as wide as the longest tracker URL, up to
+    // 800px.
     var TRACKERS_MAX_WIDTH = 800;
 
     function setUpEditTrackers() {
         var win = deluge.editTrackers;
         if (!win || !win.list) return;
-        win.list.addClass('dh-inset-list');
+        win.list.dhSizesWindow = true;
         // The trackers load after the window opens, and change as they're
         // added, edited, moved and removed
         win.list.getStore().on('datachanged', fit);
@@ -1364,6 +1366,75 @@ Ext.ns('Deluge.plugins.darkhand');
         function fit() {
             Ext.defer(fitListColumns, 1, null, [win, win.list, { stretch: 'url', maxWidth: TRACKERS_MAX_WIDTH }]);
         }
+    }
+
+    // Every list and grid in a window (Add Torrents, the Connection Manager,
+    // Edit Trackers, Preferences' Plugins page, plugins' own pages...) inset
+    // from its frame (dashboard.css), and a list's columns fitted to their
+    // text. Preferences' page list is a menu instead. Hooked on the
+    // prototypes, so lists that plugins add later are included.
+    var GRID_INSET = 12; // an inset grid's rows sit 6px in each side
+
+    function insetWindowLists() {
+        var ListView = Ext.list && Ext.list.ListView;
+        if (ListView) {
+            var listAfterRender = ListView.prototype.afterRender;
+            ListView.prototype.afterRender = function () {
+                var result = listAfterRender.apply(this, arguments);
+                if (!this.el.hasClass('dh-pref-list') && this.el.up('.x-window')) {
+                    this.addClass('dh-inset-list');
+                    fitListInPlace(this);
+                }
+                return result;
+            };
+        }
+        var GridPanel = Ext.grid && Ext.grid.GridPanel;
+        if (GridPanel) {
+            var gridAfterRender = GridPanel.prototype.afterRender;
+            GridPanel.prototype.afterRender = function () {
+                // Before the grid's first layout: Ext fits the columns to
+                // the width less its scrollbar; leave room for the inset too
+                if (this.el.up('.x-window')) {
+                    this.addClass('dh-inset-grid');
+                    var view = this.getView();
+                    view.scrollOffset = view.getScrollOffset() + GRID_INSET;
+                }
+                return gridAfterRender.apply(this, arguments);
+            };
+        }
+    }
+
+    // Columns fitted to their text as the list's items change and it's
+    // shown or resized, the window left as it is. The widest column takes
+    // the rest. (The Connection Manager and Edit Trackers size their window
+    // to their list themselves.)
+    function fitListInPlace(list) {
+        var stretch, widest = 0;
+        Ext.each(list.columns, function (col) {
+            if (col.width > widest) {
+                widest = col.width;
+                stretch = col.dataIndex;
+            }
+        });
+        var fit = function () {
+            if (list.dhSizesWindow || list.isDestroyed) return;
+            Ext.defer(fitListColumns, 1, null, [null, list, { stretch: stretch }]);
+        };
+        var store = list.getStore();
+        Ext.each(['datachanged', 'add', 'update', 'remove'], function (name) {
+            store.on(name, fit);
+        });
+        // It gets its width (and a page its items) when its page is shown
+        var width = 0;
+        if (window.ResizeObserver) {
+            new ResizeObserver(function () {
+                if (list.el.dom.offsetWidth !== width) {
+                    width = list.el.dom.offsetWidth;
+                    fit();
+                }
+            }).observe(list.el.dom);
+        }
+        fit();
     }
 
     // Hide the Owner column by default, to leave Name more room. Done once
@@ -1440,7 +1511,6 @@ Ext.ns('Deluge.plugins.darkhand');
             add.addClass('dh-add');
             add.items.get(0).addClass('dh-add-section');
             add.optionsPanel.addClass('dh-add-section');
-            if (add.list) add.list.addClass('dh-inset-list');
             if (add.optionsPanel.files) {
                 add.optionsPanel.files.addClass('dh-add-files');
                 stretchFileNames(add.optionsPanel.files);
@@ -1460,12 +1530,6 @@ Ext.ns('Deluge.plugins.darkhand');
         }
         // Preferences' page list, styled as a menu (dashboard.css)
         if (deluge.preferences && deluge.preferences.list) deluge.preferences.list.addClass('dh-pref-list');
-        // The Plugins page's list inset like the Connection Manager's
-        Ext.iterate((deluge.preferences && deluge.preferences.pages) || {}, function (name, page) {
-            if (Deluge.preferences.Plugins && page instanceof Deluge.preferences.Plugins && page.list && page.list.addClass) {
-                page.list.addClass('dh-inset-list');
-            }
-        });
         rememberDetailsSize(mode, details);
 
         var refit = function () {
@@ -1592,6 +1656,7 @@ Ext.ns('Deluge.plugins.darkhand');
             var ui = this;
             try {
                 sizeWindows(); // before Deluge creates its windows
+                insetWindowLists();
             } catch (e) {
                 if (window.console) console.error('Darkhand: window sizing failed', e);
             }

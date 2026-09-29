@@ -363,6 +363,17 @@ separate title or body frame, outer outline + shadow (G20).
   corners, the current page filled with the soft accent. The Plugins page's
   list is an inset list, its Enabled checkboxes CSS-drawn like the Files
   tab's; Find More gets the Lucide search icon.
+- Every list and grid in a window is inset (`insetWindowLists`, hooked on
+  `Ext.list.ListView` / `Ext.grid.GridPanel` `afterRender`, so plugins' pages
+  such as AutoAdd, Execute, Blocklist and Notifications are included): lists
+  get `.dh-inset-list` and their columns fitted to their text in place
+  (`fitListInPlace`: the widest column stretches, cut-off text gets an
+  ellipsis and a tooltip); grids get `.dh-inset-grid`, the scroller padded
+  4px / 6px (Ext sizes it less its padding) and the view's `scrollOffset`
+  12px larger, so its auto-expanding column leaves room for the inset.
+  Preferences' page list (`.dh-pref-list`) is excluded; the Connection
+  Manager and Edit Trackers size their window to their list instead
+  (`dhSizesWindow`).
 
 ### Status bar
 
@@ -517,6 +528,16 @@ Each learned the hard way. Symptom → cause → what the code does.
   selector in it along. Write such conditions as sibling `:has()` /
   `:not(:has())` checks, and keep experimental selectors in rules of their
   own.
+- **G38. A component's classes arrive after `onRender`.** `addClass()`
+  before rendering queues the class (`this.cls`); Ext puts it on the element
+  after `onRender`, so a hook there doesn't see it → hook `afterRender`.
+- **G39. Padding and Ext's sizes.** Where Ext sizes an element with
+  `setSize` / `setWidth` (a grid's scroller, a panel body it lays out), it
+  subtracts the element's CSS padding, so padding there is safe. Where the
+  size comes from a config (a form's `bodyStyle` padding, fixed column
+  widths), CSS padding adds to it and overflows → set it in the config
+  before render, or leave room in the component (a grid view's
+  `scrollOffset`).
 - **G20. Inset shadows on windows vanish.** The window's own frame cells
   paint over an inset outline → windows use an outer `0 0 0 1px` ring.
 - **G24. ListView columns are fractions.** Change `columns[i].width`
