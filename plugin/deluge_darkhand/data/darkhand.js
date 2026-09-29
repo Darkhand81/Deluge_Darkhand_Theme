@@ -771,9 +771,36 @@ Ext.ns('Deluge.plugins.darkhand');
         if (changed) view.updateHeaderSortState();
     }
 
+    // The Progress column shouldn't get narrower than its longest label
+    // ("Downloading 99.99%", or its translation) needs. A downloading
+    // torrent becomes Seeding at 100%.
+    var PROGRESS_STATES = ['Downloading', 'Seeding', 'Paused', 'Checking', 'Queued', 'Error', 'Allocating', 'Moving'];
+    var PROGRESS_PAD = 12; // around the label, inside the bar
+    var measureCanvas;
+
+    function progressMinWidth(view, i) {
+        if (!view.hasRows()) return 0;
+        var cell = view.getCell(0, i);
+        var wrap = cell && Ext.fly(cell).child('.x-progress-wrap', true);
+        var label = wrap && Ext.fly(wrap).child('.x-progress-text-back > div', true);
+        if (!label) return 0;
+        var style = window.getComputedStyle(label);
+        measureCanvas = measureCanvas || document.createElement('canvas');
+        var ctx = measureCanvas.getContext('2d');
+        ctx.font = style.fontWeight + ' ' + style.fontSize + ' ' + style.fontFamily;
+        var widest = 0;
+        Ext.each(PROGRESS_STATES, function (s) {
+            var pct = s === 'Downloading' ? ' 99.99%' : ' 100.00%';
+            widest = Math.max(widest, ctx.measureText(_(s) + pct).width);
+        });
+        // plus the room between the cell's edges and the bar's track
+        return Math.ceil(widest + PROGRESS_PAD + (cell.offsetWidth - wrap.clientWidth));
+    }
+
     // Take up to `need` px from the other columns for Name, in proportion
-    // to what each can spare (never below its header, or SHRINK_TO of its
-    // normal width). Columns you've sized yourself are left alone.
+    // to what each can spare (never below its header, its content's
+    // minimum, or SHRINK_TO of its normal width). Columns you've sized
+    // yourself are left alone.
     function giveNameRoom(view, cm, nameIndex, need, sized) {
         if (need < 1) return;
         var cols = [], room = 0;
@@ -782,6 +809,7 @@ Ext.ns('Deluge.plugins.darkhand');
             if (cm.isHidden(i) || i === nameIndex || sized[id]) continue;
             var w = cm.getColumnWidth(i);
             var floor = Math.max(headerWidth(view, i), Math.ceil((w - (stretch[id] || 0)) * SHRINK_TO));
+            if (cm.config[i].dataIndex === 'progress') floor = Math.max(floor, progressMinWidth(view, i));
             if (w > floor) {
                 cols.push([i, id, w - floor]);
                 room += w - floor;
@@ -833,7 +861,9 @@ Ext.ns('Deluge.plugins.darkhand');
                 for (i = 0; i < n; i++) {
                     id = cm.getColumnId(i);
                     if (cm.isHidden(i) || i === nameIndex || sized[id]) continue;
-                    var fit = headerWidth(view, i) - cm.getColumnWidth(i);
+                    var needed = headerWidth(view, i);
+                    if (cm.config[i].dataIndex === 'progress') needed = Math.max(needed, progressMinWidth(view, i));
+                    var fit = needed - cm.getColumnWidth(i);
                     if (fit > 0) {
                         stretch[id] = (stretch[id] || 0) + fit;
                         cm.setColumnWidth(i, cm.getColumnWidth(i) + fit, true);
@@ -853,6 +883,7 @@ Ext.ns('Deluge.plugins.darkhand');
                     var short = SPEED_HEADERS[c.dataIndex] && c.dhHeader && c.header !== c.dhHeader;
                     var need = short ? c.dhFullWidth || 0 : headerWidth(view, i);
                     if (SPEED_HEADERS[c.dataIndex] && !short) c.dhFullWidth = need;
+                    if (c.dataIndex === 'progress') need = Math.max(need, progressMinWidth(view, i));
                     w = Math.max(w, need);
                 }
                 others += w;
@@ -899,10 +930,30 @@ Ext.ns('Deluge.plugins.darkhand');
         var view = grid.getView();
         var cm = grid.getColumnModel();
         var busy = false;
+        // Deluge draws each progress bar (and centres its label) at the
+        // column's width when the row is rendered, and only re-renders rows
+        // whose data changed. When the Progress column's width changes,
+        // redraw the rows so seeding and paused torrents' bars match it.
+        var progressWidth = function () {
+            var i = cm.findColumnIndex('progress');
+            return i < 0 ? 0 : cm.getColumnWidth(i);
+        };
+        var drawnWidth = progressWidth();
+        view.on('refresh', function () {
+            drawnWidth = progressWidth();
+        });
+
         var restretch = function () {
             if (busy) return;
             busy = true;
             stretchColumns(grid);
+            if (progressWidth() !== drawnWidth && view.hasRows()) {
+                try {
+                    view.refresh();
+                } catch (e) {
+                    if (window.console) console.error('Darkhand: redraw failed', e);
+                }
+            }
             busy = false;
         };
 
