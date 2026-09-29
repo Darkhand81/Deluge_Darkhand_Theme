@@ -932,7 +932,7 @@ html body.dh-dashboard,
 }
 
 /* ------------------------------------------------------------------------ */
-/* Brand and About window                                                   */
+/* Brand                                                                    */
 /* ------------------------------------------------------------------------ */
 
 /* The brand opens the About window */
@@ -954,31 +954,155 @@ html body.dh-dashboard,
     filter: drop-shadow(0 4px 16px rgba(76, 144, 232, 0.7));
 }
 
-/* The About window as a dashboard card (the plugin tags its parts, which
-   Deluge styles inline, hence !important) */
-.dh-dashboard .dh-about.x-window {
+/* ------------------------------------------------------------------------ */
+/* Windows: Preferences, Connection Manager, Add Torrents, dialogs...        */
+/* ------------------------------------------------------------------------ */
+
+/* Every window is a dashboard card: the card surface, radius, outline and
+   shadow, no separate frame around the title or the body */
+.dh-dashboard .x-window {
     border-radius: var(--dh-card-radius);
     overflow: hidden;
     /* the outline outside: the window's own parts would cover an inset one */
     box-shadow: 0 0 0 1px var(--dh-border), 0 24px 60px rgba(0, 0, 0, 0.55);
 }
 
-.dh-dashboard .dh-about .x-window-tl,
-.dh-dashboard .dh-about .x-window-tr,
-.dh-dashboard .dh-about .x-window-tc,
-.dh-dashboard .dh-about .x-window-ml,
-.dh-dashboard .dh-about .x-window-mr,
-.dh-dashboard .dh-about .x-window-mc,
-.dh-dashboard .dh-about .x-window-bl,
-.dh-dashboard .dh-about .x-window-br,
-.dh-dashboard .dh-about .x-window-bc,
-.dh-dashboard .dh-about .x-window-body {
+.dh-dashboard .x-window-tl,
+.dh-dashboard .x-window-tr,
+.dh-dashboard .x-window-tc,
+.dh-dashboard .x-window-ml,
+.dh-dashboard .x-window-mr,
+.dh-dashboard .x-window-mc,
+.dh-dashboard .x-window-bl,
+.dh-dashboard .x-window-br,
+.dh-dashboard .x-window-bc,
+.dh-dashboard .x-window-plain .x-window-mc,
+body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
+.dh-dashboard .x-window-body,
+.dh-dashboard .x-window-plain .x-window-body {
     background: var(--dh-bg-1);
     border-color: transparent;
     border-radius: 0;
 }
 
-/* No icon in the title bar: the logo is right below it */
+/* The frame's side and bottom strips become padding round the content */
+.dh-dashboard .x-window-ml {
+    padding-left: 12px;
+}
+
+.dh-dashboard .x-window-mr {
+    padding-right: 12px;
+}
+
+.dh-dashboard .x-window-header {
+    padding: 14px 14px 10px 18px;
+}
+
+/* A window's icon is the title bar's background: line it up with the
+   title */
+.dh-dashboard .x-window-header.x-panel-icon {
+    padding-left: 44px !important; /* Ext's is !important */
+    background-position: 18px 14px !important;
+    background-size: 18px 18px !important;
+}
+
+.dh-dashboard .x-window-tl {
+    padding-left: 0;
+}
+
+.dh-dashboard .x-window-tr {
+    padding-right: 0;
+}
+
+.dh-dashboard .x-window-header-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dh-text-strong);
+}
+
+/* Close button: a Lucide x, in --dh-text-muted */
+.dh-dashboard .x-window .x-tool-close {
+    width: 24px;
+    height: 24px;
+    margin: -4px -4px 0 0;
+    border-radius: 6px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a94a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E")
+        center / 16px 16px no-repeat;
+    filter: none;
+    opacity: 1;
+}
+
+.dh-dashboard .x-window .x-tool-close:hover,
+.dh-dashboard .x-window .x-tool-close-over {
+    background-color: var(--dh-bg-3);
+}
+
+/* Panels framed inside a window (lists, the Preferences pages...) get
+   rounded corners, like the cards */
+.dh-dashboard .x-window-body .x-panel-body:not(.x-panel-body-noborder),
+.dh-dashboard .x-window-body .x-tab-panel-body:not(.x-tab-panel-body-noborder) {
+    border-radius: 10px;
+}
+
+/* Buttons along the bottom: pills, the last one (the window's main
+   action: OK, Connect, Add...) in the accent colour. Message boxes keep
+   hidden buttons in the row, so theirs are all plain. */
+.dh-dashboard .x-window-footer {
+    padding: 8px 6px 16px;
+}
+
+.dh-dashboard .x-window-footer table.x-btn {
+    border-radius: 999px;
+}
+
+.dh-dashboard .x-window-footer table.x-btn button {
+    padding: 0 14px;
+}
+
+.dh-dashboard .x-window:not(.x-window-dlg) .x-window-footer td.x-toolbar-cell:last-child table.x-btn {
+    background: var(--dh-accent-soft);
+    box-shadow: inset 0 0 0 1px rgba(76, 144, 232, 0.45);
+}
+
+.dh-dashboard .x-window:not(.x-window-dlg) .x-window-footer td.x-toolbar-cell:last-child table.x-btn.x-btn-over {
+    background: rgba(76, 144, 232, 0.28);
+}
+
+.dh-dashboard .x-window:not(.x-window-dlg) .x-window-footer td.x-toolbar-cell:last-child table.x-btn button {
+    color: var(--dh-text-strong);
+}
+
+/* Message box icons: Lucide circle-help, info, triangle-alert and
+   circle-x in the accent, warning and error colours, instead of Ext's
+   bitmaps */
+.dh-dashboard .x-window-dlg .ext-mb-icon {
+    width: 28px;
+    height: 28px;
+    margin-right: 12px;
+    padding: 0;
+    background-position: center;
+    background-size: 24px 24px;
+}
+
+.dh-dashboard .x-window-dlg .ext-mb-question {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234c90e8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+}
+
+.dh-dashboard .x-window-dlg .ext-mb-info {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234c90e8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
+}
+
+.dh-dashboard .x-window-dlg .ext-mb-warning {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5b84b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+}
+
+.dh-dashboard .x-window-dlg .ext-mb-error {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff5f6d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m15 9-6 6'/%3E%3Cpath d='m9 9 6 6'/%3E%3C/svg%3E");
+}
+
+/* The About window: the logo is its header, so its title is a small
+   caption with no icon (the plugin tags its parts, which Deluge styles
+   inline, hence !important) */
 .dh-dashboard .dh-about .x-window-header,
 .dh-dashboard .dh-about .x-window-header.x-panel-icon {
     padding: 14px 14px 4px 18px;
@@ -988,27 +1112,9 @@ html body.dh-dashboard,
 .dh-dashboard .dh-about .x-window-header-text {
     padding-left: 0;
     font-size: 12px;
-    font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--dh-text-faint);
-}
-
-/* Close button: a Lucide x, in --dh-text-muted */
-.dh-dashboard .dh-about .x-tool-close {
-    width: 24px;
-    height: 24px;
-    margin: -5px -4px 0 0;
-    border-radius: 6px;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a94a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E")
-        center / 16px 16px no-repeat;
-    filter: none;
-    opacity: 1;
-}
-
-.dh-dashboard .dh-about .x-tool-close:hover,
-.dh-dashboard .dh-about .x-tool-close-over {
-    background-color: var(--dh-bg-3);
 }
 
 .dh-dashboard .dh-about .x-box-item {
@@ -1057,21 +1163,6 @@ html body.dh-dashboard,
 
 .dh-dashboard .dh-about .x-window-footer {
     padding: 4px 0 20px;
-}
-
-.dh-dashboard .dh-about .x-window-footer table.x-btn {
-    border-radius: 999px;
-    background: var(--dh-accent-soft);
-    box-shadow: inset 0 0 0 1px rgba(76, 144, 232, 0.45);
-}
-
-.dh-dashboard .dh-about .x-window-footer table.x-btn.x-btn-over {
-    background: rgba(76, 144, 232, 0.28);
-}
-
-.dh-dashboard .dh-about .x-window-footer table.x-btn button {
-    padding: 0 16px;
-    color: var(--dh-text-strong);
 }
 
 /* ------------------------------------------------------------------------ */
