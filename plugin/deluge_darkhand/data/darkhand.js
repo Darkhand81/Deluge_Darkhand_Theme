@@ -1142,11 +1142,17 @@ Ext.ns('Deluge.plugins.darkhand');
     var WINDOW_EXTRA_W = 24;
     var WINDOW_EXTRA_H = 36;
 
+    // Preferences grows by more: its tallest page (Interface) needs it with
+    // the theme's row spacing (--dh-inset between rows)
+    var PREFS_EXTRA_H = 36;
+
     function growWindow(win) {
         if (win.dhSized || win.rendered) return;
         win.dhSized = true;
         if (typeof win.width === 'number') win.width += WINDOW_EXTRA_W;
         if (typeof win.height === 'number') win.height += WINDOW_EXTRA_H;
+        var Prefs = Deluge.preferences && Deluge.preferences.PreferencesWindow;
+        if (Prefs && win instanceof Prefs && typeof win.height === 'number') win.height += PREFS_EXTRA_H;
     }
 
     // Widen a window whose footer buttons don't fit (Remove Torrent's three,
@@ -1173,12 +1179,19 @@ Ext.ns('Deluge.plugins.darkhand');
     }
 
     // A small window that's just a form (Edit Tracker, Move Storage, Add
-    // Connection...) has a fixed height, which leaves more room below the
-    // fields than above. Fit its height to them: as far from the frame's
-    // bottom as the first is from its top. Not for forms whose fields take a
-    // share of the height.
+    // Connection...) keeps the padding and fixed height Deluge gave it, so
+    // each sits its fields a different way inside its frame, with more room
+    // below them than above. Lay it out by the theme's spacing instead
+    // (dashboard.css): its fields --dh-window-pad inside the frame on every
+    // side (the window widening by what the sides gain, so the fields keep
+    // their width), its label column fitted to the labels, and its height to
+    // the fields. Not for forms whose fields take a share of the height.
     function fitFormWindow(win) {
         try {
+            if (win.html && win.items && !win.items.getCount()) {
+                fitTextWindow(win);
+                return;
+            }
             var form = win.items && win.items.getCount() === 1 && win.items.get(0);
             if (!form || !form.isXType('form') || !win.isVisible()) return;
             var tall = false;
@@ -1186,44 +1199,88 @@ Ext.ns('Deluge.plugins.darkhand');
                 if (f.anchor && /\s\S/.test(Ext.util.Format.trim(String(f.anchor)))) tall = true;
             });
             if (tall) return;
-            fitFormLabels(form);
-            var box = win.body.dom.getBoundingClientRect();
+            var pad = cssPx(win.el.dom, '--dh-window-pad', 12);
             var edges = formEdges(form);
             if (!edges) return;
-            // Some (Add / Edit Connection, Add from Url) have more room above
-            // their fields than beside them: as much at the sides (once).
-            // Not where the labels are right-aligned (Login's row is centred).
-            var side = Math.round((edges.top - box.top) - (edges.left - box.left));
-            if (side >= 2 && !form.dhSidePadded && form.labelAlign !== 'right') {
-                form.dhSidePadded = true;
-                var body = form.body, s = window.getComputedStyle(body.dom);
-                body.setStyle({
-                    paddingLeft: parseFloat(s.paddingLeft) + side + 'px',
-                    paddingRight: parseFloat(s.paddingRight) + side + 'px',
+            // Once: the room above and beside the fields. Not beside them
+            // where the labels are right-aligned (Login's row is centred).
+            if (!form.dhSpaced) {
+                form.dhSpaced = true;
+                var frame = frameInner(win, form);
+                var top = pad - (edges.top - frame.top);
+                var side = form.labelAlign === 'right' ? 0 : pad - (edges.left - frame.left);
+                var s = window.getComputedStyle(form.body.dom);
+                form.body.setStyle({
+                    paddingTop: Math.max(0, parseFloat(s.paddingTop) + top) + 'px',
+                    paddingLeft: Math.max(0, parseFloat(s.paddingLeft) + side) + 'px',
+                    paddingRight: Math.max(0, parseFloat(s.paddingRight) + side) + 'px',
                 });
-                form.doLayout();
+                if (side) win.setWidth(win.getWidth() + 2 * side);
+                win.doLayout();
+                fitFormLabels(form);
                 edges = formEdges(form);
+                // A form with its own frame (Copy Magnet URI) grows to its
+                // fields itself: the room below goes in its padding, and the
+                // window grows by as much
+                if (frame.own) {
+                    var below = Math.round(edges.bottom + pad - frameInner(win, form).bottom);
+                    form.body.setStyle('padding-bottom', Math.max(0, parseFloat(s.paddingBottom) + below) + 'px');
+                    win.setHeight(win.getHeight() + below);
+                    win.doLayout();
+                    edges = formEdges(form);
+                }
             }
-            var first = edges.top, bottom = edges.bottom;
-            var delta = Math.round(bottom + (first - box.top) - box.bottom);
+            // As much room below them
+            var delta = Math.round(edges.bottom + pad - frameInner(win, form).bottom);
             if (delta && win.getHeight() + delta <= Ext.lib.Dom.getViewHeight()) {
                 win.setHeight(win.getHeight() + delta);
-                win.center();
             }
+            win.center();
         } catch (e) {}
     }
 
-    // Deluge sizes a form's label column for its own font; at the theme's,
-    // a long label can nearly touch its field (Add Connection's
-    // "Username:"). Widen the column to leave LABEL_GAP after the longest,
-    // if the fields still fit in the form moved along by that much.
-    var LABEL_GAP = 10;
+    // A window that's just text (Remove Torrent's question) the same way:
+    // the text --dh-window-pad inside the frame, as much room below
+    function fitTextWindow(win) {
+        var body = win.body.dom, pad = cssPx(win.el.dom, '--dh-window-pad', 12);
+        var range = document.createRange();
+        range.selectNodeContents(body);
+        var text = range.getBoundingClientRect();
+        if (!text.height) return;
+        var frame = frameInner(win, null);
+        if (!win.dhSpaced) {
+            win.dhSpaced = true;
+            var s = window.getComputedStyle(body);
+            win.body.setStyle({
+                paddingTop: Math.max(0, parseFloat(s.paddingTop) + pad - (text.top - frame.top)) + 'px',
+                paddingLeft: Math.max(0, parseFloat(s.paddingLeft) + pad - (text.left - frame.left)) + 'px',
+                paddingRight: Math.max(0, parseFloat(s.paddingRight) + pad - (text.left - frame.left)) + 'px',
+            });
+            win.doLayout();
+            text = range.getBoundingClientRect();
+        }
+        var delta = Math.round(text.bottom + pad - frameInner(win, null).bottom);
+        if (delta && win.getHeight() + delta <= Ext.lib.Dom.getViewHeight()) win.setHeight(win.getHeight() + delta);
+        win.center();
+    }
 
+    // The inside edge of the frame round a form window's fields: the form's
+    // own, where it has a border (Copy Magnet URI), or the window's. Frames
+    // are drawn 1px in, 1px wide (dashboard.css), so 2px inside the element.
+    function frameInner(win, form) {
+        var own = !!form && form.body.hasClass('x-panel-body') && !form.body.hasClass('x-panel-body-noborder');
+        var el = own ? form.bwrap.dom : win.el.child('.x-window-mc', true);
+        var r = el.getBoundingClientRect();
+        return { own: own, top: r.top + 2, left: r.left + 2, right: r.right - 2, bottom: r.bottom - 2 };
+    }
+
+    // Deluge sizes a form's label column for its own font, some roomy, some
+    // with a label nearly touching its field (Add Connection's "Username:").
+    // Fit the column to the longest label plus --dh-label-gap, so every form
+    // leaves the same gap; if it grows, only while the fields still fit.
     function fitFormLabels(form) {
-        if (form.dhLabelsFitted) return;
-        form.dhLabelsFitted = true;
         var layout = form.getLayout();
-        if (!layout.labelAdjust || form.labelAlign === 'top') return;
+        if (!layout.labelAdjust || (form.labelAlign && form.labelAlign !== 'left')) return;
         var items = Ext.toArray(form.body.dom.querySelectorAll('.x-form-item'));
         var widest = 0, fieldsRight = 0;
         Ext.each(items, function (item) {
@@ -1234,21 +1291,48 @@ Ext.ns('Deluge.plugins.darkhand');
                 if (c.offsetWidth) fieldsRight = Math.max(fieldsRight, c.getBoundingClientRect().right);
             });
         });
-        var extra = Math.ceil(widest + LABEL_GAP - layout.labelAdjust);
-        if (extra <= 0 || !widest) return;
+        if (!widest) return;
+        var extra = Math.ceil(widest + cssPx(form.body.dom, '--dh-label-gap', 10) - layout.labelAdjust);
+        if (!extra) return;
         var body = form.body.dom, s = window.getComputedStyle(body);
         var room = body.getBoundingClientRect().right - parseFloat(s.paddingRight) - parseFloat(s.borderRightWidth);
-        if (fieldsRight + extra > room) return;
+        if (extra > 0 && fieldsRight + extra > room) return;
         Ext.each(items, function (item) {
             var label = item.querySelector('label.x-form-item-label');
             var el = item.querySelector('.x-form-element');
             if (!label || !el) return;
-            label.style.width = label.offsetWidth - parseFloat(window.getComputedStyle(label).paddingLeft) -
-                parseFloat(window.getComputedStyle(label).paddingRight) + extra + 'px';
+            var ls = window.getComputedStyle(label);
+            label.style.width = label.offsetWidth - parseFloat(ls.paddingLeft) - parseFloat(ls.paddingRight) + extra + 'px';
             el.style.paddingLeft = parseFloat(window.getComputedStyle(el).paddingLeft) + extra + 'px';
         });
         layout.labelAdjust += extra;
         form.doLayout();
+    }
+
+    // Preferences keeps Deluge's height, and a page taller than that
+    // (Interface, with the theme's row spacing; a plugin's) would scroll.
+    // Grow the window to the page when it's shown, as far as the screen
+    // allows. Never shrink it, so it doesn't jump from page to page.
+    function fitPreferences(prefs) {
+        var doSelectPage = prefs.doSelectPage;
+        prefs.doSelectPage = function (page) {
+            var result = doSelectPage.apply(this, arguments);
+            Ext.defer(fitPreferencesPage, 1, null, [this, this.pages[page]]);
+            return result;
+        };
+    }
+
+    function fitPreferencesPage(win, page) {
+        try {
+            if (!page || !page.body || !win.isVisible()) return;
+            var body = page.body.dom, over = body.scrollHeight - body.clientHeight;
+            if (over <= 1) return;
+            var height = Math.min(win.getHeight() + over, Ext.lib.Dom.getViewHeight() - 2 * GAP);
+            if (height > win.getHeight()) {
+                win.setHeight(height);
+                win.center();
+            }
+        } catch (e) {}
     }
 
     // Where a form's contents start and end (Ext's clearing divs, below the
@@ -1373,8 +1457,13 @@ Ext.ns('Deluge.plugins.darkhand');
     // How far an inset list's rows sit in from its frame, on each side:
     // dashboard.css's --dh-inset
     function insetOf(el) {
-        var v = parseFloat(window.getComputedStyle(el).getPropertyValue('--dh-inset'));
-        return isNaN(v) ? 6 : v;
+        return cssPx(el, '--dh-inset', 6);
+    }
+
+    // A spacing token (dashboard.css) as seen from el, in px
+    function cssPx(el, name, fallback) {
+        var v = parseFloat(window.getComputedStyle(el).getPropertyValue(name));
+        return isNaN(v) ? fallback : v;
     }
 
     // opts.stretch: the dataIndex of the column that takes the rest of the
@@ -1922,12 +2011,16 @@ Ext.ns('Deluge.plugins.darkhand');
             if (add.optionsPanel.form) add.optionsPanel.form.bodyStyle = 'padding: 5px 15px';
             // The Options tab's form fills Deluge's 265px exactly, so the
             // rounded section would clip its last row: 12px more for it, and
-            // for the window, so the torrent list keeps its height
+            // 12 more for its six rows of checkboxes, each 2px further apart
+            // with the theme's row spacing (--dh-inset, where Ext's is 4px).
+            // The window grows by as much, so the torrent list keeps its
+            // height.
+            var extra = 12 + 12;
             configure(add.optionsPanel, {
                 margins: margins(10, 0, 0, 0),
-                height: add.optionsPanel.height + 12,
+                height: add.optionsPanel.height + extra,
             });
-            if (typeof add.height === 'number') add.height += 12;
+            if (typeof add.height === 'number') add.height += extra;
         }
         // The details card's Details and Options tabs, restyled in
         // dashboard.css
@@ -1937,6 +2030,7 @@ Ext.ns('Deluge.plugins.darkhand');
         });
         // Preferences' page list, styled as a menu (dashboard.css)
         if (deluge.preferences && deluge.preferences.list) deluge.preferences.list.addClass('dh-pref-list');
+        if (deluge.preferences && deluge.preferences.doSelectPage) fitPreferences(deluge.preferences);
         rememberDetailsSize(mode, details);
 
         var refit = function () {
