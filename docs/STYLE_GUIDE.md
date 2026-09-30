@@ -319,7 +319,9 @@ toolbar doesn't fit (measured on every toolbar resize). Labels stay as tooltips.
   hovered column; none on Name; the last column's on its own border). The
   hovered column's menu button (⌄) sits on the header's surface, 3px in from
   the edge to clear the handle, with a small rounded highlight under the
-  pointer (also in the details card's and windows' grids).
+  pointer (also in the details card's and windows' grids). Every header
+  keeps room for the sort arrow, shown only on the sorted column, so the
+  columns (fitted to their headers) don't move when you sort.
 - Rows: fixed 28px; every cell has a 20px line so text, state icons and
   progress bars share one centre line.
 - Columns fit the card exactly at every width (see G4–G8):
