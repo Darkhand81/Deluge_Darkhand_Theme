@@ -1186,21 +1186,83 @@ Ext.ns('Deluge.plugins.darkhand');
                 if (f.anchor && /\s\S/.test(Ext.util.Format.trim(String(f.anchor)))) tall = true;
             });
             if (tall) return;
+            fitFormLabels(form);
             var box = win.body.dom.getBoundingClientRect();
-            var first = null, bottom = 0;
-            Ext.each(Ext.toArray(form.body.dom.children), function (child) {
-                var r = child.getBoundingClientRect();
-                if (!r.height) return; // Ext's clearing divs, below the last margin
-                if (first === null) first = r.top;
-                bottom = Math.max(bottom, r.bottom);
-            });
-            if (first === null) return;
+            var edges = formEdges(form);
+            if (!edges) return;
+            // Some (Add / Edit Connection, Add from Url) have more room above
+            // their fields than beside them: as much at the sides (once).
+            // Not where the labels are right-aligned (Login's row is centred).
+            var side = Math.round((edges.top - box.top) - (edges.left - box.left));
+            if (side >= 2 && !form.dhSidePadded && form.labelAlign !== 'right') {
+                form.dhSidePadded = true;
+                var body = form.body, s = window.getComputedStyle(body.dom);
+                body.setStyle({
+                    paddingLeft: parseFloat(s.paddingLeft) + side + 'px',
+                    paddingRight: parseFloat(s.paddingRight) + side + 'px',
+                });
+                form.doLayout();
+                edges = formEdges(form);
+            }
+            var first = edges.top, bottom = edges.bottom;
             var delta = Math.round(bottom + (first - box.top) - box.bottom);
             if (delta && win.getHeight() + delta <= Ext.lib.Dom.getViewHeight()) {
                 win.setHeight(win.getHeight() + delta);
                 win.center();
             }
         } catch (e) {}
+    }
+
+    // Deluge sizes a form's label column for its own font; at the theme's,
+    // a long label can nearly touch its field (Add Connection's
+    // "Username:"). Widen the column to leave LABEL_GAP after the longest,
+    // if the fields still fit in the form moved along by that much.
+    var LABEL_GAP = 10;
+
+    function fitFormLabels(form) {
+        if (form.dhLabelsFitted) return;
+        form.dhLabelsFitted = true;
+        var layout = form.getLayout();
+        if (!layout.labelAdjust || form.labelAlign === 'top') return;
+        var items = Ext.toArray(form.body.dom.querySelectorAll('.x-form-item'));
+        var widest = 0, fieldsRight = 0;
+        Ext.each(items, function (item) {
+            var label = item.querySelector('label.x-form-item-label');
+            if (label && label.offsetWidth) widest = Math.max(widest, textWidth(label, label.textContent));
+            var el = item.querySelector('.x-form-element');
+            Ext.each(el ? Ext.toArray(el.children) : [], function (c) {
+                if (c.offsetWidth) fieldsRight = Math.max(fieldsRight, c.getBoundingClientRect().right);
+            });
+        });
+        var extra = Math.ceil(widest + LABEL_GAP - layout.labelAdjust);
+        if (extra <= 0 || !widest) return;
+        var body = form.body.dom, s = window.getComputedStyle(body);
+        var room = body.getBoundingClientRect().right - parseFloat(s.paddingRight) - parseFloat(s.borderRightWidth);
+        if (fieldsRight + extra > room) return;
+        Ext.each(items, function (item) {
+            var label = item.querySelector('label.x-form-item-label');
+            var el = item.querySelector('.x-form-element');
+            if (!label || !el) return;
+            label.style.width = label.offsetWidth - parseFloat(window.getComputedStyle(label).paddingLeft) -
+                parseFloat(window.getComputedStyle(label).paddingRight) + extra + 'px';
+            el.style.paddingLeft = parseFloat(window.getComputedStyle(el).paddingLeft) + extra + 'px';
+        });
+        layout.labelAdjust += extra;
+        form.doLayout();
+    }
+
+    // Where a form's contents start and end (Ext's clearing divs, below the
+    // last margin, have no height)
+    function formEdges(form) {
+        var edges = null;
+        Ext.each(Ext.toArray(form.body.dom.children), function (child) {
+            var r = child.getBoundingClientRect();
+            if (!r.height) return;
+            if (!edges) edges = { top: r.top, left: r.left, bottom: r.bottom };
+            edges.left = Math.min(edges.left, r.left);
+            edges.bottom = Math.max(edges.bottom, r.bottom);
+        });
+        return edges;
     }
 
     // Deluge's FormLayout fix (ext-extensions) renders a field without
