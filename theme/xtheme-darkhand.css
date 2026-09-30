@@ -1025,6 +1025,13 @@ html body .x-treegrid-resizer {
     border-bottom-color: var(--dh-border);
 }
 
+/* A label beside its field, its text level with the field's (Ext's 3px
+   above it leaves it 1px high at the theme's sizes) */
+html body :is(.x-form-label-left, .x-form-label-right) label.x-form-item-label {
+    padding-top: 4px;
+    padding-bottom: 2px;
+}
+
 .x-form-text,
 textarea.x-form-field,
 .x-form-select-one,
