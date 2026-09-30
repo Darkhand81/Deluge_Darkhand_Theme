@@ -743,7 +743,11 @@ td.sort-asc .x-grid3-hd-inner {
     box-shadow: inset 0 -2px 0 var(--dh-accent);
 }
 
-.x-grid3-hd-btn {
+/* A column's menu button: the theme's chevron, centred. Ext's hover
+   shifts the button's image 14px (its sprite's second half), which would
+   slide the chevron out of sight: keep it centred. */
+.x-grid3-hd-btn,
+a.x-grid3-hd-btn:hover {
     background: var(--dh-bg-4) var(--dh-chevron-down) no-repeat center;
     filter: none;
 }

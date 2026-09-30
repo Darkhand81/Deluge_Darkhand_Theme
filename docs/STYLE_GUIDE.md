@@ -316,7 +316,10 @@ toolbar doesn't fit (measured on every toolbar resize). Labels stay as tooltips.
 
 - Headers: 10.5px bold uppercase, faint; no cell dividers. Hovering the
   header row shows a 2×14px grab handle at each column edge (brighter on the
-  hovered column; none on Name; the last column's on its own border).
+  hovered column; none on Name; the last column's on its own border). The
+  hovered column's menu button (⌄) sits on the header's surface, 3px in from
+  the edge to clear the handle, with a small rounded highlight under the
+  pointer (also in the details card's and windows' grids).
 - Rows: fixed 28px; every cell has a 20px line so text, state icons and
   progress bars share one centre line.
 - Columns fit the card exactly at every width (see G4–G8):
@@ -573,6 +576,10 @@ Each learned the hard way. Symptom → cause → what the code does.
   cell's menu button (⌄) covers its own edge → grab handles sit just past the
   edge; the last visible column (followed by hidden ones, so CSS can't find
   it) is tagged `dh-hd-last` and its handle sits on its border.
+- **G42. The column menu button's hover shifts its image.** Ext's
+  `a.x-grid3-hd-btn:hover` moves the background 14px (the second half of
+  its sprite), which slides a single centred icon out of sight → keep
+  `background-position: center` on hover too.
 - **G33.** `view.getCell()` throws when the grid has no rows yet: check
   `view.hasRows()`.
 

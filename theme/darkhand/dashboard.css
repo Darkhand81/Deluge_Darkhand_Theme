@@ -774,6 +774,23 @@ html body.dh-dashboard,
     display: none;
 }
 
+/* The column menu button on the header's own surface rather than a grey
+   box, with a small rounded highlight under the pointer (inset from the
+   header's top and bottom: Ext sets the button's height to the header's),
+   3px in from the column's edge so it clears the resize handle there */
+.dh-dashboard :is(#torrentGrid, .dh-card-grid, .dh-inset-grid) :is(.x-grid3-hd-btn, a.x-grid3-hd-btn:hover) {
+    right: 3px;
+    box-sizing: border-box;
+    padding: 6px 0;
+    border-radius: var(--dh-small-radius);
+    background-color: transparent;
+    background-clip: content-box;
+}
+
+.dh-dashboard :is(#torrentGrid, .dh-card-grid, .dh-inset-grid) a.x-grid3-hd-btn:hover {
+    background-color: var(--dh-bg-3);
+}
+
 /* The line Ext draws while you drag a column's edge */
 .dh-dashboard #torrentGrid .x-grid3-resize-proxy {
     width: 2px;
