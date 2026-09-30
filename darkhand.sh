@@ -633,11 +633,40 @@ start_web() {
 
 trap 'start_web' EXIT
 
+# PIDs of running deluge-web processes that use one of CONFIG_DIRS (another
+# instance with its own config doesn't matter). One whose config directory
+# can't be read counts, to be safe.
+config_web_pids() {
+    local pid dir home c
+    local -a want=()
+    for c in "${CONFIG_DIRS[@]}"; do
+        want+=("$(readlink -f "$c" 2>/dev/null || printf '%s' "$c")")
+    done
+    for pid in $(deluge_web_pids); do
+        dir="$(pid_config_dir "$pid")"
+        if [[ -z "$dir" ]]; then
+            home="$( (tr '\0' '\n' 2>/dev/null <"/proc/$pid/environ" || true) |
+                sed -n 's/^HOME=//p')"
+            [[ -n "$home" ]] || { printf '%s\n' "$pid"; continue; }
+            dir="$home/.config/deluge"
+        elif [[ "$dir" != /* ]]; then
+            dir="$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)/$dir"
+        fi
+        dir="$(readlink -f "$dir" 2>/dev/null || printf '%s' "$dir")"
+        for c in "${want[@]}"; do
+            if [[ "$dir" == "$c" ]]; then
+                printf '%s\n' "$pid"
+                break
+            fi
+        done
+    done
+}
+
 # deluge-web rewrites web.conf when it shuts down, so an edit made while it is
 # running would be lost. Returns non-zero if it is still running.
 ensure_web_stopped() {
     local pids
-    pids="$(deluge_web_pids | tr '\n' ' ')"
+    pids="$(config_web_pids | tr '\n' ' ')"
     [[ -z "${pids// /}" ]] && return 0
     warn "deluge-web is running (pid ${pids% }) outside a systemd service this"
     warn "script can manage, and would overwrite web.conf when it exits."
@@ -646,7 +675,7 @@ ensure_web_stopped() {
     fi
     printf '  Stop deluge-web now, then press Enter to continue (Ctrl-C to abort)... '
     read -r _
-    pids="$(deluge_web_pids | tr '\n' ' ')"
+    pids="$(config_web_pids | tr '\n' ' ')"
     [[ -z "${pids// /}" ]]
 }
 
