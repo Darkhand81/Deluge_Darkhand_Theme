@@ -1172,13 +1172,63 @@ Ext.ns('Deluge.plugins.darkhand');
         } catch (e) {}
     }
 
+    // A small window that's just a form (Edit Tracker, Move Storage, Add
+    // Connection...) has a fixed height, which leaves more room below the
+    // fields than above. Fit its height to them: as far from the frame's
+    // bottom as the first is from its top. Not for resizable windows, or
+    // forms whose fields take a share of the height.
+    function fitFormWindow(win) {
+        try {
+            var form = win.items && win.items.getCount() === 1 && win.items.get(0);
+            if (!form || !form.isXType('form') || win.resizable || !win.isVisible()) return;
+            var tall = false;
+            form.getForm().items.each(function (f) {
+                if (f.anchor && /\s\S/.test(Ext.util.Format.trim(String(f.anchor)))) tall = true;
+            });
+            if (tall) return;
+            var box = win.body.dom.getBoundingClientRect();
+            var first = null, bottom = 0;
+            Ext.each(Ext.toArray(form.body.dom.children), function (child) {
+                var r = child.getBoundingClientRect();
+                if (!r.height) return; // Ext's clearing divs, below the last margin
+                if (first === null) first = r.top;
+                bottom = Math.max(bottom, r.bottom);
+            });
+            if (first === null) return;
+            var delta = Math.round(bottom + (first - box.top) - box.bottom);
+            if (delta && win.getHeight() + delta <= Ext.lib.Dom.getViewHeight()) {
+                win.setHeight(win.getHeight() + delta);
+                win.center();
+            }
+        } catch (e) {}
+    }
+
+    // Deluge's FormLayout fix (ext-extensions) renders a field without
+    // noting its label, so Ext sizes a labelled field anchored to the full
+    // width as if it had none: it runs a label's width past the form (Edit
+    // Tracker, Add Tracker). Note it as Ext's own renderItem does, for those
+    // only: Deluge's narrower anchors (Add Connection's 75%...) are sized
+    // for the way it is.
+    function fixFormLabels() {
+        var renderItem = Ext.layout.FormLayout.prototype.renderItem;
+        Ext.layout.FormLayout.prototype.renderItem = function (c) {
+            var result = renderItem.apply(this, arguments);
+            if (c && c.formItem && !c.label && /^100%/.test(String(c.anchor || ''))) {
+                c.label = c.formItem.child('label.x-form-item-label');
+            }
+            return result;
+        };
+    }
+
     function sizeWindows() {
+        fixFormLabels();
         var initComponent = Ext.Window.prototype.initComponent;
         Ext.Window.prototype.initComponent = function () {
             growWindow(this);
             var result = initComponent.apply(this, arguments);
             this.on('show', function (win) {
                 Ext.defer(fitWindowButtons, 1, null, [win]);
+                Ext.defer(fitFormWindow, 1, null, [win]);
                 if (document.fonts && document.fonts.ready) {
                     document.fonts.ready.then(function () {
                         fitWindowButtons(win);
@@ -1192,6 +1242,7 @@ Ext.ns('Deluge.plugins.darkhand');
             growWindow(win);
             win.on('show', function () {
                 Ext.defer(fitWindowButtons, 1, null, [win]);
+                Ext.defer(fitFormWindow, 1, null, [win]);
             });
         });
     }
@@ -1375,6 +1426,33 @@ Ext.ns('Deluge.plugins.darkhand');
         function fit() {
             Ext.defer(fitListColumns, 1, null, [win, win.list, { stretch: 'url', maxWidth: TRACKERS_MAX_WIDTH }]);
         }
+        // Its Edit Tracker window as wide as the URL being edited, the same
+        // way
+        var edit = win.editWindow;
+        if (edit) {
+            edit.on('show', function () {
+                Ext.defer(fitEditTracker, 1, null, [edit]);
+            });
+        }
+    }
+
+    function fitEditTracker(win) {
+        try {
+            var field = win.form && win.form.getForm().findField('tracker');
+            if (!field || !field.el || !win.isVisible()) return;
+            win.dhBaseWidth = win.dhBaseWidth || win.getWidth();
+            var input = field.el.dom, s = window.getComputedStyle(input);
+            var need = Math.ceil(textWidth(input, field.getValue()) + parseFloat(s.paddingLeft) + parseFloat(s.paddingRight) +
+                parseFloat(s.borderLeftWidth) + parseFloat(s.borderRightWidth)) + 2; // + the caret
+            var maxWidth = Math.max(win.dhBaseWidth, Math.min(TRACKERS_MAX_WIDTH, Ext.lib.Dom.getViewWidth() - 48));
+            // (the field grows with the window)
+            var width = Math.max(win.dhBaseWidth, Math.min(maxWidth, win.getWidth() + need - input.offsetWidth));
+            if (Math.abs(width - win.getWidth()) > 1) {
+                win.setWidth(width);
+                win.doLayout();
+                win.center();
+            }
+        } catch (e) {}
     }
 
     // Every list, grid and tree grid in a window (Add Torrents, the

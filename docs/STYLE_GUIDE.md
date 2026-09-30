@@ -603,6 +603,14 @@ Each learned the hard way. Symptom → cause → what the code does.
   widths), CSS padding adds to it and overflows → set it in the config
   before render, or leave room in the component (a grid view's
   `scrollOffset`).
+- **G41. Deluge's form fields don't know their labels.** Deluge replaces
+  `FormLayout.renderItem` (`Ext.ux.layout.FormLayoutFix`) and never sets a
+  field's `label`, so Ext's anchor layout doesn't take the label's width off
+  an anchored field: `anchor: '100%'` beside a label runs that far past the
+  form (Edit Tracker, Add Tracker). Deluge's narrower anchors (Add
+  Connection's 75% and 40%) are sized for this, so the plugin sets `label`
+  only for full-width anchors. Small form windows also have fixed heights;
+  the plugin fits them to their fields (`fitFormWindow`).
 - **G20. Inset shadows on windows vanish.** The window's own frame cells
   paint over an inset outline → windows use an outer `0 0 0 1px` ring.
 - **G24. ListView columns are fractions.** Change `columns[i].width`
