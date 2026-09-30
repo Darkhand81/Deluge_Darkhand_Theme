@@ -1358,10 +1358,27 @@ body.x-body-masked .x-window-plain .x-window-mc {
     color: var(--dh-text);
 }
 
+/* The prompt's box is a plain input, not an Ext field: dress it as one */
 .x-window-dlg .ext-mb-textarea,
 .x-window-dlg .ext-mb-input {
     background: var(--dh-bg-0);
     color: var(--dh-text);
+    border: 1px solid var(--dh-border-strong);
+    border-radius: var(--dh-small-radius);
+    padding: 1px 3px;
+    font: inherit;
+    font-size: var(--dh-text-small);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.x-window-dlg .ext-mb-input {
+    height: 22px;
+}
+
+.x-window-dlg :is(.ext-mb-textarea, .ext-mb-input):focus {
+    border-color: var(--dh-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--dh-accent) 20%, transparent);
 }
 
 .x-dlg-mask {
