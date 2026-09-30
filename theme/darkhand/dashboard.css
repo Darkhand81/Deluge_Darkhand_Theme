@@ -774,6 +774,20 @@ html body.dh-dashboard,
     display: none;
 }
 
+/* In the torrent list the sort arrow takes its room in every header, shown
+   only on the sorted column: the plugin fits the columns to their headers,
+   so an arrow appearing would widen its column (and move the others) each
+   time you sort. Not in the details card's grids, whose narrow right-hand
+   layout has no room to spare for it. */
+.dh-dashboard #torrentGrid .x-grid3-hd-inner .x-grid3-sort-icon {
+    display: inline;
+    visibility: hidden;
+}
+
+.dh-dashboard #torrentGrid :is(td.sort-asc, td.sort-desc) .x-grid3-hd-inner .x-grid3-sort-icon {
+    visibility: visible;
+}
+
 /* The column menu button on the header's own surface rather than a grey
    box, with a small rounded highlight under the pointer (inset from the
    header's top and bottom: Ext sets the button's height to the header's),
