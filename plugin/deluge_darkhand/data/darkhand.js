@@ -837,6 +837,9 @@ Ext.ns('Deluge.plugins.darkhand');
     var SPEED_HEADERS = {
         download_payload_rate: '↓ ',
         upload_payload_rate: '↑ ',
+        // the details card's Peers tab
+        down_speed: '↓ ',
+        up_speed: '↑ ',
     };
 
     function setShortHeaders(view, cm, short) {
@@ -864,8 +867,8 @@ Ext.ns('Deluge.plugins.darkhand');
     var PROGRESS_STATES = ['Downloading', 'Seeding', 'Paused', 'Checking', 'Queued', 'Error', 'Allocating', 'Moving'];
     var PROGRESS_PAD = 12; // around the label, inside the bar
 
-    // The width of text as it would be drawn in el: its font and letter
-    // spacing (which the canvas doesn't apply)
+    // The width of text as it would be drawn in el: its font, letter
+    // spacing and capitals (which the canvas doesn't apply)
     var measureCanvas;
 
     function textWidth(el, text) {
@@ -873,6 +876,7 @@ Ext.ns('Deluge.plugins.darkhand');
         measureCanvas = measureCanvas || document.createElement('canvas');
         var ctx = measureCanvas.getContext('2d');
         ctx.font = s.fontWeight + ' ' + s.fontSize + ' ' + s.fontFamily;
+        if (s.textTransform === 'uppercase') text = text.toUpperCase();
         return ctx.measureText(text).width + (parseFloat(s.letterSpacing) || 0) * text.length;
     }
 
@@ -1386,7 +1390,32 @@ Ext.ns('Deluge.plugins.darkhand');
             var view = grid.getView();
             view.scrollOffset = view.getScrollOffset() + 2 * insetOf(grid.el.dom);
         });
-        hookInset(Ext.ux && Ext.ux.tree && Ext.ux.tree.TreeGrid, 'dh-inset-tree', stretchTreeColumn);
+        hookInset(Ext.ux && Ext.ux.tree && Ext.ux.tree.TreeGrid, 'dh-inset-tree', function (tree) {
+            stretchTreeColumn(tree, true);
+        });
+        // The details card's grids (Files, Peers) look like the torrent list
+        // (dashboard.css), their widest column filling the card
+        hookCard(Ext.grid && Ext.grid.GridPanel, function (grid) {
+            var view = grid.getView();
+            view.emptyText = _('No peers connected');
+            view.deferEmptyText = false;
+            fitGridColumns(grid);
+        });
+        hookCard(Ext.ux && Ext.ux.tree && Ext.ux.tree.TreeGrid, function (tree) {
+            stretchTreeColumn(tree, false);
+        });
+    }
+
+    function hookCard(Component, setUp) {
+        if (!Component) return;
+        var afterRender = Component.prototype.afterRender;
+        Component.prototype.afterRender = function () {
+            if (this.el.up('#detailsPanel')) {
+                this.addClass('dh-card-grid');
+                setUp(this);
+            }
+            return afterRender.apply(this, arguments);
+        };
     }
 
     // Mark each one in a window and let setUp adjust it, before its first
@@ -1474,37 +1503,235 @@ Ext.ns('Deluge.plugins.darkhand');
         card[needed > ct.dom.offsetWidth ? 'addClass' : 'removeClass']('dh-toolbar-compact');
     }
 
-    // A tree grid's widest column (Add Torrents' Filename) takes whatever
-    // width the others leave, less the inset, so its rows fill it; the
-    // others are at least as wide as their header. The tree grid sizes its
-    // columns (on resize, and when its scrollbar comes or goes) through
-    // updateColumnWidths.
-    function stretchTreeColumn(tree) {
-        var cols = tree.columns;
-        var stretch = 0;
-        for (var i = 1; i < cols.length; i++) {
-            if (cols[i].width > cols[stretch].width) stretch = i;
+    // Fitting columns to a width: the stretch column takes what the others
+    // leave, at least STRETCH_MIN; when that's too little, the others give
+    // up width, in proportion to what each can spare: first down to their
+    // content (or header, if wider), then down to their header, their text
+    // ending in an ellipsis. Past that, the list scrolls sideways.
+    var STRETCH_MIN = 120;
+
+    // cols: [{ base: normal width, want: its content's, min: its header's,
+    // full: its whole content's }]. The stretch column asks for its whole
+    // content (at least STRETCH_MIN) before the others keep theirs.
+    function fitWidths(avail, cols, stretch) {
+        var w = [], others = 0, i;
+        var target = Math.max(STRETCH_MIN, cols[stretch].full || 0);
+        for (i = 0; i < cols.length; i++) {
+            w[i] = Math.max(cols[i].base, cols[i].want);
+            if (i !== stretch) others += w[i];
         }
+        Ext.each(['want', 'min'], function (floor) {
+            var short = target - (avail - others), room = 0;
+            if (short <= 0) return;
+            for (i = 0; i < cols.length; i++) {
+                if (i !== stretch) room += Math.max(0, w[i] - cols[i][floor]);
+            }
+            if (!room) return;
+            var share = Math.min(1, short / room);
+            for (i = 0; i < cols.length; i++) {
+                if (i === stretch) continue;
+                var take = Math.floor(Math.max(0, w[i] - cols[i][floor]) * share);
+                w[i] -= take;
+                others -= take;
+            }
+        });
+        w[stretch] = Math.max(STRETCH_MIN, avail - others);
+        return w;
+    }
+
+    // Whether the columns fit at their header widths with room for the
+    // stretch column
+    function fitsHeaders(avail, cols, stretch) {
+        var others = 0;
+        for (var i = 0; i < cols.length; i++) {
+            if (i !== stretch) others += cols[i].min;
+        }
+        return avail - others >= STRETCH_MIN;
+    }
+
+    // Width a cell's content needs: from the cell's left edge to the end of
+    // its text and images (indents and icons included), measuring the text
+    // itself, which a narrow column clips
+    var CELL_END_PAD = 8;
+
+    function cellNeed(td) {
+        if (!td) return 0;
+        var left = td.getBoundingClientRect().left, right = 0;
+        var walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT);
+        var range = document.createRange();
+        for (var node = walker.nextNode(); node; node = walker.nextNode()) {
+            if (!node.textContent.trim()) continue;
+            range.selectNodeContents(node);
+            right = Math.max(right, range.getBoundingClientRect().right);
+        }
+        Ext.each(Ext.toArray(td.querySelectorAll('img')), function (img) {
+            right = Math.max(right, img.getBoundingClientRect().right);
+        });
+        return right ? Math.ceil(right - left) + CELL_END_PAD : 0;
+    }
+
+    // A progress bar is drawn at its column's width; it needs room for its
+    // label ("100.00%")
+    function barNeed(el) {
+        var label = el && (el.querySelector('.x-progress-text-back > div') || el);
+        return label ? Math.ceil(textWidth(label, '100.00%')) + PROGRESS_PAD + 8 : 60;
+    }
+
+    // Each column's widths for fitWidths: its content's (no wider than its
+    // normal width) and its header's. A progress bar can't go below its
+    // label.
+    function columnMins(cols, headerNeed, cells) {
+        return cols.map(function (c, i) {
+            var content = 0, bar = c.dataIndex === 'progress';
+            Ext.each(cells(i), function (td) {
+                content = Math.max(content, bar ? barNeed(td) : cellNeed(td));
+            });
+            var header = headerNeed(i);
+            var want = Math.max(header, Math.min(content, c.dhBase));
+            return { base: c.dhBase, want: want, min: bar ? want : header, full: Math.max(header, content) };
+        });
+    }
+
+    // The column to stretch: the widest (the first, of equals), never a
+    // progress bar
+    function widestColumn(cols) {
+        var widest = -1;
+        for (var i = 0; i < cols.length; i++) {
+            if (cols[i].dataIndex === 'progress') continue;
+            if (widest < 0 || cols[i].width > cols[widest].width) widest = i;
+        }
+        return Math.max(widest, 0);
+    }
+
+    // A tree grid (Add Torrents' Files tab, the details card's): its widest
+    // column (Filename) takes what the others leave, less the inset in a
+    // window. The tree grid sizes its columns (on resize, and when its
+    // scrollbar comes or goes) through updateColumnWidths; its Progress
+    // bars are drawn at their column's width, so they're redrawn when it
+    // changes.
+    function stretchTreeColumn(tree, inset) {
+        var cols = tree.columns;
+        var stretch = widestColumn(cols);
+        Ext.each(cols, function (c) {
+            c.dhBase = c.width;
+        });
+        var progress = -1;
+        Ext.each(cols, function (c, i) {
+            if (c.dataIndex === 'progress') progress = i;
+        });
         var update = tree.updateColumnWidths;
         tree.updateColumnWidths = function () {
             var body = this.innerBody && this.innerBody.dom;
-            var headers = this.innerHd ? this.innerHd.dom.querySelectorAll('.x-treegrid-hd-inner') : [];
             if (body && body.clientWidth) {
-                var others = 0;
-                for (var i = 0; i < cols.length; i++) {
-                    if (i === stretch || cols[i].hidden) continue;
-                    var hd = headers[i];
-                    if (hd && hd.offsetWidth) {
-                        var s = window.getComputedStyle(hd);
-                        var need = Math.ceil(textWidth(hd, hd.textContent) + parseFloat(s.paddingLeft) + parseFloat(s.paddingRight)) + 2;
-                        cols[i].width = Math.max(cols[i].width, need);
-                    }
-                    others += cols[i].width;
+                var headers = this.innerHd.dom.querySelectorAll('.x-treegrid-hd-inner');
+                var visible = cols.filter(function (c) {
+                    return !c.hidden;
+                });
+                var mins = columnMins(visible, function (i) {
+                    var hd = headers[cols.indexOf(visible[i])];
+                    if (!hd || !hd.offsetWidth) return 0;
+                    var st = window.getComputedStyle(hd);
+                    return Math.ceil(textWidth(hd, hd.textContent) + parseFloat(st.paddingLeft) + parseFloat(st.paddingRight)) + 2;
+                }, function (i) {
+                    var n = cols.indexOf(visible[i]) + 1;
+                    return Ext.toArray(body.querySelectorAll('.x-tree-node-el > td:nth-child(' + n + ')'));
+                });
+                var avail = body.clientWidth - (inset ? 2 * insetOf(body) : 0);
+                var widths = fitWidths(avail, mins, visible.indexOf(cols[stretch]));
+                var redraw = progress >= 0 && widths[visible.indexOf(cols[progress])] !== cols[progress].width;
+                Ext.each(visible, function (c, i) {
+                    c.width = widths[i];
+                });
+                var result = update.apply(this, arguments);
+                if (redraw) {
+                    this.getRootNode().cascade(function (n) {
+                        if (n.ui && n.ui.updateColumns && n.ui.rendered) n.ui.updateColumns();
+                    });
                 }
-                cols[stretch].width = Math.max(120, body.clientWidth - 2 * insetOf(body) - others);
+                // Names still cut off show in full as a tooltip
+                Ext.each(Ext.toArray(body.querySelectorAll('.x-tree-node-el > td:first-child')), function (td) {
+                    var text = td.textContent.trim();
+                    if (text && td.scrollWidth > td.clientWidth) td.title = text;
+                    else td.removeAttribute('title');
+                });
+                return result;
             }
             return update.apply(this, arguments);
         };
+    }
+
+    // A grid in the details card (Peers): its widest column (Address)
+    // fills what the others leave, refitted as the card resizes and the
+    // rows change. Its Progress bars are drawn at their column's width, so
+    // the rows are redrawn when that changes.
+    function fitGridColumns(grid) {
+        var view = grid.getView();
+        var cm = grid.getColumnModel();
+        var busy = false;
+        Ext.each(cm.config, function (c) {
+            c.dhBase = c.width;
+        });
+        var fit = function () {
+            if (busy || !view.mainBody || !grid.el.dom.offsetWidth) return;
+            busy = true;
+            try {
+                var idx = [];
+                for (var i = 0; i < cm.getColumnCount(); i++) {
+                    if (!cm.isHidden(i)) idx.push(i);
+                }
+                var cols = idx.map(function (i) {
+                    return cm.config[i];
+                });
+                var cells = function (k) {
+                    var list = [];
+                    for (var r = 0; r < grid.getStore().getCount(); r++) list.push(view.getCell(r, idx[k]));
+                    return list;
+                };
+                // A header's width with its full text, whichever is showing
+                var header = function (k) {
+                    var c = cols[k], w = headerWidth(view, idx[k]);
+                    var cell = view.getHeaderCell(idx[k]), inner = cell && cell.firstChild;
+                    if (!c.dhHeader || c.header === c.dhHeader || !inner) return w;
+                    return w + Math.ceil(textWidth(inner, c.dhHeader) - textWidth(inner, c.header));
+                };
+                var avail = view.getGridInnerWidth(), stretch = widestColumn(cols);
+                // Short of room at the full headers: "↓ Speed" / "↑ Speed"
+                setShortHeaders(view, cm, !fitsHeaders(avail, columnMins(cols, header, cells), stretch));
+                var mins = columnMins(cols, function (k) {
+                    return headerWidth(view, idx[k]);
+                }, cells);
+                var widths = fitWidths(avail, mins, stretch);
+                var changed = false, redraw = false;
+                Ext.each(idx, function (i, k) {
+                    if (Math.abs(cm.getColumnWidth(i) - widths[k]) >= 1) {
+                        changed = true;
+                        if (cm.config[i].dataIndex === 'progress') redraw = true;
+                        cm.setColumnWidth(i, widths[k], true);
+                    }
+                });
+                if (changed) {
+                    if (redraw && view.hasRows()) view.refresh();
+                    else view.updateAllColumnWidths();
+                }
+                // Text still cut off shows in full as a tooltip
+                Ext.each(Ext.toArray(view.mainBody.dom.querySelectorAll('.x-grid3-cell-inner')), function (el) {
+                    var text = el.textContent.trim();
+                    if (text && el.scrollWidth > el.clientWidth) el.title = text;
+                    else el.removeAttribute('title');
+                });
+            } catch (e) {
+                if (window.console) console.error('Darkhand: column layout failed', e);
+            }
+            busy = false;
+        };
+        var onLayout = view.onLayout;
+        view.onLayout = function () {
+            var result = onLayout.apply(this, arguments);
+            fit();
+            return result;
+        };
+        grid.getStore().on('datachanged', fit);
+        grid.getStore().on('add', fit);
     }
 
     function wireUp(mode, details, box) {
@@ -1536,6 +1763,12 @@ Ext.ns('Deluge.plugins.darkhand');
             });
             if (typeof add.height === 'number') add.height += 12;
         }
+        // The details card's Details and Options tabs, restyled in
+        // dashboard.css
+        Ext.each(deluge.details.items.items, function (tab) {
+            if (Deluge.details.DetailsTab && tab instanceof Deluge.details.DetailsTab) tab.addClass('dh-details-tab');
+            if (Deluge.details.OptionsTab && tab instanceof Deluge.details.OptionsTab) tab.addClass('dh-options');
+        });
         // Preferences' page list, styled as a menu (dashboard.css)
         if (deluge.preferences && deluge.preferences.list) deluge.preferences.list.addClass('dh-pref-list');
         rememberDetailsSize(mode, details);
