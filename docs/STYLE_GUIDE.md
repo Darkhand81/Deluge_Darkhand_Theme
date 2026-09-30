@@ -487,6 +487,12 @@ amber / red, priorities...). Every rule is `html body ... !important` to beat
 only icons (stat icons, chevrons, close ×, message box icons) are inline data
 URIs in `dashboard.css`.
 
+Menus: a grid column's menu uses Lucide's A–Z / Z–A arrows and a columns
+icon. Check items (its Columns list) are 14px boxes like a grid's check
+column, accent-filled with a white tick when on; radio groups (the status
+bar's limit menus) are circles with an accent dot on the chosen one. Both
+themes (`xtheme-darkhand.css`, the tick in `icons.css`).
+
 ---
 
 ## 6. Behaviour and remembered state
