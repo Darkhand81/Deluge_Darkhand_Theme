@@ -163,13 +163,30 @@ strong, labels muted, captions faint.
 | `--dh-bar-radius` | 6px | Progress bars, the collapsed details strip, badges, and anything inside a frame with 4px around it (switch segments, Preferences rows) |
 | `--dh-small-radius` | 4px | Inputs, checkboxes, menu items |
 | `--dh-ease` | 0.12s ease | Every hover / state transition |
-| `--dh-inset` | 6px | How far the rows of lists in windows sit in from their frame (and apart); the plugin reads it |
+| `--dh-inset` | 6px | How far the rows of lists in windows sit in from their frame (and apart), and the gap between form rows; the plugin reads it |
+| `--dh-window-pad` | 12px | A window's side margin, how far a form or text dialog's contents sit inside its frame on every side, and the room above and below footer buttons; the plugin reads it |
+| `--dh-label-gap` | 10px | Between a form's longest label and its fields (the plugin fits the label column to it) |
 | `--dh-frame-clip` | `inset(1px round 9px)` | Clips a framed panel to its frame's outer edge (G19) |
 | `GAP` (plugin) | 16px | Between cards and around the window edge |
 | `SPLIT` (plugin) | 12px | Resize bar / collapsed strip thickness |
 | Nav width | 248px | `--dh-nav-width` and the plugin |
 | Brand height | 88px | Top of the nav card |
 | Header height | 92px | Page title row |
+
+Spacing in windows comes from those three tokens, one value per role
+(picked from screenshots of each option):
+
+| Role | Value |
+| --- | --- |
+| Window side margin (edge to frame) | `--dh-window-pad` 12px |
+| Form and text dialogs: contents to frame, every side | `--dh-window-pad` 12px |
+| Footer: frame to buttons, buttons to window edge | `--dh-window-pad` 12px |
+| Form rows: one to the next | `--dh-inset` 6px |
+| List rows: in from the frame, and apart | `--dh-inset` 6px |
+| Longest label to its field | `--dh-label-gap` 10px |
+
+Write new window spacing with these tokens rather than numbers; the plugin
+reads them from CSS, so changing a token changes both.
 
 Radii follow that scale everywhere; nothing is fully rounded except circular
 icons and legend dots. Something nested inside a rounded container with a
@@ -381,17 +398,27 @@ separate title or body frame, outer outline + shadow (G20).
 
 - Title bar: 14px 600 title, its icon lined up at 18px, a Lucide × close
   button (24px, rounded hover).
-- Body: 12px side padding; framed inner panels get 10px corners, drawn clip-
-  safe (G19); windows that frame their whole body (Login, Remove...) keep
-  that frame.
+- Body: `--dh-window-pad` side margin; framed inner panels get 10px
+  corners, drawn clip-safe (G19); windows that frame their whole body
+  (Login, Remove...) keep that frame.
+- Form and text dialogs (Edit Tracker, Add Connection, Move Download Folder,
+  Remove Torrent, plugins' form dialogs...): `fitFormWindow` sets their
+  contents `--dh-window-pad` inside the frame on every side (the window
+  widening by what the sides gain; not beside Login's centred row), fits the
+  label column to the longest label plus `--dh-label-gap`, and fits the
+  height to the contents. Form rows are `--dh-inset` apart in every window.
+- Preferences: 36px taller than other windows grow (its Interface page needs
+  it with the row spacing), and taller still when a page (a plugin's) would
+  scroll, up to the screen (`fitPreferences`).
 - Lists, grids and tree grids in windows: see Inset lists, below.
 - Add Torrents: two framed sections 10px apart (`.dh-add-section`), the
   torrent list with its File / Url / Remove bar at the bottom, and the Files /
   Options tabs at the top of the second, their strip `--dh-inset` in from the
-  frame. The Options section and the window get 12px more height so the
-  rounded corners don't clip the form's last row; the form is padded 15px at
+  frame. The Options section and the window get 24px more height so the
+  rounded corners don't clip the form's last row (12px, and 12 for its six
+  checkbox rows at `--dh-inset` apart); the form is padded 15px at
   the sides (set before render, G39), like the Preferences pages.
-- Footer: buttons with 8px corners; the last one (the main action: OK, Connect, Add,
+- Footer: `--dh-window-pad` above and below the buttons; buttons with 8px corners; the last one (the main action: OK, Connect, Add,
   Move, Remove Torrent) accent-filled. Not in message boxes (G17).
 - Message boxes: Lucide circle-help / info (accent), triangle-alert (warn),
   circle-x (bad) instead of Ext's bitmaps.
@@ -609,13 +636,11 @@ Each learned the hard way. Symptom → cause → what the code does.
   an anchored field: `anchor: '100%'` beside a label runs that far past the
   form (Edit Tracker, Add Tracker). Deluge's narrower anchors (Add
   Connection's 75% and 40%) are sized for this, so the plugin sets `label`
-  only for full-width anchors. Small form windows also have fixed heights;
-  the plugin fits them to their fields (`fitFormWindow`: as much room
-  below as above, and at the sides where Deluge's padding gives less there,
-  unless the labels are right-aligned like Login's centred row), widens a
-  label column that leaves a label within 10px of its field
-  (`fitFormLabels`, if the fields still fit), and widens any
-  window whose title doesn't fit on one line (`fitWindowTitle`: the status
+  only for full-width anchors. Small form windows also keep Deluge's padding,
+  fixed heights and label columns (sized for its font); the plugin lays them
+  out by the spacing tokens instead (`fitFormWindow`, `fitFormLabels`: see
+  Windows and dialogs), and widens any window whose title doesn't fit on
+  one line (`fitWindowTitle`: the status
   bar's Other... limits are 210px, or 180 once Deluge resizes one without a
   unit).
 - **G20. Inset shadows on windows vanish.** The window's own frame cells

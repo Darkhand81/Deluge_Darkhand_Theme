@@ -11,9 +11,16 @@
     /* Colours, radii and the rest are the theme's (xtheme-darkhand.css) */
     /* Framed panels clip to their frame's outer edge, 1px in (see the frames) */
     --dh-frame-clip: inset(1px round calc(var(--dh-frame-radius) - 1px));
-    /* How far the rows of lists in windows sit in from their frame, and the
-       tab strip above them (the plugin reads it too) */
+    /* Spacing in windows (the plugin reads these too):
+       rows of lists and forms: how far list rows sit in from their frame,
+       the tab strip above them, and the gap between one row and the next */
     --dh-inset: 6px;
+    /* a window's side margin, how far a form dialog's fields sit inside its
+       frame on every side, and the room above and below the footer buttons */
+    --dh-window-pad: 12px;
+    /* between a form's longest label and the fields (the label column is
+       fitted to it) */
+    --dh-label-gap: 10px;
     --dh-nav-width: 248px;
 }
 
@@ -1030,11 +1037,11 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 
 /* The frame's side and bottom strips become padding round the content */
 .dh-dashboard .x-window-ml {
-    padding-left: 12px;
+    padding-left: var(--dh-window-pad);
 }
 
 .dh-dashboard .x-window-mr {
-    padding-right: 12px;
+    padding-right: var(--dh-window-pad);
 }
 
 .dh-dashboard .x-window-header {
@@ -1127,9 +1134,15 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
 
 /* A framed form that is a window's whole body, with no padding of its own
    (Copy Magnet URI's): its fields in from the frame like other windows'
-   (Ext sizes them to the room inside the padding) */
+   (Ext sizes them to the room inside the padding; the plugin makes the
+   room --dh-window-pad from the frame, like every form dialog's) */
 .dh-dashboard .x-window-body > .x-panel > .x-panel-bwrap > .x-panel-body.x-form:not(.x-panel-body-noborder) {
     padding: 5px;
+}
+
+/* Form rows as far apart as list rows (Ext's are 4px) */
+.dh-dashboard .x-window .x-form-item {
+    margin-bottom: var(--dh-inset);
 }
 
 /* Add Torrents: two framed sections, the torrent list with its File / Url /
@@ -1349,7 +1362,7 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
    card's Apply (Options tab). Message boxes keep
    hidden buttons in the row, so theirs are all plain. */
 .dh-dashboard .x-window-footer {
-    padding: 8px 6px 16px;
+    padding: var(--dh-window-pad) 6px;
 }
 
 .dh-dashboard .x-window-footer table.x-btn button {
