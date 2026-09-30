@@ -653,8 +653,8 @@ Each learned the hard way. Symptom → cause → what the code does.
 ## 9. Testing
 
 Tests are Playwright scripts against a real Deluge (daemon + web in a
-virtualenv, a few small torrents). `tools/test/` has the standing checks
-(see its README): screenshots of the dashboard, its menu and every window,
+virtualenv, a few small torrents), which `tools/test/test-server.sh setup`
+builds. `tools/test/` has the standing checks (see its README): screenshots of the dashboard, its menu and every window,
 compared pixel by pixel before and after a change, and an audit for cut-off
 text at normal and wider font rendering. Run both for any CSS change; a
 refactor should compare identical. Things that proved useful beyond them:
@@ -679,8 +679,10 @@ refactor should compare identical. Things that proved useful beyond them:
 - **Theme-only.** Disable the plugin and check the standard layout still
   looks right.
 - **The daemon.** Deluge validates host names when adding connections (use
-  an IP), and headless test containers may lose the daemon on restart: check
-  it's running before blaming the code.
+  an IP), and headless test containers may lose the daemon on restart:
+  `test-server.sh status` before blaming the code, `start` to bring it back.
+  Deluge 2.2 needs pyOpenSSL before 25 and setuptools before 81 (the setup
+  pins them).
 
 ---
 
