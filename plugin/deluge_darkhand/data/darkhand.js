@@ -1175,12 +1175,12 @@ Ext.ns('Deluge.plugins.darkhand');
     // A small window that's just a form (Edit Tracker, Move Storage, Add
     // Connection...) has a fixed height, which leaves more room below the
     // fields than above. Fit its height to them: as far from the frame's
-    // bottom as the first is from its top. Not for resizable windows, or
-    // forms whose fields take a share of the height.
+    // bottom as the first is from its top. Not for forms whose fields take a
+    // share of the height.
     function fitFormWindow(win) {
         try {
             var form = win.items && win.items.getCount() === 1 && win.items.get(0);
-            if (!form || !form.isXType('form') || win.resizable || !win.isVisible()) return;
+            if (!form || !form.isXType('form') || !win.isVisible()) return;
             var tall = false;
             form.getForm().items.each(function (f) {
                 if (f.anchor && /\s\S/.test(Ext.util.Format.trim(String(f.anchor)))) tall = true;
@@ -1220,6 +1220,34 @@ Ext.ns('Deluge.plugins.darkhand');
         };
     }
 
+    // Widen a window whose title doesn't fit on one line (the status bar's
+    // "Set Maximum Download Speed", 210px wide)
+    function fitWindowTitle(win) {
+        try {
+            var header = win.header && win.header.dom;
+            var text = header && header.querySelector('.x-window-header-text');
+            if (!text || !win.isVisible()) return;
+            var s = window.getComputedStyle(header);
+            var room = header.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight);
+            Ext.each(Ext.toArray(header.querySelectorAll('.x-tool')), function (tool) {
+                if (tool.offsetWidth) room -= tool.offsetWidth;
+            });
+            var need = Math.ceil(textWidth(text, text.textContent)) + 8; // + room before the tools
+            if (need > room) {
+                win.setWidth(win.getWidth() + need - room);
+                win.doLayout();
+                win.center();
+            }
+        } catch (e) {}
+    }
+
+    // Everything fitted when a window shows: its title, buttons and height
+    function fitWindow(win) {
+        fitWindowTitle(win);
+        fitWindowButtons(win);
+        fitFormWindow(win);
+    }
+
     function sizeWindows() {
         fixFormLabels();
         var initComponent = Ext.Window.prototype.initComponent;
@@ -1227,8 +1255,7 @@ Ext.ns('Deluge.plugins.darkhand');
             growWindow(this);
             var result = initComponent.apply(this, arguments);
             this.on('show', function (win) {
-                Ext.defer(fitWindowButtons, 1, null, [win]);
-                Ext.defer(fitFormWindow, 1, null, [win]);
+                Ext.defer(fitWindow, 1, null, [win]);
                 if (document.fonts && document.fonts.ready) {
                     document.fonts.ready.then(function () {
                         fitWindowButtons(win);
@@ -1241,8 +1268,7 @@ Ext.ns('Deluge.plugins.darkhand');
             if (!win) return;
             growWindow(win);
             win.on('show', function () {
-                Ext.defer(fitWindowButtons, 1, null, [win]);
-                Ext.defer(fitFormWindow, 1, null, [win]);
+                Ext.defer(fitWindow, 1, null, [win]);
             });
         });
     }

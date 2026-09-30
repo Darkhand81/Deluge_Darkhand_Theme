@@ -11,8 +11,9 @@ if (!TAG) { console.error('usage: node tools/test/screenshots.js <tag> [theme]')
 const OUT = `test-output/${TAG}`;
 fs.mkdirSync(OUT, { recursive: true });
 
-const WINDOWS = ['prefs', 'prefs-network', 'prefs-plugins', 'cm', 'add-connection', 'add', 'remove', 'move',
-  'trackers', 'msg', 'error', 'warning', 'about'];
+const WINDOWS = ['prefs', 'prefs-network', 'prefs-plugins', 'cm', 'add-connection', 'edit-connection', 'add',
+  'add-url', 'remove', 'move', 'copy-magnet', 'trackers', 'edit-tracker', 'add-tracker', 'other-limit',
+  'other-limit-plain', 'msg', 'error', 'warning', 'prompt', 'wait', 'about'];
 
 // One layout: the page, its details tabs, and the context menu
 async function layout(b, [W, Hh, mode]) {
@@ -34,6 +35,7 @@ async function layout(b, [W, Hh, mode]) {
     await H.settle(page, 200); // Ext marks the row hovered before it takes a click
     await row.click({ button: 'right' });
     await H.waitForMenu(page);
+    await H.waitForDetails(page); // the click selected another torrent
     await page.screenshot({ path: `${OUT}/menu-${name}.png` });
   }
   await ctx.close();

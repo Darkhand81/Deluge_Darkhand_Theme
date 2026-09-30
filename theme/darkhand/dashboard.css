@@ -1057,8 +1057,10 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     padding-right: 0;
 }
 
+/* On one line: the plugin widens a window whose title is longer */
 .dh-dashboard .x-window-header-text {
     font-size: var(--dh-text-title);
+    white-space: nowrap;
 }
 
 /* Close button: a Lucide x (icons.css) */
@@ -1121,6 +1123,13 @@ body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
     border: 1px solid var(--dh-border);
     border-radius: calc(var(--dh-frame-radius) - 1px);
     pointer-events: none;
+}
+
+/* A framed form that is a window's whole body, with no padding of its own
+   (Copy Magnet URI's): its fields in from the frame like other windows'
+   (Ext sizes them to the room inside the padding) */
+.dh-dashboard .x-window-body > .x-panel > .x-panel-bwrap > .x-panel-body.x-form:not(.x-panel-body-noborder) {
+    padding: 5px;
 }
 
 /* Add Torrents: two framed sections, the torrent list with its File / Url /

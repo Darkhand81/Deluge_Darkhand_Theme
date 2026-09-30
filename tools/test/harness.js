@@ -53,6 +53,11 @@ async function settle(page, ms = 250) {
 // Select a torrent and wait for the details card to fill in
 async function selectTorrent(page, i) {
   await page.evaluate(i => deluge.torrents.getSelectionModel().selectRow(i), i);
+  await waitForDetails(page);
+}
+
+// The details card filled in for the selected torrent
+async function waitForDetails(page) {
   await page.waitForFunction(() => {
     const dd = [...document.querySelectorAll('#torrentDetails dd, .x-deluge-status dd')].find(d => d.offsetWidth);
     return dd && dd.textContent.trim();
@@ -93,6 +98,27 @@ const WINDOWS = {
     ready: () => deluge.editTrackers.list.getStore().getCount() > 0,
   },
   'copy-magnet': { open: () => deluge.copyMagnetWindow.show() },
+  // Dialogs opened from other windows (then: opens it once the first is ready)
+  'edit-connection': {
+    open: () => deluge.connectionManager.show(),
+    ready: () => { const r = deluge.connectionManager.list.getStore().getAt(0); return r && r.get('status'); },
+    then: () => { const cm = deluge.connectionManager; cm.list.select(0); cm.onEditClick(); },
+  },
+  'edit-tracker': {
+    open: () => deluge.editTrackers.show(),
+    ready: () => deluge.editTrackers.list.getStore().getCount() > 0,
+    then: () => { const w = deluge.editTrackers; w.editWindow.show(w.list.getStore().getAt(0)); },
+  },
+  'add-tracker': {
+    open: () => deluge.editTrackers.show(),
+    ready: () => deluge.editTrackers.list.getStore().getCount() > 0,
+    then: () => deluge.editTrackers.addWindow.show(),
+  },
+  // The status bar's "Other..." limits, with a unit and without
+  'other-limit': { open: () => { window.__ol = window.__ol || new Deluge.OtherLimitWindow({ title: _('Set Maximum Download Speed'), unit: _('KiB/s'), group: 'max_download_speed' }); window.__ol.show(); } },
+  'other-limit-plain': { open: () => { window.__ol2 = window.__ol2 || new Deluge.OtherLimitWindow({ title: _('Set Maximum Connections'), group: 'max_connections_global' }); window.__ol2.show(); } },
+  prompt: { open: () => Ext.MessageBox.prompt('Name', 'Please enter your name:') },
+  wait: { open: () => Ext.MessageBox.wait(_('Uploading your plugin...'), _('Please wait...')) },
   msg: { open: () => Ext.Msg.show({ title: 'Change Default Password', msg: 'We recommend changing the default password.<br><br>Would you like to change it now?', buttons: Ext.Msg.YESNO, icon: Ext.MessageBox.QUESTION }) },
   error: { open: () => Ext.MessageBox.show({ title: _('Error'), msg: 'Could not connect to the daemon.', buttons: Ext.MessageBox.OK, icon: Ext.MessageBox.ERROR }) },
   warning: { open: () => Ext.MessageBox.show({ title: 'Warning', msg: 'Something to check.', buttons: Ext.MessageBox.OK, icon: Ext.MessageBox.WARNING }) },
@@ -113,9 +139,11 @@ function topWindow() {
 // name: one of WINDOWS, or a spec of the same shape
 async function openWindow(page, name) {
   const w = typeof name === 'string' ? WINDOWS[name] : name;
-  await page.evaluate(`(${w.open.toString()})()`);
+  // (void: what they return, often an Ext component, isn't sent back)
+  await page.evaluate(`void (${w.open.toString()})()`);
   await page.waitForFunction(`(${topWindow.toString()})() !== null`, null, { timeout: T });
   if (w.ready) await page.waitForFunction(`!!((${w.ready.toString()})())`, null, { timeout: T });
+  if (w.then) { await settle(page, 200); await page.evaluate(`void (${w.then.toString()})()`); }
   await page.mouse.move(0, 0);
   await settle(page, 300);
 }
@@ -140,4 +168,4 @@ async function closeWindows(page) {
   await settle(page, 100);
 }
 
-module.exports = { chromium, openDeluge, settle, selectTorrent, showDetailsTab, WINDOWS, openWindow, windowBox, waitForMenu, closeWindows };
+module.exports = { chromium, openDeluge, settle, selectTorrent, waitForDetails, showDetailsTab, WINDOWS, openWindow, windowBox, waitForMenu, closeWindows };

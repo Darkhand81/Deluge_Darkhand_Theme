@@ -78,5 +78,7 @@ card (they scroll).
 ## Adding a window
 
 Add it to `WINDOWS` in `harness.js`: `open` runs in the page, and `ready`
-(optional) is true once anything it loads from the daemon has arrived. Then
+(optional) is true once anything it loads from the daemon has arrived. A
+dialog opened from another window (Edit Connection, Edit Tracker) opens that
+window in `open`, and itself in `then`, which runs once `ready` is true. Then
 list it in `screenshots.js` and `cutoff.js`.
