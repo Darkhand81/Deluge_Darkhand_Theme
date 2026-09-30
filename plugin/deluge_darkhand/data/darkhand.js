@@ -1203,7 +1203,7 @@ Ext.ns('Deluge.plugins.darkhand');
             var edges = formEdges(form);
             if (!edges) return;
             // Once: the room above and beside the fields. Not beside them
-            // where the labels are right-aligned (Login's row is centred).
+            // where the labels are right-aligned (their row is centred).
             if (!form.dhSpaced) {
                 form.dhSpaced = true;
                 var frame = frameInner(win, form);
@@ -1306,6 +1306,11 @@ Ext.ns('Deluge.plugins.darkhand');
             el.style.paddingLeft = parseFloat(window.getComputedStyle(el).paddingLeft) + extra + 'px';
         });
         layout.labelAdjust += extra;
+        // Ext's anchors remember the width they last sized for and skip the
+        // same width again: forget them, so the fields take up the new room
+        form.items.each(function (c) {
+            delete c.anchorSpec;
+        });
         form.doLayout();
     }
 
@@ -1417,6 +1422,26 @@ Ext.ns('Deluge.plugins.darkhand');
                 Ext.defer(fitWindow, 1, null, [win]);
             });
         });
+    }
+
+    // Login: Deluge centres a short password field under a wide,
+    // right-aligned label column, leaving empty space either side of it in
+    // the card. Lay it out like the other form dialogs instead: the label on
+    // the left, the field filling the rest of the row (not growing as you
+    // type), so fitFormWindow gives it the same spacing.
+    function styleLoginWindow() {
+        var Login = Deluge.LoginWindow;
+        if (!Login) return;
+        var initComponent = Login.prototype.initComponent;
+        Login.prototype.initComponent = function () {
+            var result = initComponent.apply(this, arguments);
+            if (this.form && this.passwordField) {
+                this.form.labelAlign = 'left';
+                Ext.apply(this.passwordField, { anchor: '100%', grow: false });
+                delete this.passwordField.width;
+            }
+            return result;
+        };
     }
 
     function styleAboutWindow() {
@@ -2157,6 +2182,7 @@ Ext.ns('Deluge.plugins.darkhand');
             var ui = this;
             try {
                 sizeWindows(); // before Deluge creates its windows
+                styleLoginWindow();
                 insetWindowLists();
             } catch (e) {
                 if (window.console) console.error('Darkhand: window sizing failed', e);

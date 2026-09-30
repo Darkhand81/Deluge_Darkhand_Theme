@@ -404,9 +404,18 @@ separate title or body frame, outer outline + shadow (G20).
 - Form and text dialogs (Edit Tracker, Add Connection, Move Download Folder,
   Remove Torrent, plugins' form dialogs...): `fitFormWindow` sets their
   contents `--dh-window-pad` inside the frame on every side (the window
-  widening by what the sides gain; not beside Login's centred row), fits the
+  widening by what the sides gain; not beside a right-aligned label column's
+  row), fits the
   label column to the longest label plus `--dh-label-gap`, and fits the
   height to the contents. Form rows are `--dh-inset` apart in every window.
+- Login: laid out like the other form dialogs (`styleLoginWindow`): Deluge
+  centres a short field under a 120px right-aligned label column; the label
+  goes on the left and the field fills the rest of the row, not growing as
+  you type.
+- After changing a form's label column, delete its fields' `anchorSpec`
+  before `doLayout()`: Ext's anchor functions remember the width they last
+  sized for and return nothing for the same width, so the fields would keep
+  their old size.
 - Preferences: 36px taller than other windows grow (its Interface page needs
   it with the row spacing), and taller still when a page (a plugin's) would
   scroll, up to the screen (`fitPreferences`).
