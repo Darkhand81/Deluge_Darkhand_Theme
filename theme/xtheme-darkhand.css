@@ -869,19 +869,38 @@ td.sort-asc .x-grid3-hd-inner {
 
 /* Grid cells are top-aligned, and text lines are shorter than the 20px
    progress bars. Give every cell a line as tall as a bar so text, state
-   icons and bars share one centre line whatever the cell padding. */
-html body .deluge-torrents .x-grid3-row td,
-html body .deluge-torrents .x-grid3-cell-inner {
+   icons and bars share one centre line whatever the cell padding: in the
+   torrent list, and the Peers tab's, which has bars too. */
+html body :is(.deluge-torrents, .x-deluge-peers) .x-grid3-row td,
+html body :is(.deluge-torrents, .x-deluge-peers) .x-grid3-cell-inner {
     line-height: 20px;
 }
 
-html body .deluge-torrents .x-grid3-cell-inner {
+html body :is(.deluge-torrents, .x-deluge-peers) .x-grid3-cell-inner {
     padding-top: 3px;
     padding-bottom: 3px;
 }
 
-html body .deluge-torrents .torrent-name {
+html body .deluge-torrents .torrent-name,
+html body .x-deluge-peers :is(.x-deluge-peer, .x-deluge-seed) {
     background-position: 0 center;
+}
+
+/* Tree grids (Files tabs) the same way: a line as tall as the bars, and
+   the icons centred on it */
+html body .x-treegrid-col,
+html body .x-treegrid-col :is(.x-tree-node-anchor, .x-treegrid-text) {
+    line-height: 20px;
+}
+
+html body .x-treegrid-col {
+    vertical-align: middle;
+}
+
+/* (18px tall: 1px down from the line's top centres them on it) */
+html body .x-treegrid-col :is(.x-tree-node-icon, .x-tree-ec-icon) {
+    margin-top: 1px;
+    vertical-align: top;
 }
 
 /* ListView (sidebar filters, preference categories) */

@@ -802,9 +802,16 @@ html body.dh-dashboard,
 }
 
 /* A tree grid's rows are table rows, the line under each on its cells; no
-   line round the table */
+   line round the table. As tall as the torrent list's rows (whose cells
+   have 3px round the text and a 1px border above and below: the tree's
+   have only the one below, hence 4px at the top). */
 .dh-dashboard .dh-card-grid .x-treegrid-root-table {
     border: 0;
+}
+
+.dh-dashboard .dh-card-grid .x-tree-node-el > .x-treegrid-col {
+    padding-top: 4px;
+    padding-bottom: 3px;
 }
 
 /* Text a column cuts off ends in an ellipsis, also where Deluge wraps it
