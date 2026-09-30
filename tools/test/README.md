@@ -1,12 +1,38 @@
 # Test scripts
 
 Playwright checks against a running Deluge web UI. They open and close
-windows but change nothing, so use a throwaway test server: a daemon and
-deluge-web in a virtualenv, with the theme installed (`darkhand.sh`) and a
-few torrents (8 or so small ones, some seeding, some downloading and
-queued).
+windows but change nothing, so use a throwaway test server, which
+`test-server.sh` makes.
 
-## Setup
+## The test server
+
+```sh
+tools/test/test-server.sh setup        # once: about 20s
+tools/test/test-server.sh install      # after changing the theme or plugin
+tools/test/test-server.sh plugin off   # the plain theme (then "on" again)
+tools/test/test-server.sh start | stop | restart | status
+```
+
+Run it as root (in a container, or with `sudo` for every command): the
+theme installer it uses, `darkhand.sh`, needs root, and the server's files
+then belong to root.
+
+`setup` makes `test-server/` in the checkout (ignored by git): a
+virtualenv with Deluge 2.2 and libtorrent, its own config, and eight small
+sample torrents (4 seeding, 3 downloading, 1 queued; two are folders of
+files). It installs the theme and dashboard plugin from this checkout with
+`darkhand.sh`, and starts the daemon and web UI at
+http://127.0.0.1:8112/ (password `deluge`). The web UI connects to the
+daemon on its own and skips the first-login password prompt. Running
+`setup` again is safe: it reuses what's there.
+
+`DH_TEST_DIR`, `DH_WEB_PORT` and `DH_DAEMON_PORT` put it elsewhere, for
+example beside a real Deluge. Nothing outside its directory is touched, and
+`stop` stops only its own processes.
+
+Needs python3 (3.9 to 3.12) with venv, and curl.
+
+## The checks
 
 ```sh
 npm install playwright        # or point NODE_PATH at a global install
@@ -25,19 +51,23 @@ server.
 | `screenshots.js <tag> [theme]` | Screenshots of the dashboard (bottom and right details, 1440 and 1024 wide), its details tabs, context menu and 13 windows into `test-output/<tag>/`. With `theme`, the plain theme (switch the Darkhand plugin off first). | ~15s |
 | `cutoff.js [wide]` | Lists text that's cut off anywhere: the dashboard, its details tabs and menu, and every window. `wide` adds 0.3px letter spacing to catch what wider font rendering would cut off. Run both. | ~20s each |
 | `compare.py <base> <base-again> <new>` | Compares two screenshot sets pixel by pixel. Take the baseline twice: pixels that differ between those two runs (speeds, timers) are ignored. | seconds |
+| `test-server.sh`, `test_server.py` | The test server (above); the Python helper runs in its virtualenv. | |
 | `harness.js` | Shared by the others: logs in once per page, opens and closes windows, and waits for conditions (rows loaded, window shown) rather than fixed times. | |
 
 ## A typical check
 
 ```sh
 node tools/test/screenshots.js before && node tools/test/screenshots.js before2
-# ...make the change, reinstall the theme...
+# ...make the change...
+tools/test/test-server.sh install
 node tools/test/screenshots.js after
 python3 tools/test/compare.py before before2 after
 node tools/test/cutoff.js; node tools/test/cutoff.js wide
 ```
 
-A pure refactor should compare as `same` everywhere. For a visual change,
+For the plain theme, run `test-server.sh plugin off` first and pass
+`theme` to `screenshots.js`. A pure refactor should compare as `same`
+everywhere. For a visual change,
 check that only the expected screenshots differ, and look at them.
 
 `cutoff.js` always lists two expected kinds of entry: progress labels
