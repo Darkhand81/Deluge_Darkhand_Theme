@@ -610,7 +610,11 @@ Each learned the hard way. Symptom → cause → what the code does.
   form (Edit Tracker, Add Tracker). Deluge's narrower anchors (Add
   Connection's 75% and 40%) are sized for this, so the plugin sets `label`
   only for full-width anchors. Small form windows also have fixed heights;
-  the plugin fits them to their fields (`fitFormWindow`), and widens any
+  the plugin fits them to their fields (`fitFormWindow`: as much room
+  below as above, and at the sides where Deluge's padding gives less there,
+  unless the labels are right-aligned like Login's centred row), widens a
+  label column that leaves a label within 10px of its field
+  (`fitFormLabels`, if the fields still fit), and widens any
   window whose title doesn't fit on one line (`fitWindowTitle`: the status
   bar's Other... limits are 210px, or 180 once Deluge resizes one without a
   unit).
