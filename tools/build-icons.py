@@ -115,6 +115,11 @@ ICONS = [
     ('', ['.dh-dashboard .dh-inset .x-grid3-check-col-on::after'], 'check', WHITE, 3.5),
     ('', ['.dh-details-right .x-layout-cmini-east .x-layout-mini'], 'chevron-left', GRAY, 2.5),
     ('', ['.dh-details-bottom .x-layout-cmini-south .x-layout-mini'], 'chevron-up', GRAY, 2.5),
+    ('Menus: a grid column\'s sort and columns items, and ticked check items', None, None, None),
+    ('', ['.xg-hmenu-sort-asc .x-menu-item-icon'], 'arrow-down-a-z', ICON),
+    ('', ['.xg-hmenu-sort-desc .x-menu-item-icon'], 'arrow-down-z-a', ICON),
+    ('', ['.x-cols-icon'], 'columns-3', ICON),
+    ('', ['.x-menu-item-checked .x-menu-check-item:not(.x-menu-group-item) .x-menu-item-icon'], 'check', WHITE, 3.5),
 ]
 
 # Classes the plugin puts on <body> itself
