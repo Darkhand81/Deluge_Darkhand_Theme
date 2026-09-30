@@ -352,6 +352,28 @@ The same in both positions:
 - Uses Ext's `collapseMode: 'mini'` (G11). With no torrent selected, the card
   fades its contents into its own surface (G18).
 
+Its tabs follow the dashboard's style (`#torrentDetails` is the whole tab
+panel, so a rule for one tab needs that tab's own class):
+
+- Status: its four columns spread across the bottom card and stack in the
+  right-hand one.
+- Details (`.dh-details-tab`): labels and values in a two-column grid, the
+  labels' column as wide as the longest.
+- Files and Peers (`.dh-card-grid`, from the same `afterRender` hook as the
+  inset lists): the torrent list's look, sharing its rules (uppercase caption
+  headers, no column dividers, a line under each row). The widest text column
+  (Filename, Address; never a progress bar) takes what the others leave
+  (`fitWidths`): the others shrink to their content, then to their header,
+  their text ending in an ellipsis with the full text as a tooltip; Peers'
+  speed headers become "↓ Speed" / "↑ Speed" when even that's too wide.
+  Progress bars are redrawn at their column's new width. No peers shows "No
+  peers connected".
+- Options (`.dh-options`): the fieldsets are frames (`--dh-frame-radius`, the
+  title inside as an uppercase caption), side by side at the same height,
+  each as wide as its content, wrapping when the card is narrow and stacked
+  in the right-hand card; labels on one line. Apply is the main action,
+  styled like a window's.
+
 ### Windows and dialogs
 
 Every Ext window in the dashboard is a card: card surface and radius, no
