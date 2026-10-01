@@ -1,5 +1,5 @@
-// The README's dashboard screenshots, at 1920x1080: the three layouts, and
-// some of the dashboard's menus and windows. The test server has no peers,
+// The README's dashboard screenshots, at 1920x1080: the three layouts, some
+// of the dashboard's menus and windows, and the speed chart over 30 days. The test server has no peers,
 // so the transfer speeds are simulated (in Deluge's updates, which the
 // stats card and speed chart read), and the page's clock is run on five
 // minutes so the chart is full. Writes to screenshots/.
@@ -19,6 +19,14 @@ const MIB = 1048576;
 // The simulated activity: the speeds Deluge reports over time, split among
 // the downloading torrents (each with its progress and ETA) and the seeding
 // ones, which also get a few peers
+// and the daemon's history for the longer ranges: busy evenings, a quiet
+// weekend (by time, so it's the same whatever is asked for)
+const DAY = 86400000;
+const pastDown = t => {
+  const day = ((t / DAY) % 1 + 1) % 1, weekend = [5, 6].includes(new Date(t).getDay());
+  return Math.max(0, Math.round((weekend ? 0.5 : 1) * (2.4 + 1.7 * Math.sin((day - 0.3) * 2 * Math.PI)) * (1 + 0.25 * Math.sin(t / 5.3e6)) * MIB));
+};
+const pastUp = t => Math.max(0, Math.round((0.7 + 0.35 * Math.sin(((t / DAY) % 1) * 2 * Math.PI + 1)) * MIB));
 const downRate = n => Math.max(0, Math.round((2.6 + 1.6 * Math.sin(n / 11) + 0.5 * Math.sin(n / 3.1)) * MIB));
 const upRate = n => Math.max(0, Math.round((0.7 + 0.45 * Math.sin(n / 17 + 1) + 0.15 * Math.sin(n / 2.3)) * MIB));
 const DOWNLOADS = [
@@ -78,6 +86,17 @@ async function dashboard(browser, details, stats) {
   await page.route('**/json', async route => {
     const body = route.request().postDataJSON();
     const method = body && body.method;
+    // A range longer than an hour, from the "daemon": the points asked for
+    if (method === 'darkhand.get_speed_history' && body.params[1]) {
+      const [, span, points] = body.params, now = Date.now(), step = Math.round(span / points), samples = [];
+      for (let t = now - span; t <= now; t += step) samples.push([t, pastDown(t), pastUp(t)]);
+      return route.fulfill({ json: { id: body.id, error: null, result: { now, interval: step, samples } } });
+    }
+    // and no 2-second history (the test daemon's is all zeros): the page's
+    // simulated samples are the last hour's
+    if (method === 'darkhand.get_speed_history') {
+      return route.fulfill({ json: { id: body.id, error: null, result: { now: Date.now(), interval: 2000, samples: [] } } });
+    }
     if (method !== 'web.update_ui' && method !== 'web.get_torrent_status') return route.continue();
     const res = await route.fetch();
     const json = await res.json();
@@ -201,6 +220,24 @@ const shot = (page, name) => page.screenshot({ path: path.join(OUT, name) });
   await H.openWindow(page, 'cm');
   await shot(page, 'dashboard-connection-manager.png');
   await H.closeWindows(page);
+
+  // The speed chart over the last 30 days, its range menu open
+  await page.click('#dh-chart-range');
+  await H.waitForMenu(page);
+  await page.click('.x-menu:visible .x-menu-item-text:text-is("Last 30 days")');
+  await page.waitForFunction(() => /30 days/.test(document.getElementById('dh-chart-range-label').textContent));
+  await H.settle(page, 1500);
+  await page.click('#dh-chart-range');
+  await H.waitForMenu(page);
+  await page.mouse.move(0, 0);
+  await H.settle(page, 400);
+  const clip = await page.evaluate(() => {
+    const boxes = [document.querySelector('.dh-chart'), [...document.querySelectorAll('.x-menu')].find(m => m.offsetWidth && getComputedStyle(m).visibility !== 'hidden')].map(e => e.getBoundingClientRect());
+    const pad = 16, x = Math.min(...boxes.map(b => b.left)) - pad, y = Math.min(...boxes.map(b => b.top)) - pad;
+    return { x, y, width: Math.max(...boxes.map(b => b.right)) + pad - x, height: Math.max(...boxes.map(b => b.bottom)) + pad - y };
+  });
+  await page.screenshot({ path: path.join(OUT, 'dashboard-chart.png'), clip });
+  await page.keyboard.press('Escape');
 
   await done(page, ctx);
   await b.close();

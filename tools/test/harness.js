@@ -114,6 +114,13 @@ const WINDOWS = {
     ready: () => deluge.editTrackers.list.getStore().getCount() > 0,
     then: () => deluge.editTrackers.addWindow.show(),
   },
+  // The speed chart's Custom... range (its range menu, then Custom...)
+  'chart-range': {
+    open: () => {
+      document.getElementById('dh-chart-range').click();
+      [...document.querySelectorAll('.x-menu a.x-menu-item')].find(a => a.offsetWidth && /^Custom/.test(a.textContent)).click();
+    },
+  },
   // The status bar's "Other..." limits, with a unit and without
   'other-limit': { open: () => { window.__ol = window.__ol || new Deluge.OtherLimitWindow({ title: _('Set Maximum Download Speed'), unit: _('KiB/s'), group: 'max_download_speed' }); window.__ol.show(); } },
   'other-limit-plain': { open: () => { window.__ol2 = window.__ol2 || new Deluge.OtherLimitWindow({ title: _('Set Maximum Connections'), group: 'max_connections_global' }); window.__ol2.show(); } },

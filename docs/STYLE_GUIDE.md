@@ -356,20 +356,58 @@ card doesn't jump) with an "Open Preferences" link when Deluge reports -1.
 
 ### Transfer speed chart
 
-Plain SVG, no library. Five-minute window, sampled from the same poll and
-backed by the plugin's daemon half (`core.py`), which records the session's
-speeds every 2s (10 minutes kept, in memory) and returns them from
-`darkhand.get_speed_history`. The chart fetches that when its first update
-arrives and after any gap in its own samples over 10s, and uses the
-daemon's samples up to its newest, its own after (the daemon's times
-shifted onto the page's clock by the `now` it returns). An older daemon
-half without the method leaves the chart on the page's samples alone.
+Plain SVG, no library. Range: the last 5 minutes (default), hour, 12
+hours, day or 30 days, or a custom one up to 90 days, kept in localStorage
+(`darkhand.chartRange`, in minutes); a change redraws without a reload.
+Picked from the range in the header ("Last 5 minutes", `--dh-text-faint`,
+a 14px Lucide chevron-down that turns over while open; hover and open:
+`--dh-bg-2`, `--dh-text-strong`), which opens an Ext menu like the status
+bar's: a radio group of the presets, a separator, **Custom…** (ticked
+while a custom range is shown). Custom… opens a window like the status
+bar's Other (Deluge's OtherLimitWindow): a spinner and a minutes / hours /
+days combo, prefilled with the range in its largest whole unit, and a line
+under them with the limit in that unit ("Up to 90 days",
+`--dh-text-small`, `--dh-text-faint`). OK applies only a whole number
+from 1 to that limit; otherwise the line says what's wrong in `--dh-bad`
+("Enter a whole number", "At least 1", "At most 2,160 hours") and the
+field is marked invalid, and both follow as you type until it's right.
+The keys for a minus sign and a decimal point are blocked. The daemon
+clamps the span to what it keeps and the points to 5,000 whatever it's
+sent.
+
+History is the plugin's daemon half (`core.py`): the session's speeds
+every 2s, in three tiers, each averaged from the one before in
+clock-aligned steps: 2s for an hour, 1 minute for 2 days, 15 minutes for
+90 days (about 13,000 samples, in `array`s). Saved to
+`darkhand_history.json` in the config folder every 5 minutes and on
+disable (written beside it and moved over it), loaded on enable.
+`darkhand.get_speed_history(since, span, points)`: with `span` (ms), that
+span from the finest tier that keeps it, plus the step under way, averaged
+to about `points` if there are over 1.5 times as many; without, the 2s
+samples after `since` (the first version's call, which a page from before
+still makes). Times are the daemon's, with its `now` to shift them onto
+the page's clock, and `interval`, the ms between samples.
+
+Up to an hour, the chart draws its own samples (an hour kept) and the
+daemon's 2s ones, fetched when its first update arrives and after any gap
+in its own over 10s: the daemon's up to its newest, its own after. Longer,
+it asks for the span at a point per 3px of the plot (at least 100), again
+every minute (or the data's step, if longer) and after a gap, and draws
+those with its own newer samples after them. Where there are more samples
+than a point per 3px, each unbroken run is averaged in clock-aligned steps
+(so points don't shift as the chart moves on); the axis maximum comes from
+what's drawn. A daemon half from before (no `span`, or no method) leaves
+the chart its own samples.
 Download green, upload `#5b9dff`; 2px round-capped lines with a fading area
 fill (30% / 18% opacity to 0). Monotone cubic smoothing (Fritsch–Carlson) so
 lines never dip below zero. Axis: a "nice" maximum (1, 1.5, 2, 3, 4, 5, 6, 8
 × 10ⁿ in binary units, at least 16 KiB/s), dashed grid at top, middle and
-zero, labels in a 70px gutter. Lines are clipped to the plot and break at
-gaps of more than 10 seconds between updates (G27).
+zero, labels in a 70px gutter. Times along the bottom (a 22px row,
+`--dh-text-caption`): the shortest step from 1 minute to 2 weeks that
+leaves 90px between labels, on the hour, day... of local time; times of
+day, or dates for steps of a day or more; none within 24px of either end.
+Lines are clipped to the plot and break at gaps of more than 10 seconds
+between updates, or 2.5 times the data's step for a long range (G27).
 
 ### Details card, resize bar and collapsed strip
 

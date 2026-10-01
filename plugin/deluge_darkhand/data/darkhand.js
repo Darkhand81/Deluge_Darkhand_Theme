@@ -320,25 +320,76 @@ Ext.ns('Deluge.plugins.darkhand');
     }
 
     // -----------------------------------------------------------------------
-    // Speed chart: download and upload over the last few minutes, sampled
-    // from the same update poll. Deluge's web API keeps no history, so the
-    // plugin's daemon half (core.py) records one; the chart fetches it when
-    // it loads and after any gap in its own samples (a background tab, a
-    // sleeping laptop), so it starts full and gaps fill in. Without it (an
-    // older daemon half) the chart fills from the page's samples alone.
-    // Plain SVG, no chart library.
+    // Speed chart: download and upload over a range you pick (the last 5
+    // minutes to the last 90 days), sampled from the same update poll.
+    // Deluge's web API keeps no history, so the plugin's daemon half
+    // (core.py) records one. Up to an hour, the chart draws its own samples
+    // and the daemon's 2-second ones, fetched when it loads and after any gap
+    // in its own (a background tab, a sleeping laptop), so it starts full and
+    // gaps fill in. Longer, it asks the daemon for the range at about one
+    // point per 3px, and again every minute or so. Without the daemon half
+    // (or with its first version, which kept ten minutes) the chart has its
+    // own samples alone. Plain SVG, no chart library.
     // -----------------------------------------------------------------------
 
-    var CHART_WINDOW = 5 * 60 * 1000; // ms of history shown
+    // The range shown, in minutes: one of these or a custom one, up to the
+    // 90 days the daemon keeps; remembered per browser
+    var RANGE_PRESETS = [5, 60, 12 * 60, 24 * 60, 30 * 24 * 60];
+    var RANGE_MAX = 90 * 24 * 60;
+    var RANGE_KEY = 'darkhand.chartRange';
+    var LIVE_KEEP = 60 * 60 * 1000; // ms of the page's own samples kept
     var CHART_GAP = 10 * 1000; // ms without updates that breaks the lines
-    var samples = []; // { t: ms, down: bytes/s, up: bytes/s }
+    var LONG_REFRESH = 60 * 1000; // ms between fetches of a long range
+    var samples = []; // the page's and the daemon's 2s samples: { t: ms, down: bytes/s, up: bytes/s }
+    // A long range from the daemon: { span: ms, step: ms, at: ms, samples }
+    var longHistory = null, longPending = false;
+
+    function getChartRange() {
+        var v = null;
+        try {
+            var stored = window.localStorage.getItem(RANGE_KEY);
+            v = /^\d+$/.test(stored || '') ? parseInt(stored, 10) : null;
+        } catch (e) {}
+        return v >= 1 && v <= RANGE_MAX ? v : 5;
+    }
+
+    function setChartRange(minutes) {
+        try {
+            window.localStorage.setItem(RANGE_KEY, String(minutes));
+        } catch (e) {}
+    }
+
+    function chartSpan() {
+        return getChartRange() * 60 * 1000;
+    }
+
+    // A number of minutes in the largest unit it's a whole number of
+    function rangeParts(minutes) {
+        if (minutes % (24 * 60) === 0) return [minutes / (24 * 60), 'days'];
+        if (minutes % 60 === 0) return [minutes / 60, 'hours'];
+        return [minutes, 'minutes'];
+    }
+
+    // "Last 5 minutes", "Last hour", "Last 30 days"
+    function rangeLabel(minutes) {
+        var parts = rangeParts(minutes);
+        var unit = parts[0] === 1 ? parts[1].replace(/s$/, '') : parts[1];
+        return 'Last ' + (parts[0] === 1 ? '' : parts[0] + ' ') + unit;
+    }
+
+    // Lucide's chevron-down
+    var CHEVRON =
+        '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" ' +
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 
     function chartHtml() {
         return (
             '<div class="dh-chart">' +
             '<div class="dh-chart-head">' +
             '<div class="dh-chart-title">Transfer speed ' +
-            '<span>Last 5 minutes</span></div>' +
+            '<button type="button" class="dh-chart-range" id="dh-chart-range" title="Change the time shown">' +
+            '<span id="dh-chart-range-label">' + rangeLabel(getChartRange()) + '</span>' +
+            CHEVRON + '</button></div>' +
             '<div class="dh-chart-legend">' +
             '<span class="dh-legend-down"><i></i>Download ' +
             '<b id="dh-chart-down">&ndash;</b></span>' +
@@ -351,13 +402,198 @@ Ext.ns('Deluge.plugins.darkhand');
         );
     }
 
-    // The daemon's history: fetched when the first update arrives and after
-    // a gap, one request at a time
+    // The range menu, like the status bar's: the presets, then Custom...,
+    // which opens a window for any other (as the status bar's Other does)
+    var rangeMenu = null, rangeWindow = null;
+
+    function showRangeMenu() {
+        var btn = Ext.get('dh-chart-range');
+        if (!btn) return;
+        if (!rangeMenu) {
+            var items = RANGE_PRESETS.map(function (minutes) {
+                return {
+                    xtype: 'menucheckitem',
+                    text: rangeLabel(minutes),
+                    value: minutes,
+                    group: 'dh-chart-range',
+                    handler: onRangePicked,
+                };
+            });
+            items.push('-', {
+                xtype: 'menucheckitem',
+                text: _('Custom') + '…',
+                value: 'custom',
+                group: 'dh-chart-range',
+                handler: onRangePicked,
+            });
+            rangeMenu = new Ext.menu.Menu({ items: items, defaultOffsets: [0, 4] });
+            rangeMenu.on('show', function () {
+                btn.addClass('dh-chart-range-open');
+            });
+            rangeMenu.on('hide', function () {
+                btn.removeClass('dh-chart-range-open');
+            });
+        }
+        if (rangeMenu.isVisible()) {
+            rangeMenu.hide();
+            return;
+        }
+        // Tick the range shown: its preset, or Custom
+        var current = getChartRange();
+        var preset = RANGE_PRESETS.indexOf(current) >= 0;
+        rangeMenu.items.each(function (item) {
+            if (!item.setChecked) return;
+            item.setChecked(item.value === current || (!preset && item.value === 'custom'), true);
+        });
+        rangeMenu.show(btn, 'tl-bl?');
+    }
+
+    function onRangePicked(item) {
+        if (item.value === 'custom') {
+            showRangeWindow();
+        } else {
+            setRange(item.value);
+        }
+    }
+
+    function setRange(minutes) {
+        setChartRange(minutes);
+        var label = document.getElementById('dh-chart-range-label');
+        if (label) label.innerHTML = rangeLabel(minutes);
+        if (chartSpan() > LIVE_KEEP) loadLongHistory();
+        drawChart();
+    }
+
+    var RANGE_UNITS = { minutes: 1, hours: 60, days: 24 * 60 };
+    var rangeAmount = null, rangeUnit = null, rangeHint = null;
+
+    // Custom...: a number and a unit, at most the 90 days the daemon keeps.
+    // A line under them gives the limit in the unit chosen, and says what's
+    // wrong when the number isn't a whole one from 1 to that; OK applies
+    // nothing until it is.
+    function showRangeWindow() {
+        if (!rangeWindow) {
+            rangeAmount = new Ext.ux.form.SpinnerField({
+                name: 'amount',
+                width: 70,
+                minValue: 1,
+                maxValue: RANGE_MAX,
+                allowDecimals: false,
+                allowNegative: false,
+                enableKeyEvents: true,
+                // Checked here (checkRange), with its messages, not Ext's
+                validationEvent: false,
+                validateOnBlur: false,
+            });
+            rangeUnit = new Ext.form.ComboBox({
+                name: 'unit',
+                width: 100,
+                margins: '0 0 0 6',
+                store: [['minutes', _('minutes')], ['hours', _('hours')], ['days', _('days')]],
+                mode: 'local',
+                triggerAction: 'all',
+                editable: false,
+                forceSelection: true,
+            });
+            rangeHint = new Ext.BoxComponent({ cls: 'dh-range-hint' });
+            rangeWindow = new Ext.Window({
+                title: _('Custom Range'),
+                layout: 'fit',
+                width: 230,
+                height: 120,
+                constrainHeader: true,
+                closeAction: 'hide',
+                resizable: false,
+                items: {
+                    xtype: 'form',
+                    baseCls: 'x-plain',
+                    bodyStyle: 'padding: 5px',
+                    items: [
+                        {
+                            xtype: 'container',
+                            layout: 'hbox',
+                            height: 26,
+                            layoutConfig: { pack: 'start', align: 'middle' },
+                            items: [rangeAmount, rangeUnit],
+                        },
+                        rangeHint,
+                    ],
+                },
+                keys: [{ key: Ext.EventObject.ENTER, fn: onRangeOk }],
+            });
+            rangeWindow.addButton(_('Cancel'), function () {
+                rangeWindow.hide();
+            });
+            rangeWindow.addButton(_('OK'), onRangeOk);
+            // Checked as you type and pick, once it has said something's wrong
+            rangeAmount.on('keyup', function () {
+                checkRange(false);
+            });
+            rangeAmount.on('spin', function () {
+                checkRange(false);
+            });
+            rangeUnit.on('select', function () {
+                checkRange(false);
+            });
+        }
+        var parts = rangeParts(getChartRange());
+        rangeWindow.show();
+        rangeAmount.setValue(parts[0]);
+        rangeUnit.setValue(parts[1]);
+        checkRange(false, true);
+        rangeAmount.focus(true, 10);
+    }
+
+    // The range entered, in minutes, or null when it isn't one. `strict`
+    // (OK) shows what's wrong; otherwise only an error already shown is
+    // updated, or cleared once put right.
+    function checkRange(strict, reset) {
+        var unit = rangeUnit.getValue() || 'minutes';
+        var max = RANGE_MAX / RANGE_UNITS[unit];
+        rangeAmount.maxValue = max;
+        var raw = Ext.util.Format.trim(String(rangeAmount.getRawValue()));
+        var amount = /^\d+$/.test(raw) ? parseInt(raw, 10) : NaN;
+        var error = null;
+        if (isNaN(amount)) error = _('Enter a whole number');
+        else if (amount < 1) error = _('At least 1');
+        else if (amount > max) error = _('At most') + ' ' + Ext.util.Format.number(max, '0,000') + ' ' + _(unit);
+        var shown = rangeHint.el && rangeHint.el.hasClass('dh-range-error');
+        if (error && (strict || (shown && !reset))) {
+            rangeAmount.markInvalid(error);
+            rangeHint.el.addClass('dh-range-error');
+            rangeHint.el.update(error);
+        } else {
+            rangeAmount.clearInvalid();
+            if (rangeHint.el) {
+                rangeHint.el.removeClass('dh-range-error');
+                rangeHint.el.update(_('Up to') + ' ' + Ext.util.Format.number(max, '0,000') + ' ' + _(unit));
+            }
+        }
+        return error ? null : amount * RANGE_UNITS[unit];
+    }
+
+    function onRangeOk() {
+        var minutes = checkRange(true);
+        if (minutes === null) {
+            rangeAmount.focus(true, 10);
+            return;
+        }
+        rangeWindow.hide();
+        setRange(minutes);
+    }
+
+    // The daemon's 2-second history: fetched when the first update arrives
+    // and after a gap, one request at a time
     var historyAsked = false, historyPending = false;
 
-    function loadHistory() {
+    function speedApi() {
         var api = deluge.client && deluge.client.darkhand;
-        if (historyPending || !api || typeof api.get_speed_history !== 'function') return;
+        return api && typeof api.get_speed_history === 'function' ? api : null;
+    }
+
+    function loadHistory() {
+        var api = speedApi();
+        if (historyPending || !api) return;
         historyPending = true;
         api.get_speed_history(0, {
             success: function (history) {
@@ -370,22 +606,25 @@ Ext.ns('Deluge.plugins.darkhand');
         });
     }
 
-    // The daemon's samples up to its latest, then the page's own after that.
-    // Its times are on the daemon's clock: shift them onto the page's.
+    // Times on the daemon's clock, shifted onto the page's
+    function fromDaemon(history) {
+        var shift = new Date().getTime() - history.now;
+        return (history.samples || []).map(function (s) {
+            return { t: s[0] + shift, down: s[1], up: s[2] };
+        });
+    }
+
+    // The daemon's samples up to its latest, then the page's own after that
     function mergeHistory(history) {
         try {
-            var list = history && history.samples;
-            if (!list || !list.length) return;
-            var shift = new Date().getTime() - history.now;
-            var merged = list.map(function (s) {
-                return { t: s[0] + shift, down: s[1], up: s[2] };
-            });
+            var merged = history ? fromDaemon(history) : [];
+            if (!merged.length) return;
             var last = merged[merged.length - 1].t;
             Ext.each(samples, function (s) {
                 if (s.t > last) merged.push(s);
             });
             var now = merged[merged.length - 1].t;
-            while (merged.length > 2 && merged[1].t < now - CHART_WINDOW) {
+            while (merged.length > 2 && merged[1].t < now - LIVE_KEEP) {
                 merged.shift();
             }
             samples = merged;
@@ -395,20 +634,58 @@ Ext.ns('Deluge.plugins.darkhand');
         }
     }
 
+    // A range longer than the page keeps, from the daemon, at about one
+    // point per 3px of the plot
+    function loadLongHistory() {
+        var api = speedApi();
+        if (longPending || !api) return;
+        var span = chartSpan();
+        var plot = document.getElementById('dh-chart-plot');
+        var points = Math.max(100, Math.round(((plot ? plot.clientWidth : 600) - CHART_GUTTER) / 3));
+        longPending = true;
+        api.get_speed_history(0, span, points, {
+            success: function (history) {
+                longPending = false;
+                try {
+                    longHistory = {
+                        span: span,
+                        step: history.interval || 0,
+                        at: new Date().getTime(),
+                        samples: fromDaemon(history),
+                    };
+                    drawChart();
+                } catch (e) {}
+            },
+            // The daemon half's first version (no span): its own samples
+            // only, and asked again in a minute
+            failure: function () {
+                longPending = false;
+                longHistory = { span: span, step: 0, at: new Date().getTime(), samples: [] };
+            },
+        });
+    }
+
     function addSample(stats) {
         var now = new Date().getTime();
         var previous = samples.length ? samples[samples.length - 1].t : 0;
-        if (!historyAsked || (previous && now - previous > CHART_GAP)) {
+        var gap = previous && now - previous > CHART_GAP;
+        if (!historyAsked || gap) {
             historyAsked = true;
             loadHistory();
+        }
+        var span = chartSpan();
+        if (span > LIVE_KEEP) {
+            var stale =
+                !longHistory || longHistory.span !== span ||
+                now - longHistory.at > Math.max(LONG_REFRESH, longHistory.step);
+            if (stale || gap) loadLongHistory();
         }
         samples.push({
             t: now,
             down: stats.download_rate || 0,
             up: stats.upload_rate || 0,
         });
-        // Keep one sample beyond the window so the lines run off the edge
-        while (samples.length > 2 && samples[1].t < now - CHART_WINDOW) {
+        while (samples.length > 2 && samples[1].t < now - LIVE_KEEP) {
             samples.shift();
         }
         var down = document.getElementById('dh-chart-down');
@@ -474,23 +751,123 @@ Ext.ns('Deluge.plugins.darkhand');
         return d;
     }
 
+    // Samples averaged in steps of `step` ms (on the clock, so a step's
+    // points don't shift as the chart moves on): an hour is 1800 samples,
+    // more than the chart has pixels.
+    function average(run, step) {
+        var out = [], group = null;
+        Ext.each(run, function (s) {
+            var key = Math.floor(s.t / step);
+            if (!group || group.key !== key) {
+                group = { key: key, n: 0, t: 0, down: 0, up: 0 };
+                out.push(group);
+            }
+            group.n++;
+            group.t += s.t;
+            group.down += s.down;
+            group.up += s.up;
+        });
+        return out.map(function (g) {
+            return { t: g.t / g.n, down: g.down / g.n, up: g.up / g.n };
+        });
+    }
+
+    // Time labels along the bottom: the shortest of these steps that leaves
+    // room between labels, on the hour, the day... of local time
+    var TIME_STEPS = [1, 2, 5, 10, 15, 30, 60, 120, 180, 360, 720, 1440, 2880, 4320, 10080, 20160].map(function (m) {
+        return m * 60 * 1000;
+    });
+
+    function timeTicks(now, span, width) {
+        var step = TIME_STEPS[TIME_STEPS.length - 1];
+        for (var i = 0; i < TIME_STEPS.length; i++) {
+            if ((TIME_STEPS[i] / span) * width >= 90) {
+                step = TIME_STEPS[i];
+                break;
+            }
+        }
+        var offset = new Date(now).getTimezoneOffset() * 60 * 1000;
+        var ticks = [];
+        for (var t = Math.floor((now - offset) / step) * step + offset; t > now - span; t -= step) {
+            var d = new Date(t);
+            ticks.push({
+                t: t,
+                label: step >= 24 * 60 * 60 * 1000
+                    ? d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+                    : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            });
+        }
+        return ticks;
+    }
+
+    // The samples to draw: up to an hour, the page's and the daemon's 2s
+    // ones; longer, the daemon's range with the page's newer ones after it.
+    // `gap` is the time between samples that breaks the lines.
+    function chartData(span) {
+        if (span <= LIVE_KEEP || !longHistory || !longHistory.samples.length) {
+            return { list: samples, gap: CHART_GAP };
+        }
+        var list = longHistory.samples.slice();
+        var last = list[list.length - 1].t;
+        Ext.each(samples, function (s) {
+            if (s.t > last) list.push(s);
+        });
+        return { list: list, gap: Math.max(CHART_GAP, 2.5 * longHistory.step) };
+    }
+
+    var CHART_GUTTER = 70; // px for the speed labels, left of the plot
+
     function drawChart() {
         var plot = document.getElementById('dh-chart-plot');
         if (!plot) return;
         var w = plot.clientWidth, h = plot.clientHeight;
         if (w < 20 || h < 20) return;
 
+        // Axis labels get their own column on the left, clear of the lines,
+        // and a row along the bottom for the times
+        var gutter = CHART_GUTTER;
+        var top = 6, bottom = h - 22;
+        var span = chartSpan();
+        var data = chartData(span);
+        var list = data.list;
+        var now = list.length ? list[list.length - 1].t : new Date().getTime();
+
+        // The samples in range, and one from before it so the lines run off
+        // the left edge
+        var start = 0;
+        while (start < list.length - 2 && list[start + 1].t < now - span) start++;
+        var shown = list.slice(start);
+
+        // Updates stop while the tab is in the background or the computer
+        // sleeps, and the daemon while it's down. Break the lines at such
+        // gaps rather than drawing a ramp across time nobody measured. Each
+        // run is averaged down to a point every 3px or so when there are
+        // more samples than that.
+        var step = span / Math.max(1, (w - gutter) / 3);
+        var runs = [], run = [];
+        Ext.each(shown, function (s, i) {
+            if (i && s.t - shown[i - 1].t > data.gap) {
+                runs.push(run);
+                run = [];
+            }
+            run.push(s);
+        });
+        runs.push(run);
+        if (step > 3000) {
+            runs = runs.map(function (r) {
+                return average(r, step);
+            });
+        }
+
         var peak = 0;
-        Ext.each(samples, function (s) {
-            peak = Math.max(peak, s.down, s.up);
+        Ext.each(runs, function (r) {
+            Ext.each(r, function (s) {
+                peak = Math.max(peak, s.down, s.up);
+            });
         });
         var max = niceMax(peak * 1.1);
-        // Axis labels get their own column on the left, clear of the lines
-        var gutter = 70;
-        var top = 6, bottom = h - 6;
-        var now = samples.length ? samples[samples.length - 1].t : 0;
         var x = function (t) {
-            return gutter + (1 - (now - t) / CHART_WINDOW) * (w - gutter);
+            return gutter + (1 - (now - t) / span) * (w - gutter);
         };
         var y = function (v) {
             return bottom - (v / max) * (bottom - top);
@@ -520,18 +897,15 @@ Ext.ns('Deluge.plugins.darkhand');
                 '" y="' + (gy + 3.5) + '">' + (f ? fspeed(max * f, true) : '0') + '</text>';
         });
 
-        // Updates stop while the tab is in the background or the computer
-        // sleeps. Break the lines at such gaps rather than drawing a ramp
-        // across time nobody measured.
-        var runs = [], run = [];
-        Ext.each(samples, function (s, i) {
-            if (i && s.t - samples[i - 1].t > CHART_GAP) {
-                runs.push(run);
-                run = [];
-            }
-            run.push(s);
+        // Times under the plot, each centred on its moment, none hanging
+        // past either end
+        Ext.each(timeTicks(now, span, w - gutter), function (tick) {
+            var tx = x(tick.t);
+            if (tx < gutter + 24 || tx > w - 24) return;
+            svg +=
+                '<text class="dh-chart-label" text-anchor="middle" x="' + Math.round(tx) +
+                '" y="' + (h - 4) + '">' + tick.label + '</text>';
         });
-        runs.push(run);
 
         // The lines stay inside the plot, right of the axis labels: the
         // sample kept from just before the window starts left of it.
@@ -2221,6 +2595,8 @@ Ext.ns('Deluge.plugins.darkhand');
         if (plot && window.ResizeObserver) {
             new ResizeObserver(drawChart).observe(plot);
         }
+        var range = Ext.get('dh-chart-range');
+        if (range) range.on('click', showRangeMenu);
 
         Ext.each(ICON_BUTTONS, function (id) {
             var btn = deluge.toolbar.items.get(id);

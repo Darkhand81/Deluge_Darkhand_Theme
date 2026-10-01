@@ -546,24 +546,61 @@ html body.dh-dashboard,
 .dh-chart-head {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 4px 16px;
     margin-bottom: 8px;
 }
 
 .dh-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     font-size: var(--dh-text-body);
     font-weight: 700;
     color: var(--dh-text-strong);
     white-space: nowrap;
 }
 
-.dh-chart-title span {
-    margin-left: 6px;
-    font-size: var(--dh-text-base);
-    font-weight: 400;
+/* The range shown ("Last 5 minutes"), a button opening the range menu */
+.dh-chart-range {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border: 0;
+    border-radius: var(--dh-small-radius);
+    background: transparent;
     color: var(--dh-text-faint);
+    font: 400 var(--dh-text-base) var(--dh-font);
+    cursor: pointer;
+    transition: background-color var(--dh-ease), color var(--dh-ease);
+}
+
+.dh-chart-range:hover,
+.dh-chart-range-open {
+    background: var(--dh-bg-2);
+    color: var(--dh-text-strong);
+}
+
+.dh-chart-range svg {
+    flex: none;
+    transition: transform var(--dh-ease);
+}
+
+.dh-chart-range-open svg {
+    transform: rotate(180deg);
+}
+
+/* The Custom Range window's limit ("Up to 90 days"), or what's wrong */
+.dh-range-hint {
+    margin-top: 8px;
+    font-size: var(--dh-text-small);
+    color: var(--dh-text-faint);
+}
+
+.dh-range-hint.dh-range-error {
+    color: var(--dh-bad);
 }
 
 .dh-chart-legend {
