@@ -1458,6 +1458,58 @@ Ext.ns('Deluge.plugins.darkhand');
         });
     }
 
+    // Deluge's size formatters stop at GiB, so a big download folder's free
+    // space reads "27000.0 GiB". Carry on through TiB, PiB and EiB (same one
+    // decimal). Deluge keeps them in globals that most of its code calls by
+    // name (fspeed, the status bar, the Files tabs, the stats card), but its
+    // grids' size columns hold the old functions as their renderers: swap
+    // those in every grid's columns. Before Deluge builds its UI.
+    var SIZE_UNITS = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB'];
+    var SHORT_UNITS = ['K', 'M', 'G', 'T', 'P', 'E'];
+
+    function sizeFormatter(units) {
+        return function (bytes, showZero) {
+            if (!bytes && !showZero) return '';
+            var value = bytes / 1024, unit = 0;
+            while (value >= 1024 && unit < units.length - 1) {
+                value /= 1024;
+                unit++;
+            }
+            return value.toFixed(1) + ' ' + units[unit];
+        };
+    }
+
+    function extendSizeUnits() {
+        var F = Deluge.Formatters;
+        if (!F || F.dhSizes) return;
+        var swaps = [];
+        [['size', 'fsize', SIZE_UNITS], ['sizeShort', 'fsize_short', SHORT_UNITS]].forEach(function (f) {
+            var old = F[f[0]], fn = sizeFormatter(f[2]);
+            if (typeof old !== 'function') return;
+            F[f[0]] = fn;
+            if (window[f[1]] === old) window[f[1]] = fn;
+            swaps.push([old, fn]);
+        });
+        F.dhSizes = true;
+        var swap = function (config) {
+            Ext.each(config || [], function (c) {
+                Ext.each(swaps, function (sw) {
+                    if (c && c.renderer === sw[0]) c.renderer = sw[1];
+                });
+            });
+        };
+        // Grids made from now on, and those Deluge made when its script
+        // loaded (the torrent list)
+        var setConfig = Ext.grid.ColumnModel.prototype.setConfig;
+        Ext.grid.ColumnModel.prototype.setConfig = function (config) {
+            swap(config);
+            return setConfig.apply(this, arguments);
+        };
+        Ext.ComponentMgr.all.each(function (c) {
+            if (c instanceof Ext.grid.GridPanel && c.getColumnModel()) swap(c.getColumnModel().config);
+        });
+    }
+
     // Login: Deluge centres a short password field under a wide,
     // right-aligned label column, leaving empty space either side of it in
     // the card. Lay it out like the other form dialogs instead: the label on
@@ -2217,6 +2269,7 @@ Ext.ns('Deluge.plugins.darkhand');
             try {
                 sizeWindows(); // before Deluge creates its windows
                 styleLoginWindow();
+                extendSizeUnits();
                 insetWindowLists();
             } catch (e) {
                 if (window.console) console.error('Darkhand: window sizing failed', e);

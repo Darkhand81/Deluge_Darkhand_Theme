@@ -595,6 +595,15 @@ Each learned the hard way. Symptom → cause → what the code does.
   `a.x-grid3-hd-btn:hover` moves the background 14px (the second half of
   its sprite), which slides a single centred icon out of sight → keep
   `background-position: center` on hover too.
+- **G43. Deluge's sizes stop at GiB.** `Deluge.Formatters.size` (and
+  `sizeShort`) top out at GiB, so 27 TiB of free space read "27000.0 GiB".
+  The plugin replaces them with formatters that go on to TiB, PiB and EiB
+  (`extendSizeUnits`). Most code calls the `fsize` global by name, so
+  reassigning it is enough there, but grid columns hold the old function as
+  their `renderer` (the torrent list's Size, Downloaded, Uploaded,
+  Remaining): swap it in existing grids' column models and in
+  `ColumnModel.setConfig` for later ones. The theme alone can't do this, so
+  without the plugin Deluge still shows GiB.
 - **G33.** `view.getCell()` throws when the grid has no rows yet: check
   `view.hasRows()`.
 
