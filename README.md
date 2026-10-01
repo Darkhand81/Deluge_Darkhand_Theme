@@ -45,8 +45,17 @@ that, and your choices are remembered per browser:
 | --- | --- |
 | ![Dashboard with the details card on the right](screenshots/dashboard-right.png) | ![Dashboard with the stats above the torrent list](screenshots/dashboard-stats-above.png) |
 
-The transfer speeds in the dashboard screenshots are simulated; the test
-setup they were taken on has no peers.
+Deluge's menus and windows match the cards: the torrent menu, Add Torrents,
+Preferences and the Connection Manager, among others.
+
+| Torrent menu | Add Torrents |
+| --- | --- |
+| ![The torrent menu, with a speed limit submenu open](screenshots/dashboard-menu.png) | ![Add Torrents, with a torrent's files listed](screenshots/dashboard-add-torrents.png) |
+| **Preferences** | **Connection Manager** |
+| ![Preferences](screenshots/dashboard-preferences.png) | ![The Connection Manager](screenshots/dashboard-connection-manager.png) |
+
+The transfer activity in the dashboard screenshots (speeds, progress, peers)
+is simulated; the test setup they were taken on has no peers.
 
 Also in the dashboard:
 
@@ -83,10 +92,6 @@ The theme restyles Deluge's standard layout, and is what the Web UI falls back
 to without the plugin:
 
 ![The Darkhand theme with Deluge's standard layout](screenshots/main.png)
-
-| Context menu | Preferences |
-| --- | --- |
-| ![Context menu](screenshots/menu.png) | ![Preferences](screenshots/preferences.png) |
 
 - Flat, low-glare near-black palette with blue accents from the Deluge logo,
   and panels that float as rounded cards
