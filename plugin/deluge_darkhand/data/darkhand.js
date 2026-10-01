@@ -716,7 +716,7 @@ Ext.ns('Deluge.plugins.darkhand');
                 collapseMode: 'mini',
                 animCollapse: false,
                 useSplitTips: true,
-                collapsibleSplitTip: 'Drag to resize. Double-click to close.',
+                collapsibleSplitTip: 'Drag to resize the details card. Double-click to close it.',
                 margins: margins(GAP - SPLIT, GAP, GAP, GAP),
                 // Closed, the strip keeps a full gap from the cards above
                 cmargins: margins(GAP, GAP, GAP, GAP),
@@ -736,7 +736,7 @@ Ext.ns('Deluge.plugins.darkhand');
                 collapseMode: 'mini',
                 animCollapse: false,
                 useSplitTips: true,
-                collapsibleSplitTip: 'Drag to resize. Double-click to close.',
+                collapsibleSplitTip: 'Drag to resize the details card. Double-click to close it.',
             });
         }
 
