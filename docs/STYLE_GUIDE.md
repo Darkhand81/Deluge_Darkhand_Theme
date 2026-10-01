@@ -590,6 +590,11 @@ Each learned the hard way. Symptom → cause → what the code does.
   Deluge's rendered bars (`x-progress-renderered`) size the label to the
   bar's *outer* width, border included → padding 0 and `margin-left: -1px`
   on rendered bars only (a real `Ext.ProgressBar` sizes it correctly).
+- **G44. Progress label vanishes near the fill's end.** Deluge clips the
+  white label 9px short of the fill (fill width less 10px, the bar's less
+  1px), and the bar, stacked above the muted label, hides that one too →
+  `width: 100% !important` on the bar's `.x-progress-text`, so the white
+  label is clipped at the fill.
 - **G23. Text and bars on different lines.** Grid cells are top-aligned and
   text lines are shorter than the 20px bars → `line-height: 20px` on every
   cell. Rows are a fixed 28px, so don't add vertical padding.

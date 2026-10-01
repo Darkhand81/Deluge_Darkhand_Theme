@@ -1277,6 +1277,14 @@ html body .x-progress-renderered .x-progress-inner .x-progress-text > div {
     margin-left: -1px;
 }
 
+/* Deluge's rendered bars clip the white label 9px short of the fill (its
+   width is the fill's less 10px, the bar's less 1px), and the bar covers the
+   muted label beneath, so the text vanished just inside the fill's end:
+   clip the white label at the fill itself. */
+html body .x-progress-renderered .x-progress-bar > .x-progress-text {
+    width: 100% !important;
+}
+
 html body .x-tree .x-progress-wrap .x-progress-inner .x-progress-text {
     line-height: 12px;
 }
