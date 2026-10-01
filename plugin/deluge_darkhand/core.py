@@ -203,6 +203,7 @@ class Core(CorePluginBase):
         more. Without, the 2-second samples after `since` (ms since the
         epoch), as the plugin's first version returned."""
         now = int(time.time() * 1000)
+        since, span = int(since), int(span)
         if not span:
             raw = self.series[0]
             return {
@@ -210,7 +211,9 @@ class Core(CorePluginBase):
                 'interval': raw.step,
                 'samples': [s for s in raw.since(0) if s[0] > since],
             }
-        span = int(span)
+        # Within what's kept, and no more points than any chart could use
+        span = max(0, min(span, self.series[-1].keep))
+        points = max(0, min(int(points), 5000))
         series = self.series[-1]
         for i, s in enumerate(self.series):
             if s.keep >= span:
@@ -224,7 +227,6 @@ class Core(CorePluginBase):
             # (its middle can be still to come)
             samples.append([min(t, now), down, up])
         step = series.step
-        points = int(points)
         if points > 0 and len(samples) > points * 1.5:
             step = max(step, span // points)
             samples = average(samples, step)

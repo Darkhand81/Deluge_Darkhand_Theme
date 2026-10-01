@@ -347,7 +347,8 @@ Ext.ns('Deluge.plugins.darkhand');
     function getChartRange() {
         var v = null;
         try {
-            v = parseInt(window.localStorage.getItem(RANGE_KEY), 10);
+            var stored = window.localStorage.getItem(RANGE_KEY);
+            v = /^\d+$/.test(stored || '') ? parseInt(stored, 10) : null;
         } catch (e) {}
         return v >= 1 && v <= RANGE_MAX ? v : 5;
     }
@@ -464,14 +465,42 @@ Ext.ns('Deluge.plugins.darkhand');
     }
 
     var RANGE_UNITS = { minutes: 1, hours: 60, days: 24 * 60 };
+    var rangeAmount = null, rangeUnit = null, rangeHint = null;
 
+    // Custom...: a number and a unit, at most the 90 days the daemon keeps.
+    // A line under them gives the limit in the unit chosen, and says what's
+    // wrong when the number isn't a whole one from 1 to that; OK applies
+    // nothing until it is.
     function showRangeWindow() {
         if (!rangeWindow) {
+            rangeAmount = new Ext.ux.form.SpinnerField({
+                name: 'amount',
+                width: 70,
+                minValue: 1,
+                maxValue: RANGE_MAX,
+                allowDecimals: false,
+                allowNegative: false,
+                enableKeyEvents: true,
+                // Checked here (checkRange), with its messages, not Ext's
+                validationEvent: false,
+                validateOnBlur: false,
+            });
+            rangeUnit = new Ext.form.ComboBox({
+                name: 'unit',
+                width: 100,
+                margins: '0 0 0 6',
+                store: [['minutes', _('minutes')], ['hours', _('hours')], ['days', _('days')]],
+                mode: 'local',
+                triggerAction: 'all',
+                editable: false,
+                forceSelection: true,
+            });
+            rangeHint = new Ext.BoxComponent({ cls: 'dh-range-hint' });
             rangeWindow = new Ext.Window({
                 title: _('Custom Range'),
                 layout: 'fit',
                 width: 230,
-                height: 100,
+                height: 120,
                 constrainHeader: true,
                 closeAction: 'hide',
                 resizable: false,
@@ -479,28 +508,15 @@ Ext.ns('Deluge.plugins.darkhand');
                     xtype: 'form',
                     baseCls: 'x-plain',
                     bodyStyle: 'padding: 5px',
-                    layout: 'hbox',
-                    layoutConfig: { pack: 'start' },
                     items: [
                         {
-                            xtype: 'spinnerfield',
-                            name: 'amount',
-                            width: 70,
-                            minValue: 1,
-                            maxValue: RANGE_MAX,
-                            allowDecimals: false,
+                            xtype: 'container',
+                            layout: 'hbox',
+                            height: 26,
+                            layoutConfig: { pack: 'start', align: 'middle' },
+                            items: [rangeAmount, rangeUnit],
                         },
-                        {
-                            xtype: 'combo',
-                            name: 'unit',
-                            width: 100,
-                            margins: '0 0 0 6',
-                            store: [['minutes', _('minutes')], ['hours', _('hours')], ['days', _('days')]],
-                            mode: 'local',
-                            triggerAction: 'all',
-                            editable: false,
-                            forceSelection: true,
-                        },
+                        rangeHint,
                     ],
                 },
                 keys: [{ key: Ext.EventObject.ENTER, fn: onRangeOk }],
@@ -509,26 +525,61 @@ Ext.ns('Deluge.plugins.darkhand');
                 rangeWindow.hide();
             });
             rangeWindow.addButton(_('OK'), onRangeOk);
+            // Checked as you type and pick, once it has said something's wrong
+            rangeAmount.on('keyup', function () {
+                checkRange(false);
+            });
+            rangeAmount.on('spin', function () {
+                checkRange(false);
+            });
+            rangeUnit.on('select', function () {
+                checkRange(false);
+            });
         }
-        var form = rangeWindow.items.get(0);
         var parts = rangeParts(getChartRange());
         rangeWindow.show();
-        form.items.get(0).setValue(parts[0]);
-        form.items.get(1).setValue(parts[1]);
-        form.items.get(0).focus(true, 10);
+        rangeAmount.setValue(parts[0]);
+        rangeUnit.setValue(parts[1]);
+        checkRange(false, true);
+        rangeAmount.focus(true, 10);
     }
 
-    // The range entered, at most the 90 days the daemon keeps
+    // The range entered, in minutes, or null when it isn't one. `strict`
+    // (OK) shows what's wrong; otherwise only an error already shown is
+    // updated, or cleared once put right.
+    function checkRange(strict, reset) {
+        var unit = rangeUnit.getValue() || 'minutes';
+        var max = RANGE_MAX / RANGE_UNITS[unit];
+        rangeAmount.maxValue = max;
+        var raw = Ext.util.Format.trim(String(rangeAmount.getRawValue()));
+        var amount = /^\d+$/.test(raw) ? parseInt(raw, 10) : NaN;
+        var error = null;
+        if (isNaN(amount)) error = _('Enter a whole number');
+        else if (amount < 1) error = _('At least 1');
+        else if (amount > max) error = _('At most') + ' ' + Ext.util.Format.number(max, '0,000') + ' ' + _(unit);
+        var shown = rangeHint.el && rangeHint.el.hasClass('dh-range-error');
+        if (error && (strict || (shown && !reset))) {
+            rangeAmount.markInvalid(error);
+            rangeHint.el.addClass('dh-range-error');
+            rangeHint.el.update(error);
+        } else {
+            rangeAmount.clearInvalid();
+            if (rangeHint.el) {
+                rangeHint.el.removeClass('dh-range-error');
+                rangeHint.el.update(_('Up to') + ' ' + Ext.util.Format.number(max, '0,000') + ' ' + _(unit));
+            }
+        }
+        return error ? null : amount * RANGE_UNITS[unit];
+    }
+
     function onRangeOk() {
-        var form = rangeWindow.items.get(0);
-        var amount = parseInt(form.items.get(0).getValue(), 10);
-        var unit = RANGE_UNITS[form.items.get(1).getValue()] || 1;
-        if (!(amount >= 1)) {
-            form.items.get(0).focus(true, 10);
+        var minutes = checkRange(true);
+        if (minutes === null) {
+            rangeAmount.focus(true, 10);
             return;
         }
         rangeWindow.hide();
-        setRange(Math.min(amount * unit, RANGE_MAX));
+        setRange(minutes);
     }
 
     // The daemon's 2-second history: fetched when the first update arrives

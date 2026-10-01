@@ -365,7 +365,15 @@ a 14px Lucide chevron-down that turns over while open; hover and open:
 bar's: a radio group of the presets, a separator, **Custom…** (ticked
 while a custom range is shown). Custom… opens a window like the status
 bar's Other (Deluge's OtherLimitWindow): a spinner and a minutes / hours /
-days combo, prefilled with the range in its largest whole unit.
+days combo, prefilled with the range in its largest whole unit, and a line
+under them with the limit in that unit ("Up to 90 days",
+`--dh-text-small`, `--dh-text-faint`). OK applies only a whole number
+from 1 to that limit; otherwise the line says what's wrong in `--dh-bad`
+("Enter a whole number", "At least 1", "At most 2,160 hours") and the
+field is marked invalid, and both follow as you type until it's right.
+The keys for a minus sign and a decimal point are blocked. The daemon
+clamps the span to what it keeps and the points to 5,000 whatever it's
+sent.
 
 History is the plugin's daemon half (`core.py`): the session's speeds
 every 2s, in three tiers, each averaged from the one before in

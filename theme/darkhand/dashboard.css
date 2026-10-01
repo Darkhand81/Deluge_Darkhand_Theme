@@ -592,6 +592,17 @@ html body.dh-dashboard,
     transform: rotate(180deg);
 }
 
+/* The Custom Range window's limit ("Up to 90 days"), or what's wrong */
+.dh-range-hint {
+    margin-top: 8px;
+    font-size: var(--dh-text-small);
+    color: var(--dh-text-faint);
+}
+
+.dh-range-hint.dh-range-error {
+    color: var(--dh-bad);
+}
+
 .dh-chart-legend {
     display: flex;
     gap: 16px;
