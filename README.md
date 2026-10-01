@@ -172,6 +172,33 @@ sudo ./darkhand.sh install --no-activate
 
 On Deluge 2.2+, then choose **Darkhand** under **Preferences → Interface → Theme**.
 
+### Windows and manual installs
+
+`darkhand.sh` is for Linux. On Windows, or anywhere you'd rather not run it,
+install from the [latest release](https://github.com/darkhand81/deluge_darkhand_theme/releases/latest),
+which has the theme as `darkhand-theme-<version>.zip` and the dashboard plugin
+as `Darkhand-<version>-py3.egg`:
+
+1. Find Deluge's web UI `themes` folder. It's inside the Deluge install
+   folder (on Windows, under `C:\Program Files\Deluge`), in `…\deluge\ui\web\themes`,
+   and holds a `css` folder with Deluge's own `xtheme-gray.css`.
+2. Extract the theme zip into that `themes` folder. It adds
+   `css\xtheme-darkhand.css` and a `darkhand` folder. Writing under
+   `Program Files` needs administrator rights.
+3. In the Web UI, choose **Darkhand** under **Preferences → Interface →
+   Theme** (Deluge 2.2 and later) and reload the page. On older versions,
+   stop `deluge-web` and set `"theme": "darkhand"` in its `web.conf`
+   (`%APPDATA%\deluge\web.conf` on Windows), then start it again.
+4. For the dashboard, go to **Preferences → Plugins**, click **Install**,
+   choose the egg, and tick **Darkhand** in the list. The page reloads into
+   the dashboard once you close Preferences.
+
+The dashboard needs the theme: it's where the dashboard's styles live. To
+remove them, untick the plugin and delete its egg from the daemon's
+`plugins` folder (`%APPDATA%\deluge\plugins` on Windows), choose another
+theme, and delete the files the zip added. Upgrading Deluge removes the
+theme (see below): extract the zip again afterwards.
+
 ## Uninstall
 
 ```sh

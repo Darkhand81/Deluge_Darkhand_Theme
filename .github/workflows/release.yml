@@ -1,0 +1,83 @@
+# On a version tag (v1.0.0), publish a release with the dashboard plugin as
+# a prebuilt egg and the theme as a zip, for installs without darkhand.sh
+# (Windows: see the README). Tag on main, after merging.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version from the tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if ! [[ "$version" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+            echo "::error::tag $GITHUB_REF_NAME isn't a version (v1.0.0)"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      # As darkhand.sh's build_egg: plugin/ zipped as it is (the code is pure
+      # Python, so one "py3" egg suits every Python 3 Deluge), with the tag's
+      # version in its metadata
+      - name: Build the plugin egg
+        run: |
+          mkdir -p dist build
+          cp -R plugin build/plugin
+          sed -i "s/^Version: .*/Version: $VERSION/" build/plugin/EGG-INFO/PKG-INFO
+          python3 - build/plugin "dist/Darkhand-$VERSION-py3.egg" <<'PY'
+          import os, sys, zipfile
+
+          src, dest = sys.argv[1], sys.argv[2]
+          with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as egg:
+              for root, dirs, files in os.walk(src):
+                  dirs[:] = sorted(d for d in dirs if d != "__pycache__")
+                  for name in sorted(files):
+                      path = os.path.join(root, name)
+                      egg.write(path, os.path.relpath(path, src))
+          PY
+
+      # Laid out as Deluge's themes folder (as darkhand.sh installs it: the
+      # stylesheet in css/, beside the stock ones, and the darkhand/ folder),
+      # so it extracts straight into that folder
+      - name: Zip the theme
+        run: |
+          mkdir -p build/themes/css
+          cp theme/xtheme-darkhand.css build/themes/css/
+          cp -R theme/darkhand build/themes/
+          cd build/themes
+          zip -r -X "../../dist/darkhand-theme-$VERSION.zip" css darkhand
+
+      - name: Check the files
+        run: |
+          python3 - "dist/Darkhand-$VERSION-py3.egg" "dist/darkhand-theme-$VERSION.zip" <<'PY'
+          import sys, zipfile
+
+          egg, theme = (set(zipfile.ZipFile(p).namelist()) for p in sys.argv[1:])
+          for name in ("EGG-INFO/PKG-INFO", "EGG-INFO/entry_points.txt",
+                       "deluge_darkhand/__init__.py", "deluge_darkhand/data/darkhand.js"):
+              assert name in egg, f"egg is missing {name}"
+          assert not any("\\" in n for n in egg), "egg paths must use /"
+          for name in ("css/xtheme-darkhand.css", "darkhand/dashboard.css",
+                       "darkhand/icons.css", "darkhand/fonts.css"):
+              assert name in theme, f"theme zip is missing {name}"
+          print("egg:", len(egg), "files; theme:", len(theme), "files")
+          PY
+          ls -l dist
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "Darkhand $VERSION" \
+            --generate-notes
