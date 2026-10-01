@@ -48,7 +48,7 @@ server.
 
 | Script | What it does | Time |
 | --- | --- | --- |
-| `screenshots.js <tag> [theme]` | Screenshots of the dashboard (bottom and right details, 1440 and 1024 wide), its details tabs, context menu and 22 windows and dialogs into `test-output/<tag>/`. With `theme`, the plain theme (switch the Darkhand plugin off first). | ~15s |
+| `screenshots.js <tag> [theme]` | Screenshots of the dashboard (bottom and right details, 1440 and 1024 wide), its details tabs, context menu and 23 windows and dialogs into `test-output/<tag>/`. With `theme`, the plain theme (switch the Darkhand plugin off first). | ~15s |
 | `cutoff.js [wide]` | Lists text that's cut off anywhere: the dashboard, its details tabs and menu, and every window. `wide` adds 0.3px letter spacing to catch what wider font rendering would cut off. Run both. | ~20s each |
 | `readme-screenshots.js` | The README's dashboard screenshots, at 1920×1080, into `screenshots/`: the three layouts, the torrent menu, Add Torrents, Preferences and the Connection Manager. Transfer activity is simulated (the test server has no peers) and the page's clock run on five minutes, so the speed chart is full. `DH_TORRENT` picks the torrent Add Torrents shows (default: the test server's `Sintel.2010.4K`). | ~1 min |
 | `compare.py <base> <base-again> <new>` | Compares two screenshot sets pixel by pixel. Take the baseline twice: pixels that differ between those two runs (speeds, timers) are ignored. | seconds |

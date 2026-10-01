@@ -28,14 +28,19 @@ If the daemon can't find the download folder (it doesn't exist, or the user
 link to **Preferences → Downloads**, where Deluge's own status bar just says
 "Error".
 
-The speed chart plots download and upload over the last minute, 5 minutes, 15
-minutes or hour: pick the range in its header (5 minutes to begin with; your
-choice is remembered in that browser). Deluge's web API keeps no speed history,
-so the plugin's daemon side records one, every two seconds whether or not a
-browser is open, and keeps the last hour. The chart starts full when the
-page loads, and time spent in a background tab (where browsers slow the page's
-updates) fills in when you come back. The history is kept in memory, so it
-starts again when the daemon restarts. It sits beside the stats when the column
+The speed chart plots download and upload over a range you pick: click the
+range in its header ("Last 5 minutes") for the last 5 minutes, hour, 12 hours,
+day or 30 days, or **Custom…** for any number of minutes, hours or days up to
+90 days. Your choice is remembered in that browser. Deluge's web API keeps no
+speed history, so the plugin's daemon side records one, every two seconds
+whether or not a browser is open. It keeps less detail the further back it
+goes, so 90 days take only a few hundred KB: every two seconds for the last
+hour, a one-minute average for two days, a 15-minute average for 90 days. It
+saves them to `darkhand_history.json` in Deluge's config folder every few
+minutes and when the daemon stops, so the history survives a restart (the time
+the daemon was down shows as a gap). The chart starts full when the page loads,
+and time spent in a background tab (where browsers slow the page's updates)
+fills in when you come back. It sits beside the stats when the column
 is wide and below them when it's narrower. When the window is too short for the
 chart without squeezing the torrent list, it's hidden until there's room again.
 

@@ -54,6 +54,7 @@ const WINDOWS = [
   ['copy-magnet', 'copy-magnet'],
   ['other limit', 'other-limit'],
   ['other limit, no unit', 'other-limit-plain'],
+  ['chart range', 'chart-range'],
   ['message', 'msg'],
   ['error', 'error'],
   ['prompt', 'prompt'],
