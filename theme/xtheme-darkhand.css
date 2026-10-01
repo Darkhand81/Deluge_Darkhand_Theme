@@ -1435,14 +1435,30 @@ a.x-menu-item,
     color: var(--dh-text);
 }
 
+/* Ext swaps a hovered item's 1px padding for a 1px border (and gives its
+   link 1px side borders, pulled back by a -1px margin). Where a browser
+   rounds borders to whole screen pixels but not padding (display scaling
+   of 125%, 150%...), the hovered row changes size by a fraction of a pixel
+   and nudges the text and separators around it as the mouse moves. Every
+   item keeps the same transparent border instead, hovered or not. */
+html body .x-menu-list-item,
+html body .x-menu-list-item.x-menu-item-active {
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+}
+
+html body .x-menu-item-active a.x-menu-item {
+    margin: 0;
+    border-width: 0;
+}
+
 .x-menu-item-active {
     background: var(--dh-accent-soft);
-    border-color: transparent;
     border-radius: var(--dh-small-radius);
 }
 
 .x-menu-item-active a.x-menu-item {
-    border-color: transparent;
     color: var(--dh-text-strong);
 }
 

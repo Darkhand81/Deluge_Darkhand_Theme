@@ -628,6 +628,12 @@ Each learned the hard way. Symptom → cause → what the code does.
   Deluge's rendered bars (`x-progress-renderered`) size the label to the
   bar's *outer* width, border included → padding 0 and `margin-left: -1px`
   on rendered bars only (a real `Ext.ProgressBar` sizes it correctly).
+- **G45. Menu items shifting on hover.** Ext swaps a hovered item's 1px
+  padding for a 1px border (and its link's for side borders and a -1px
+  margin). Browsers that round borders to whole screen pixels but not
+  padding (display scaling of 125%, 150%...) resize the hovered row by a
+  fraction of a pixel, nudging the text and separators around it → every
+  item keeps a 1px transparent border, hovered or not.
 - **G44. Progress label vanishes near the fill's end.** Deluge clips the
   white label 9px short of the fill (fill width less 10px, the bar's less
   1px), and the bar, stacked above the muted label, hides that one too →
