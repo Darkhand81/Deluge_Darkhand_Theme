@@ -1,0 +1,5 @@
+[deluge.plugin.core]
+Darkhand = deluge_darkhand:CorePlugin
+
+[deluge.plugin.web]
+Darkhand = deluge_darkhand:WebUIPlugin

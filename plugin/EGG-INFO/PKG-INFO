@@ -1,0 +1,11 @@
+Metadata-Version: 1.1
+Name: Darkhand
+Version: 0.1
+Summary: Dashboard layout for the Darkhand Web UI theme
+Home-page: https://github.com/darkhand81/deluge_darkhand_theme
+Author: Darkhand81
+License: GPLv3
+Description: Rebuilds the Deluge Web UI as a dashboard: full-height navigation
+        sidebar, page header, and the torrent list and details as cards.
+        Requires the Darkhand theme.
+Platform: UNKNOWN

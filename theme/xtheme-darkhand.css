@@ -7,8 +7,16 @@
  * repaints everything on top of it. Selectors that compete with Deluge's own
  * deluge.css are prefixed with "html" so they win regardless of stylesheet
  * load order (Deluge < 2.2 loads the theme before deluge.css).
+ *
+ * The bundled fonts (Inter, JetBrains Mono) and the Lucide icon set live in
+ * ../darkhand/ and are served locally by deluge-web; nothing is loaded from
+ * the internet. ../darkhand/dashboard.css styles the Darkhand plugin's
+ * dashboard layout and only applies while the plugin is enabled.
  */
 @import url('xtheme-gray.css');
+@import url('../darkhand/fonts.css');
+@import url('../darkhand/icons.css');
+@import url('../darkhand/dashboard.css');
 
 :root {
     --dh-bg-0: #0d1014; /* app backdrop, gutters between panels */
@@ -25,16 +33,50 @@
     --dh-text-faint: #5a6373;
     --dh-accent: #4c90e8;
     --dh-accent-2: #094491;
-    --dh-accent-soft: rgba(76, 144, 232, 0.16);
-    --dh-accent-softer: rgba(76, 144, 232, 0.08);
+    /* Tints of the accent: selections and pressed buttons, soft washes,
+       and the ring of an accent-tinted button */
+    --dh-accent-soft: color-mix(in srgb, var(--dh-accent) 16%, transparent);
+    --dh-accent-softer: color-mix(in srgb, var(--dh-accent) 8%, transparent);
+    --dh-accent-ring: color-mix(in srgb, var(--dh-accent) 45%, transparent);
+    --dh-accent-glow: var(--dh-accent-ring); /* glow round the logo */
+    --dh-on-accent: #fff; /* text and marks on the accent */
     --dh-good: #3ecf8e;
     --dh-warn: #f5b84b;
     --dh-bad: #ff5f6d;
-    --dh-radius: 6px;
-    --dh-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter',
-        'Helvetica Neue', Arial, sans-serif;
-    --dh-mono: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Menlo, Consolas,
-        monospace;
+    --dh-bad-surface: #3a1c22; /* error tooltips */
+    /* Colours of the dashboard's stats and chart (and their icons) */
+    --dh-upload: #5b9dff;
+    --dh-purple: #b197fc;
+    --dh-icon: #b4bccb;
+    --dh-border-hover: #414a5a; /* a button's ring, a scrollbar, on hover */
+    /* Corner radii, largest to smallest: the dashboard's cards and windows;
+       frames inside them, containers of controls, the plain theme's panels;
+       buttons, inputs' containers, menus, the plain theme's windows; bars,
+       badges and anything inside a frame with 4px around it (so its
+       corners run parallel to the frame's); inputs, checkboxes, menu
+       items */
+    --dh-card-radius: 18px;
+    --dh-frame-radius: 10px;
+    --dh-radius: 8px;
+    --dh-bar-radius: 6px;
+    --dh-small-radius: 4px;
+    --dh-ease: 0.12s ease; /* hover and state transitions */
+    /* Shadows: menus, drop-down lists, tooltips and other pop-ups; windows */
+    --dh-shadow-pop: 0 12px 30px rgba(0, 0, 0, 0.5);
+    --dh-shadow-window: 0 24px 60px rgba(0, 0, 0, 0.6);
+    --dh-font: 'Darkhand Inter', 'Inter Variable', Inter, system-ui,
+        -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --dh-mono: 'Darkhand Mono', 'JetBrains Mono', 'SFMono-Regular', Menlo,
+        Consolas, monospace;
+    /* Type scale: every font size is one of these */
+    --dh-text-caption: 10.5px; /* uppercase captions: column headers, section labels, chart axis */
+    --dh-text-small: 11.5px;   /* captions under values, mono hashes, dialog forms, window list headers */
+    --dh-text-base: 12px;      /* body text */
+    --dh-text-body: 13px;      /* nav filters, breadcrumb, chart title, About text */
+    --dh-text-title: 14px;     /* window titles, the torrent count, the stat warning */
+    --dh-text-value: 20px;     /* stat values, the brand, the About title */
+    --dh-text-display: 30px;   /* page title */
+    --dh-font-size: var(--dh-text-base);
     /* Recolours dark-on-light ExtJS sprites (arrows, tools) to light-on-dark */
     --dh-sprite-filter: invert(0.86) hue-rotate(180deg) brightness(1.1);
     --dh-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23aab3c2' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -53,8 +95,11 @@ html body {
     background: var(--dh-bg-0);
     color: var(--dh-text);
     font-family: var(--dh-font);
+    /* Inter alternates that tell l, I and 1 apart in torrent names */
+    font-feature-settings: 'cv05', 'cv08';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 html body,
@@ -87,6 +132,38 @@ html body button,
 .x-list-body dt em,
 .ext-el-mask-msg div {
     font-family: var(--dh-font);
+    font-size: var(--dh-font-size);
+}
+
+/* Numbers line up in columns. Not applied to names: Inter's tabular forms
+   also widen hyphens, which spaces out file names. */
+.x-grid3-row td,
+.x-treegrid-col,
+.x-progress-text,
+#torrentDetails dd,
+.x-statusbar {
+    font-variant-numeric: tabular-nums;
+}
+
+.x-grid3-row td .torrent-name,
+.x-grid3-row td .x-deluge-peer,
+.x-grid3-row td .x-deluge-seed,
+.x-treegrid-col .x-treegrid-text,
+.x-treegrid-col .x-tree-node-anchor,
+#torrentDetails dd.torrent_name,
+#torrentDetails dd.path,
+#torrentDetails dd.comment,
+#torrentDetails dd.tracker {
+    font-variant-numeric: normal;
+}
+
+/* Hashes, addresses and paths in the monospace face */
+#torrentDetails dd.hash,
+#torrentDetails dd.path,
+.x-deluge-peers .x-grid3-col-address .x-grid3-cell-inner,
+.x-deluge-peers .x-grid3-col-client .x-grid3-cell-inner {
+    font-family: var(--dh-mono);
+    font-size: var(--dh-text-small);
 }
 
 html input {
@@ -99,7 +176,7 @@ a {
 
 ::selection {
     background: var(--dh-accent);
-    color: #fff;
+    color: var(--dh-on-accent);
 }
 
 /* Scrollbars */
@@ -121,12 +198,12 @@ a {
 ::-webkit-scrollbar-thumb {
     background: var(--dh-border-strong);
     border: 2px solid transparent;
-    border-radius: 10px;
+    border-radius: 10px; /* round ends */
     background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: #465062;
+    background-color: var(--dh-border-hover);
 }
 
 /* Masks and loading */
@@ -138,7 +215,7 @@ a {
     background: var(--dh-bg-2);
     border: 1px solid var(--dh-border-strong);
     border-radius: var(--dh-radius);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--dh-shadow-pop);
     padding: 3px;
 }
 
@@ -201,6 +278,22 @@ a {
     filter: var(--dh-sprite-filter);
 }
 
+/* Main regions float as rounded cards on the backdrop */
+#sidebar.x-border-panel,
+#torrentGrid.x-border-panel,
+#detailsPanel.x-border-panel {
+    border-radius: var(--dh-frame-radius);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px var(--dh-border);
+}
+
+#sidebar .x-panel-body,
+#torrentGrid .x-panel-body,
+#detailsPanel .x-panel-body,
+#detailsPanel .x-tab-panel-body {
+    border-color: transparent;
+}
+
 /* ------------------------------------------------------------------------ */
 /* Panels                                                                   */
 /* ------------------------------------------------------------------------ */
@@ -220,13 +313,16 @@ a {
     color: var(--dh-text);
 }
 
+/* Section headers: small caps labels */
 .x-panel-header,
 .x-accordion-hd {
     background: var(--dh-bg-2);
     border-color: var(--dh-border);
     color: var(--dh-text-muted);
+    font-size: var(--dh-text-caption);
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .x-panel-header-text {
@@ -307,6 +403,13 @@ html body #tbar-deluge-text {
     letter-spacing: 0.03em;
 }
 
+/* The app bar and status bar blend into the backdrop */
+.x-toolbar:has(#tbar-deluge-text),
+#deluge-statusbar {
+    background: var(--dh-bg-0);
+    border-color: transparent;
+}
+
 .x-toolbar-more-icon,
 .x-tbar-page-first,
 .x-tbar-page-last,
@@ -354,12 +457,12 @@ table.x-btn {
     border-radius: var(--dh-radius);
     background: var(--dh-bg-3);
     box-shadow: inset 0 0 0 1px var(--dh-border-strong);
-    transition: background-color 0.12s ease, box-shadow 0.12s ease;
+    transition: background-color var(--dh-ease), box-shadow var(--dh-ease);
 }
 
 table.x-btn.x-btn-over {
     background: var(--dh-bg-4);
-    box-shadow: inset 0 0 0 1px #414a5a;
+    box-shadow: inset 0 0 0 1px var(--dh-border-hover);
 }
 
 table.x-btn.x-btn-click,
@@ -406,7 +509,7 @@ table.x-btn.x-btn-disabled {
 .x-toolbar table.x-btn.x-btn-pressed,
 .x-toolbar table.x-btn.x-btn-menu-active {
     background: var(--dh-accent-soft);
-    box-shadow: inset 0 0 0 1px rgba(76, 144, 232, 0.45);
+    box-shadow: inset 0 0 0 1px var(--dh-accent-ring);
 }
 
 .x-toolbar table.x-btn.x-btn-disabled {
@@ -432,7 +535,7 @@ table.x-btn.x-btn-disabled {
 .x-window-footer table.x-btn.x-btn-over button,
 .x-panel-fbar table.x-btn.x-btn-over button,
 .x-panel-btns table.x-btn.x-btn-over button {
-    color: #fff;
+    color: var(--dh-on-accent);
 }
 
 /* Drop-down arrows: the em also wraps the button's icon and label, so draw
@@ -504,8 +607,8 @@ ul.x-tab-strip-bottom {
 }
 
 .x-tab-strip li {
-    border-radius: var(--dh-radius) var(--dh-radius) 0 0;
-    transition: background-color 0.12s ease;
+    border-radius: calc(var(--dh-radius) - 1px) calc(var(--dh-radius) - 1px) 0 0;
+    transition: background-color var(--dh-ease);
 }
 
 .x-tab-strip li.x-tab-strip-over {
@@ -520,6 +623,7 @@ ul.x-tab-strip-bottom {
 
 .x-tab-strip span.x-tab-strip-text {
     color: var(--dh-text-muted);
+    font-weight: 500;
 }
 
 .x-tab-strip-over span.x-tab-strip-text {
@@ -528,7 +632,6 @@ ul.x-tab-strip-bottom {
 
 .x-tab-strip-active span.x-tab-strip-text {
     color: var(--dh-text-strong);
-    font-weight: 600;
 }
 
 .x-tab-strip-disabled .x-tabs-text,
@@ -580,8 +683,30 @@ ul.x-tab-strip-bottom {
     color: var(--dh-text-muted);
 }
 
+/* Column headers: compact and quiet so narrow columns keep their labels */
+.x-grid3-hd-row td,
+.x-grid3-hd-inner,
+.x-list-header-inner div em,
+.x-tree-hd {
+    font-size: var(--dh-text-small);
+}
+
 .x-grid3-hd-inner {
     font-weight: 600;
+}
+
+/* Without the plugin, Deluge's fixed column widths are all the room there
+   is: 2px less padding each side keeps labels like "Down Speed" whole where
+   fonts render a little wider, and the cells lose the same 2px on the left
+   so their text stays lined up under the headers. (The dashboard sizes its
+   columns to fit.) */
+body:not(.dh-dashboard) .x-grid3-hd-inner {
+    padding-left: 3px;
+    padding-right: 1px;
+}
+
+body:not(.dh-dashboard) .x-grid3-cell-inner {
+    padding-left: 3px;
 }
 
 td.x-grid3-hd-over,
@@ -618,7 +743,11 @@ td.sort-asc .x-grid3-hd-inner {
     box-shadow: inset 0 -2px 0 var(--dh-accent);
 }
 
-.x-grid3-hd-btn {
+/* A column's menu button: the theme's chevron, centred. Ext's hover
+   shifts the button's image 14px (its sprite's second half), which would
+   slide the chevron out of sight: keep it centred. */
+.x-grid3-hd-btn,
+a.x-grid3-hd-btn:hover {
     background: var(--dh-bg-4) var(--dh-chevron-down) no-repeat center;
     filter: none;
 }
@@ -742,6 +871,42 @@ td.sort-asc .x-grid3-hd-inner {
     color: var(--dh-text-strong);
 }
 
+/* Grid cells are top-aligned, and text lines are shorter than the 20px
+   progress bars. Give every cell a line as tall as a bar so text, state
+   icons and bars share one centre line whatever the cell padding: in the
+   torrent list, and the Peers tab's, which has bars too. */
+html body :is(.deluge-torrents, .x-deluge-peers) .x-grid3-row td,
+html body :is(.deluge-torrents, .x-deluge-peers) .x-grid3-cell-inner {
+    line-height: 20px;
+}
+
+html body :is(.deluge-torrents, .x-deluge-peers) .x-grid3-cell-inner {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+html body .deluge-torrents .torrent-name,
+html body .x-deluge-peers :is(.x-deluge-peer, .x-deluge-seed) {
+    background-position: 0 center;
+}
+
+/* Tree grids (Files tabs) the same way: a line as tall as the bars, and
+   the icons centred on it */
+html body .x-treegrid-col,
+html body .x-treegrid-col :is(.x-tree-node-anchor, .x-treegrid-text) {
+    line-height: 20px;
+}
+
+html body .x-treegrid-col {
+    vertical-align: middle;
+}
+
+/* (18px tall: 1px down from the line's top centres them on it) */
+html body .x-treegrid-col :is(.x-tree-node-icon, .x-tree-ec-icon) {
+    margin-top: 1px;
+    vertical-align: top;
+}
+
 /* ListView (sidebar filters, preference categories) */
 .x-list-body dt,
 .x-list-body dt em {
@@ -775,10 +940,6 @@ td.sort-asc .x-grid3-hd-inner {
 #sidebar .x-panel-body,
 .deluge-sidebar .x-panel-body {
     background-color: var(--dh-bg-1);
-}
-
-#sidebar .x-list-selected em {
-    color: var(--dh-text-strong);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -868,6 +1029,13 @@ html body .x-treegrid-resizer {
     border-bottom-color: var(--dh-border);
 }
 
+/* A label beside its field, its text level with the field's (Ext's 3px
+   above it leaves it 1px high at the theme's sizes) */
+html body :is(.x-form-label-left, .x-form-label-right) label.x-form-item-label {
+    padding-top: 4px;
+    padding-bottom: 2px;
+}
+
 .x-form-text,
 textarea.x-form-field,
 .x-form-select-one,
@@ -875,18 +1043,18 @@ textarea.x-form-field,
     background: var(--dh-bg-0);
     border-color: var(--dh-border-strong);
     color: var(--dh-text);
-    border-radius: 4px;
+    border-radius: var(--dh-small-radius);
 }
 
 .x-form-field-wrap .x-form-text {
-    border-radius: 4px 0 0 4px;
+    border-radius: var(--dh-small-radius) 0 0 var(--dh-small-radius);
 }
 
 .x-form-focus,
 textarea.x-form-focus,
 .x-trigger-wrap-focus .x-form-text {
     border-color: var(--dh-accent);
-    box-shadow: 0 0 0 2px rgba(76, 144, 232, 0.2);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--dh-accent) 20%, transparent);
     outline: none;
 }
 
@@ -899,7 +1067,7 @@ textarea.x-form-invalid,
 .ext-webkit .x-form-invalid,
 .x-form-inner-invalid,
 textarea.x-form-inner-invalid {
-    background-color: rgba(255, 95, 109, 0.08);
+    background-color: color-mix(in srgb, var(--dh-bad) 8%, transparent);
     background-image: none;
     border-color: var(--dh-bad);
 }
@@ -919,8 +1087,8 @@ textarea.x-form-inner-invalid {
     background-position: center !important;
     border: 1px solid var(--dh-border-strong);
     border-left: 0 none;
-    border-radius: 0 4px 4px 0;
-    transition: background-color 0.12s ease;
+    border-radius: 0 var(--dh-small-radius) var(--dh-small-radius) 0;
+    transition: background-color var(--dh-ease);
 }
 
 .x-form-field-wrap .x-form-spinner-trigger {
@@ -1002,6 +1170,12 @@ html input[type='radio'] {
     font-weight: 600;
 }
 
+/* Ext pulls the legend 3px left and pads it 2px, so its text started 1px
+   outside the fieldset, which clips it; start it on the fieldset's edge */
+.x-fieldset legend {
+    margin-left: -2px;
+}
+
 .x-html-editor-wrap {
     background-color: var(--dh-bg-0);
     border-color: var(--dh-border-strong);
@@ -1012,7 +1186,7 @@ html input[type='radio'] {
     background-color: var(--dh-bg-2);
     border-color: var(--dh-border-strong);
     border-radius: 0 0 var(--dh-radius) var(--dh-radius);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--dh-shadow-pop);
 }
 
 .x-combo-list-inner {
@@ -1047,7 +1221,7 @@ html input[type='radio'] {
 
 .x-progress-wrap {
     border-color: var(--dh-border-strong);
-    border-radius: 4px;
+    border-radius: var(--dh-bar-radius);
     overflow: hidden;
 }
 
@@ -1062,13 +1236,18 @@ html input[type='radio'] {
 html body .x-progress-bar {
     position: relative;
     z-index: 1;
+    /* Clicks go through to the "back" label: Ext finds the row a click is in
+       by looking at most 10 elements up, and the bar's own label is one
+       level too deep, so a click on it (selecting, right-clicking) found no
+       row. */
+    pointer-events: none;
     min-height: 100%;
     background: linear-gradient(90deg, var(--dh-accent-2), var(--dh-accent));
     border: 0 none;
 }
 
 .x-progress-text {
-    color: #fff;
+    color: var(--dh-on-accent);
     font-weight: 600;
 }
 
@@ -1083,13 +1262,19 @@ html body .x-progress-wrap .x-progress-inner .x-progress-text {
     top: 0;
     height: 100%;
     margin-top: 0;
-    padding-top: 0;
-    padding-bottom: 0;
+    padding: 0;
     line-height: 18px;
 }
 
 html body .x-progress-wrap .x-progress-inner .x-progress-text > div {
     line-height: inherit;
+}
+
+/* Deluge's rendered bars (torrent list, Files tab) size the label to the
+   bar's outer width, border included; shift it back over the 1px border
+   so the text is centred on the track. */
+html body .x-progress-renderered .x-progress-inner .x-progress-text > div {
+    margin-left: -1px;
 }
 
 html body .x-tree .x-progress-wrap .x-progress-inner .x-progress-text {
@@ -1101,8 +1286,8 @@ html body .x-tree .x-progress-wrap .x-progress-inner .x-progress-text {
 /* ------------------------------------------------------------------------ */
 
 .x-window {
-    border-radius: 8px;
-    box-shadow: 0 0 0 1px var(--dh-border-strong), 0 24px 60px rgba(0, 0, 0, 0.6);
+    border-radius: var(--dh-radius);
+    box-shadow: 0 0 0 1px var(--dh-border-strong), var(--dh-shadow-window);
 }
 
 .x-window-tl,
@@ -1120,24 +1305,25 @@ html body .x-tree .x-progress-wrap .x-progress-inner .x-progress-text {
 }
 
 .x-window-tl {
-    border-radius: 8px 0 0 0;
+    border-radius: var(--dh-radius) 0 0 0;
 }
 
 .x-window-tr {
-    border-radius: 0 8px 0 0;
+    border-radius: 0 var(--dh-radius) 0 0;
 }
 
 .x-window-bl {
-    border-radius: 0 0 0 8px;
+    border-radius: 0 0 0 var(--dh-radius);
 }
 
 .x-window-br {
-    border-radius: 0 0 8px 0;
+    border-radius: 0 0 var(--dh-radius) 0;
 }
 
 .x-window-tl .x-window-header,
 .x-window-header-text {
     color: var(--dh-text-strong);
+    font-size: var(--dh-text-body);
     font-weight: 600;
 }
 
@@ -1158,7 +1344,7 @@ body.x-body-masked .x-window-plain .x-window-mc {
 .x-window-proxy {
     background-color: var(--dh-bg-2);
     border-color: var(--dh-accent);
-    border-radius: 8px;
+    border-radius: var(--dh-radius);
 }
 
 .x-window-maximized .x-window-tc {
@@ -1176,14 +1362,45 @@ body.x-body-masked .x-window-plain .x-window-mc {
     color: var(--dh-text);
 }
 
+/* The prompt's box is a plain input, not an Ext field: dress it as one */
 .x-window-dlg .ext-mb-textarea,
 .x-window-dlg .ext-mb-input {
     background: var(--dh-bg-0);
     color: var(--dh-text);
+    border: 1px solid var(--dh-border-strong);
+    border-radius: var(--dh-small-radius);
+    padding: 1px 3px;
+    font: inherit;
+    font-size: var(--dh-text-small);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.x-window-dlg .ext-mb-input {
+    height: 22px;
+}
+
+.x-window-dlg :is(.ext-mb-textarea, .ext-mb-input):focus {
+    border-color: var(--dh-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--dh-accent) 20%, transparent);
 }
 
 .x-dlg-mask {
     background-color: #000;
+}
+
+/* Deluge's dialogs have fixed-size forms laid out for narrower fonts; a
+   slightly smaller size keeps long labels on one line. */
+.x-window .x-form-item,
+.x-window .x-form-item label,
+.x-window .x-form-cb-label,
+.x-window .x-form-field,
+.x-window .x-fieldset legend,
+.x-window .x-list-body dt em,
+#detailsPanel .x-form-item,
+#detailsPanel .x-form-cb-label {
+    font-size: var(--dh-text-small);
+    letter-spacing: -0.005em;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -1196,7 +1413,7 @@ body.x-body-masked .x-window-plain .x-window-mc {
     background: var(--dh-bg-2) !important;
     border-color: var(--dh-border-strong);
     border-radius: var(--dh-radius);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--dh-shadow-pop);
     padding: 3px 0;
 }
 
@@ -1213,7 +1430,7 @@ a.x-menu-item,
 .x-menu-item-active {
     background: var(--dh-accent-soft);
     border-color: transparent;
-    border-radius: 4px;
+    border-radius: var(--dh-small-radius);
 }
 
 .x-menu-item-active a.x-menu-item {
@@ -1226,15 +1443,37 @@ a.x-menu-item,
     border-bottom-color: transparent;
 }
 
-.x-menu-check-item .x-menu-item-icon,
-.x-menu-item-checked .x-menu-item-icon,
-.x-menu-item-checked .x-menu-group-item .x-menu-item-icon,
-.xg-hmenu-sort-asc .x-menu-item-icon,
-.xg-hmenu-sort-desc .x-menu-item-icon,
-.x-cols-icon,
 .x-menu-scroller-top,
 .x-menu-scroller-bottom {
     filter: var(--dh-sprite-filter);
+}
+
+/* Check items (a grid's Columns menu): a box like a form's checkbox,
+   filled with the accent and ticked when on (icons.css draws the tick).
+   Radio groups (the status bar's limit menus): a circle, with an accent
+   dot on the chosen one. Ext's icon is a 16px image at 3px, 3px. */
+.x-menu-check-item .x-menu-item-icon {
+    box-sizing: border-box;
+    width: 14px;
+    height: 14px;
+    top: 4px;
+    left: 4px;
+    border: 1px solid var(--dh-border-strong);
+    border-radius: var(--dh-small-radius);
+    background: var(--dh-bg-0) none center / 12px 12px no-repeat;
+}
+
+.x-menu-item-checked .x-menu-check-item .x-menu-item-icon {
+    border-color: var(--dh-accent);
+    background-color: var(--dh-accent);
+}
+
+.x-menu-check-item.x-menu-group-item .x-menu-item-icon {
+    border-radius: 50%;
+}
+
+.x-menu-item-checked .x-menu-check-item.x-menu-group-item .x-menu-item-icon {
+    background: var(--dh-bg-0) radial-gradient(circle, var(--dh-accent) 0 3px, transparent 3.5px);
 }
 
 /* Sub-menu arrow (the class sits on the whole item, so no filter here) */
@@ -1278,7 +1517,7 @@ a.x-menu-item-arrow::after {
 
 .x-tip {
     border-radius: var(--dh-radius);
-    box-shadow: 0 0 0 1px var(--dh-border-strong), 0 10px 24px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 1px var(--dh-border-strong), var(--dh-shadow-pop);
     overflow: hidden;
 }
 
@@ -1304,7 +1543,7 @@ a.x-menu-item-arrow::after {
 .x-form-invalid-tip .x-tip-ml,
 .x-form-invalid-tip .x-tip-mr,
 .x-form-invalid-tip .x-tip-mc {
-    background-color: #3a1c22;
+    background-color: var(--dh-bad-surface);
 }
 
 .x-dd-drag-ghost {
@@ -1392,11 +1631,6 @@ dl.singleline dd,
     color: var(--dh-text);
 }
 
-/* Peers tab: IP addresses read better in a monospace face */
-.x-deluge-peers .x-grid3-col-address .x-grid3-cell-inner {
-    font-family: var(--dh-mono);
-}
-
 /* Status bar connection state */
 .x-not-connected {
     color: var(--dh-bad) !important;
@@ -1404,5 +1638,5 @@ dl.singleline dd,
 
 /* About window */
 .x-deluge-logo {
-    filter: drop-shadow(0 4px 16px rgba(76, 144, 232, 0.35));
+    filter: drop-shadow(0 4px 16px var(--dh-accent-glow));
 }

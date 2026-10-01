@@ -1,0 +1,1693 @@
+/*
+ * Darkhand dashboard layout styles.
+ *
+ * Only active when the Darkhand plugin is enabled: its script rebuilds the
+ * window and puts "dh-dashboard" (plus "dh-details-right" or
+ * "dh-details-bottom") on <body>. Without the plugin none of this applies and
+ * the theme looks as usual.
+ */
+
+.dh-dashboard {
+    /* Colours, radii and the rest are the theme's (xtheme-darkhand.css) */
+    /* Framed panels clip to their frame's outer edge, 1px in (see the frames) */
+    --dh-frame-clip: inset(1px round calc(var(--dh-frame-radius) - 1px));
+    /* Spacing in windows (the plugin reads these too):
+       rows of lists and forms: how far list rows sit in from their frame,
+       the tab strip above them, and the gap between one row and the next */
+    --dh-inset: 6px;
+    /* a window's side margin, how far a form dialog's fields sit inside its
+       frame on every side, and the room above and below the footer buttons */
+    --dh-window-pad: 12px;
+    /* between a form's longest label and the fields (the label column is
+       fitted to it) */
+    --dh-label-gap: 10px;
+    --dh-nav-width: 248px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Canvas                                                                   */
+/* ------------------------------------------------------------------------ */
+
+/* The layout containers show the window background, so the cards' rounded
+   corners sit on it rather than on the theme's lighter panel colour */
+html body.dh-dashboard,
+.dh-dashboard .x-viewport,
+.dh-dashboard #dh-shell,
+.dh-dashboard #dh-main,
+.dh-dashboard #dh-main > .x-panel-bwrap > .x-panel-body,
+.dh-dashboard #dh-list-column,
+.dh-dashboard #dh-list-column > .x-panel-bwrap > .x-panel-body {
+    background: var(--dh-bg-0);
+}
+
+.dh-dashboard .x-layout-split {
+    background: transparent;
+}
+
+/* The standalone theme's card styling for these regions doesn't apply here */
+.dh-dashboard #sidebar.x-border-panel,
+.dh-dashboard #torrentGrid,
+.dh-dashboard #detailsPanel.x-border-panel {
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Cards: the navigation, stats, chart, torrent list and details. (Windows
+   are cards too, their outline outside: see Windows.) */
+.dh-dashboard #dh-nav,
+.dh-stats,
+.dh-chart,
+.dh-dashboard #dh-torrents-card,
+.dh-dashboard #detailsPanel.x-border-panel {
+    border-radius: var(--dh-card-radius);
+    background: var(--dh-bg-1);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
+}
+
+.dh-dashboard #dh-nav,
+.dh-dashboard #dh-torrents-card,
+.dh-dashboard #detailsPanel.x-border-panel {
+    overflow: hidden;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Navigation column: brand + torrent filters                               */
+/* ------------------------------------------------------------------------ */
+
+.dh-dashboard #dh-nav,
+.dh-dashboard #dh-nav > .x-panel-bwrap > .x-panel-body {
+    background: var(--dh-bg-1);
+}
+
+/* The brand; it opens the About window */
+.dh-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 88px;
+    box-sizing: border-box;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--dh-border);
+    cursor: pointer;
+    outline: none;
+    transition: background-color var(--dh-ease);
+}
+
+.dh-brand:hover {
+    background: var(--dh-accent-softer);
+}
+
+.dh-brand:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--dh-accent);
+}
+
+.dh-brand-mark {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    background: url('../../icons/deluge-192.png') center / contain no-repeat;
+    filter: drop-shadow(0 4px 14px var(--dh-accent-glow));
+}
+
+.dh-brand:hover .dh-brand-mark {
+    filter: drop-shadow(0 4px 16px color-mix(in srgb, var(--dh-accent) 70%, transparent));
+}
+
+.dh-brand-name {
+    font-family: var(--dh-font);
+    font-size: var(--dh-text-value);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dh-text-strong);
+}
+
+.dh-dashboard #sidebar,
+.dh-dashboard #sidebar .x-panel-body,
+.dh-dashboard #sidebar .x-panel-bwrap {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* The "Filters" title bar; the brand replaces it */
+.dh-dashboard #sidebar > .x-panel-header {
+    display: none;
+}
+
+/* Section labels: States, Trackers, Owner, Labels */
+.dh-dashboard #sidebar .x-panel-header {
+    background: transparent;
+    border: 0 none;
+    padding: 20px 28px 8px;
+    color: var(--dh-text-faint);
+    font-size: var(--dh-text-caption);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.dh-dashboard #sidebar .x-panel-header .x-tool {
+    margin-top: -1px;
+}
+
+/* Filters as navigation items */
+.dh-dashboard #sidebar .x-list-body dl {
+    padding: 0 20px 0 28px;
+    transition: background-color var(--dh-ease);
+}
+
+.dh-dashboard #sidebar .x-list-body dt em {
+    padding: 8px 0 !important;
+    font-size: var(--dh-text-body);
+    color: var(--dh-text-muted);
+}
+
+.dh-dashboard #sidebar .x-deluge-filter {
+    padding-left: 32px !important;
+    line-height: 20px !important;
+    height: 20px !important;
+    background-size: 18px 18px !important;
+    background-position: 0 center !important;
+}
+
+.dh-dashboard #sidebar .x-list-over {
+    background: var(--dh-bg-2);
+}
+
+.dh-dashboard #sidebar .x-list-selected {
+    background: linear-gradient(90deg, transparent, var(--dh-accent-softer));
+    box-shadow: inset -4px 0 0 var(--dh-accent);
+}
+
+.dh-dashboard #sidebar .x-list-selected dt em,
+.dh-dashboard #sidebar .x-list-selected em {
+    color: var(--dh-text-strong); /* over the muted filters, above */
+    font-weight: 700;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Page header                                                              */
+/* ------------------------------------------------------------------------ */
+
+/* Title row with the Stats and Details switches */
+.dh-header-wrap {
+    box-sizing: border-box;
+    /* Line up with the torrent list card's edges */
+    padding: 0 16px;
+    font-family: var(--dh-font);
+}
+
+/* On the right-hand layout the list card stops at the 12px resize bar */
+.dh-details-right .dh-header-wrap {
+    padding-right: 4px;
+}
+
+.dh-header-inner {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    height: 92px;
+    box-sizing: border-box;
+    padding-bottom: 16px;
+}
+
+.dh-breadcrumb {
+    margin-bottom: 6px;
+    font-size: var(--dh-text-body);
+    color: var(--dh-text-muted);
+}
+
+.dh-breadcrumb span {
+    color: var(--dh-text);
+}
+
+.dh-breadcrumb > span:first-child {
+    margin: 0 4px;
+    color: var(--dh-text-faint);
+}
+
+#dh-title {
+    margin: 0;
+    font-size: var(--dh-text-display);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--dh-text-strong);
+}
+
+.dh-title-count {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 3px 11px;
+    border-radius: var(--dh-bar-radius);
+    background: var(--dh-bg-2);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
+    color: var(--dh-text-muted);
+    font-size: var(--dh-text-title);
+    font-weight: 600;
+    letter-spacing: 0;
+    vertical-align: 5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.dh-header-tools {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 4px;
+}
+
+.dh-seg-label {
+    font-size: var(--dh-text-base);
+    color: var(--dh-text-muted);
+}
+
+/* Space between the Stats and Details switches */
+.dh-seg + .dh-seg-label {
+    margin-left: 12px;
+}
+
+/* The title never wraps; it can shrink so the plugin can tell it's short of
+   room and switch to the compact header */
+.dh-heading {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.dh-breadcrumb,
+#dh-title {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.dh-header-compact .dh-seg-label {
+    display: none;
+}
+
+.dh-header-compact .dh-header-tools {
+    gap: 8px;
+}
+
+.dh-header-compact .dh-seg-btn {
+    padding: 6px 10px;
+}
+
+.dh-seg {
+    display: flex;
+    padding: 4px;
+    border-radius: var(--dh-frame-radius);
+    background: var(--dh-bg-1);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
+}
+
+.dh-seg-btn {
+    padding: 6px 14px;
+    border: 0;
+    border-radius: var(--dh-bar-radius);
+    background: transparent;
+    color: var(--dh-text-muted);
+    font: 600 var(--dh-text-base) var(--dh-font);
+    cursor: pointer;
+    transition: background-color var(--dh-ease), color var(--dh-ease);
+}
+
+.dh-seg-btn:hover {
+    color: var(--dh-text-strong);
+}
+
+.dh-seg-btn.dh-seg-active {
+    background: var(--dh-accent);
+    color: var(--dh-on-accent);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Stats card                                                               */
+/* ------------------------------------------------------------------------ */
+
+/* Stats card and speed chart, in their own region above or below the
+   torrent list. The plugin sizes the region to this wrapper; the padding is
+   the gap between it and the list. */
+.dh-overview-wrap {
+    box-sizing: border-box;
+    font-family: var(--dh-font);
+}
+
+.dh-stats-above .dh-overview-wrap {
+    padding-bottom: 16px;
+}
+
+.dh-stats-below .dh-overview-wrap {
+    padding-top: 16px;
+}
+
+/* Side by side when the column is wide (the plugin adds dh-overview-side),
+   the chart below the stats otherwise. */
+.dh-overview {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+}
+
+.dh-overview-side {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+/* Not enough height for the chart without squeezing the torrent list */
+.dh-chart-off .dh-chart {
+    display: none;
+}
+
+/* One card; each stat is a section of it */
+.dh-stats {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.dh-stat {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 16px 18px;
+}
+
+/* Inset dividers: vertical between sections in a row, horizontal between
+   rows. The plugin sets dh-cols-N for the current column count. */
+.dh-stat::before,
+.dh-stat::after {
+    content: '';
+    position: absolute;
+    display: none;
+    background: var(--dh-border);
+}
+
+.dh-stat::before {
+    top: 18px;
+    bottom: 18px;
+    left: 0;
+    width: 1px;
+}
+
+.dh-stat::after {
+    top: 0;
+    left: 18px;
+    right: 18px;
+    height: 1px;
+}
+
+.dh-cols-6 .dh-stat:not(:nth-child(6n + 1))::before,
+.dh-cols-3 .dh-stat:not(:nth-child(3n + 1))::before,
+.dh-cols-2 .dh-stat:not(:nth-child(2n + 1))::before,
+.dh-cols-3 .dh-stat:nth-child(n + 4)::after,
+.dh-cols-2 .dh-stat:nth-child(n + 3)::after {
+    display: block;
+}
+
+.dh-stat-icon {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--dh-bg-2);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 22px 22px;
+}
+
+/* Soft tint behind each icon in its own colour (icons.css draws them in
+   the same palette) */
+.dh-stat-download .dh-stat-icon {
+    background-color: color-mix(in srgb, var(--dh-good) 12%, transparent);
+}
+
+.dh-stat-upload .dh-stat-icon {
+    background-color: color-mix(in srgb, var(--dh-upload) 12%, transparent);
+}
+
+.dh-stat-active .dh-stat-icon {
+    background-color: color-mix(in srgb, var(--dh-accent) 14%, transparent);
+}
+
+.dh-stat-connections .dh-stat-icon {
+    background-color: color-mix(in srgb, var(--dh-purple) 12%, transparent);
+}
+
+.dh-stat-dht .dh-stat-icon {
+    background-color: color-mix(in srgb, var(--dh-icon) 10%, transparent);
+}
+
+.dh-stat-space .dh-stat-icon {
+    background-color: color-mix(in srgb, var(--dh-warn) 12%, transparent);
+}
+
+.dh-stat-text {
+    min-width: 0;
+}
+
+/* Narrow cards: a small icon beside the label, the value on its own line
+   underneath so large numbers keep the full card width */
+.dh-stats-compact .dh-stat {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    align-items: center;
+    /* not the 14px gap used when the icon sits beside the text */
+    gap: 0 10px;
+    padding: 14px 16px;
+}
+
+.dh-stats-compact .dh-stat-text {
+    display: contents;
+}
+
+.dh-stats-compact .dh-stat-icon {
+    width: 28px;
+    height: 28px;
+    background-size: 15px 15px;
+}
+
+.dh-stats-compact .dh-stat-value,
+.dh-stats-compact .dh-stat-sub {
+    grid-column: 1 / -1;
+}
+
+.dh-stats-compact .dh-stat-value {
+    margin-top: 6px;
+}
+
+.dh-stat-label {
+    font-size: var(--dh-text-base);
+    color: var(--dh-text-muted);
+}
+
+.dh-stat-value,
+.dh-stat-sub,
+.dh-stat-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.dh-stat-value {
+    margin: 1px 0;
+    font-size: var(--dh-text-value);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--dh-text-strong);
+    font-variant-numeric: tabular-nums;
+}
+
+.dh-stat-sub {
+    font-size: var(--dh-text-small);
+    color: var(--dh-text-faint);
+}
+
+/* A stat Deluge couldn't work out (the download folder is missing): a
+   smaller amber message, on the same line height so the card keeps its
+   size */
+.dh-stat-warn .dh-stat-value {
+    font-size: var(--dh-text-title);
+    line-height: 25px;
+    letter-spacing: 0;
+    color: var(--dh-warn);
+}
+
+.dh-stat-link,
+.dh-stat-link:visited {
+    color: var(--dh-accent);
+    text-decoration: none;
+}
+
+.dh-stat-link:hover {
+    text-decoration: underline;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Speed chart                                                              */
+/* ------------------------------------------------------------------------ */
+
+.dh-chart {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 14px 18px 12px;
+}
+
+/* Below the stats it is a strip; beside them it matches their height */
+.dh-overview:not(.dh-overview-side) .dh-chart {
+    height: 170px;
+}
+
+.dh-chart-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    margin-bottom: 8px;
+}
+
+.dh-chart-title {
+    font-size: var(--dh-text-body);
+    font-weight: 700;
+    color: var(--dh-text-strong);
+    white-space: nowrap;
+}
+
+.dh-chart-title span {
+    margin-left: 6px;
+    font-size: var(--dh-text-base);
+    font-weight: 400;
+    color: var(--dh-text-faint);
+}
+
+.dh-chart-legend {
+    display: flex;
+    gap: 16px;
+    font-size: var(--dh-text-base);
+    color: var(--dh-text-muted);
+    white-space: nowrap;
+}
+
+.dh-chart-legend i {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 50%;
+    vertical-align: 1px;
+}
+
+.dh-legend-down i {
+    background: var(--dh-good);
+}
+
+.dh-legend-up i {
+    background: var(--dh-upload);
+}
+
+.dh-chart-legend b {
+    margin-left: 4px;
+    font-weight: 600;
+    color: var(--dh-text-strong);
+    font-variant-numeric: tabular-nums;
+}
+
+.dh-chart-plot {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 70px;
+}
+
+.dh-chart-plot svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    overflow: visible;
+}
+
+.dh-chart-grid {
+    stroke: var(--dh-border);
+    stroke-dasharray: 3 4;
+}
+
+.dh-chart-label {
+    fill: var(--dh-text-faint);
+    font: var(--dh-text-caption) var(--dh-font);
+    font-variant-numeric: tabular-nums;
+}
+
+.dh-chart-line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.dh-chart-down {
+    stroke: var(--dh-good);
+}
+
+.dh-chart-up {
+    stroke: var(--dh-upload);
+}
+
+.dh-stop-down {
+    stop-color: var(--dh-good);
+}
+
+.dh-stop-up {
+    stop-color: var(--dh-upload);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Torrent list card                                                        */
+/* ------------------------------------------------------------------------ */
+
+.dh-dashboard #dh-torrents-card .x-panel-body,
+.dh-dashboard #dh-torrents-card .x-grid3,
+.dh-dashboard #dh-torrents-card .x-grid3-scroller,
+.dh-dashboard #dh-torrents-card .x-grid3-body {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* Toolbar becomes the card header */
+.dh-dashboard #dh-torrents-card .x-panel-tbar,
+.dh-dashboard #dh-torrents-card .x-toolbar {
+    background: transparent;
+    border: 0 none;
+}
+
+.dh-dashboard #dh-torrents-card .x-toolbar {
+    padding: 12px 14px 10px;
+}
+
+/* The "Deluge" label and its separator; the brand is in the nav */
+.dh-dashboard td:has(> #tbar-deluge-text),
+.dh-dashboard td:has(> #tbar-deluge-text) + td {
+    display: none;
+}
+
+/* Preferences, Connection Manager, Help and Logout as buttons with a
+   label; when the toolbar is too narrow for the labels (the plugin adds
+   dh-toolbar-compact), icon-only buttons. */
+.dh-dashboard :is(#preferences, #connectionman, #help, #logout) {
+    margin-left: 6px;
+    border-radius: var(--dh-radius);
+    background: var(--dh-bg-2);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
+}
+
+.dh-dashboard :is(#preferences, #connectionman, #help, #logout).x-btn-over {
+    background: var(--dh-bg-3);
+}
+
+/* Drop Ext's corner cells so the button is just its middle cell */
+.dh-dashboard :is(#preferences, #connectionman, #help, #logout) :is(tr:first-child, tr:last-child, .x-btn-ml, .x-btn-mr) {
+    display: none;
+}
+
+.dh-dashboard :is(#preferences, #connectionman, #help, #logout) .x-btn-mc {
+    padding: 5px 12px 5px 10px !important; /* beats Ext's .x-btn td */
+}
+
+.dh-dashboard :is(#preferences, #connectionman, #help, #logout) button {
+    height: 18px;
+    line-height: 18px;
+    background-position: 0 center !important;
+}
+
+.dh-dashboard .dh-toolbar-compact :is(#preferences, #connectionman, #help, #logout) .x-btn-mc {
+    padding: 6px !important;
+}
+
+.dh-dashboard .dh-toolbar-compact :is(#preferences, #connectionman, #help, #logout) button {
+    display: block;
+    width: 16px;
+    height: 16px;
+    padding: 0 !important;
+    font-size: 0;
+    background-position: center !important;
+}
+
+/* Torrent list, and the details card's lists (Files, Peers: the plugin
+   marks them dh-card-grid), which look the same */
+.dh-dashboard :is(#torrentGrid, .dh-card-grid) .x-grid3-header {
+    background: transparent;
+    border-bottom: 1px solid var(--dh-border);
+}
+
+.dh-dashboard :is(#torrentGrid, .dh-card-grid) .x-grid3-hd-row td {
+    border-right-color: transparent;
+}
+
+/* Grab handles at the columns' edges while the pointer is over the
+   header row, so it's clear they can be resized. On the cell rather than
+   its inner div, which carries the hover and sort backgrounds. Name has
+   none: it takes up whatever the other columns leave. */
+.dh-dashboard #torrentGrid .x-grid3-hd-row td {
+    position: relative;
+}
+
+/* Just past the cell's edge: Ext starts a resize from the first few pixels
+   of the next cell, while the edge's own side is taken by the column menu
+   button when the cell is hovered */
+.dh-dashboard #torrentGrid .x-grid3-hd-row td::after {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: -2px;
+    width: 2px;
+    height: 14px;
+    margin-top: -7px;
+    border-radius: 1px;
+    background: var(--dh-border-strong);
+    opacity: 0;
+    transition: opacity var(--dh-ease);
+    pointer-events: none;
+}
+
+/* No column after the last one: its handle sits on its own border, beside
+   the menu button (the plugin marks the last visible column) */
+.dh-dashboard #torrentGrid .x-grid3-hd-row td.dh-hd-last::after {
+    right: 0;
+    width: 1px;
+}
+
+.dh-dashboard #torrentGrid .x-grid3-header:hover .x-grid3-hd-row td::after {
+    opacity: 1;
+}
+
+.dh-dashboard #torrentGrid .x-grid3-header:hover .x-grid3-hd-row td.x-grid3-hd-over::after {
+    background: var(--dh-text-faint);
+}
+
+.dh-dashboard #torrentGrid .x-grid3-hd-row td.x-grid3-td-name::after {
+    display: none;
+}
+
+/* In the torrent list the sort arrow takes its room in every header, shown
+   only on the sorted column: the plugin fits the columns to their headers,
+   so an arrow appearing would widen its column (and move the others) each
+   time you sort. Not in the details card's grids, whose narrow right-hand
+   layout has no room to spare for it. */
+.dh-dashboard #torrentGrid .x-grid3-hd-inner .x-grid3-sort-icon {
+    display: inline;
+    visibility: hidden;
+}
+
+.dh-dashboard #torrentGrid :is(td.sort-asc, td.sort-desc) .x-grid3-hd-inner .x-grid3-sort-icon {
+    visibility: visible;
+}
+
+/* The column menu button on the header's own surface rather than a grey
+   box, with a small rounded highlight under the pointer (inset from the
+   header's top and bottom: Ext sets the button's height to the header's),
+   3px in from the column's edge so it clears the resize handle there */
+.dh-dashboard :is(#torrentGrid, .dh-card-grid, .dh-inset-grid) :is(.x-grid3-hd-btn, a.x-grid3-hd-btn:hover) {
+    right: 3px;
+    box-sizing: border-box;
+    padding: 6px 0;
+    border-radius: var(--dh-small-radius);
+    background-color: transparent;
+    background-clip: content-box;
+}
+
+.dh-dashboard :is(#torrentGrid, .dh-card-grid, .dh-inset-grid) a.x-grid3-hd-btn:hover {
+    background-color: var(--dh-bg-3);
+}
+
+/* The line Ext draws while you drag a column's edge */
+.dh-dashboard #torrentGrid .x-grid3-resize-proxy {
+    width: 2px;
+    background: var(--dh-accent);
+    border: 0 none;
+}
+
+.dh-dashboard :is(#torrentGrid, .dh-card-grid) .x-grid3-hd-inner {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    color: var(--dh-text-faint);
+    font-size: var(--dh-text-caption);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dh-dashboard :is(#torrentGrid, .dh-card-grid) :is(td.x-grid3-hd-over, td.sort-asc, td.sort-desc) .x-grid3-hd-inner {
+    background: transparent;
+    color: var(--dh-text);
+}
+
+.dh-dashboard :is(#torrentGrid, .dh-card-grid) .x-grid3-row {
+    border-bottom: 1px solid var(--dh-border);
+}
+
+.dh-dashboard :is(#torrentGrid, .dh-card-grid) .x-grid3-row-alt {
+    background-color: transparent;
+}
+
+.dh-dashboard :is(#torrentGrid, .dh-card-grid) :is(.x-grid3-row-over, .x-tree-node-over) {
+    background: var(--dh-bg-2);
+}
+
+/* A tree grid's rows are table rows, the line under each on its cells; no
+   line round the table. As tall as the torrent list's rows (whose cells
+   have 3px round the text and a 1px border above and below: the tree's
+   have only the one below, hence 4px at the top). */
+.dh-dashboard .dh-card-grid .x-treegrid-root-table {
+    border: 0;
+}
+
+.dh-dashboard .dh-card-grid .x-tree-node-el > .x-treegrid-col {
+    padding-top: 4px;
+    padding-bottom: 3px;
+}
+
+/* Text a column cuts off ends in an ellipsis, also where Deluge wraps it
+   in its own element (Peers' addresses) or a tree cell (Files' names) */
+.dh-dashboard .dh-card-grid .x-grid3-cell-inner > div,
+.dh-dashboard .dh-card-grid .x-treegrid-col {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* No peers: a quiet message rather than an empty card */
+.dh-dashboard .dh-card-grid .x-grid-empty {
+    padding: 16px;
+    color: var(--dh-text-faint);
+}
+
+.dh-dashboard #torrentGrid .x-grid3-td-name .x-grid3-cell-inner {
+    color: var(--dh-text-strong);
+    font-weight: 500;
+}
+
+.dh-dashboard .x-progress-inner {
+    border-radius: var(--dh-bar-radius);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Details: card on the right, or below the list                           */
+/* ------------------------------------------------------------------------ */
+
+.dh-dashboard #detailsPanel .x-panel-body,
+.dh-dashboard #detailsPanel .x-tab-panel-body,
+.dh-dashboard #detailsPanel .x-tab-panel-header,
+.dh-dashboard #detailsPanel ul.x-tab-strip-top {
+    background: transparent;
+    border-color: transparent;
+}
+
+.dh-dashboard #detailsPanel .x-tab-panel-header {
+    padding: 8px 12px 0;
+    border-bottom: 1px solid var(--dh-border);
+}
+
+/* Deluge pins the collapse button to the window corner; keep it on the panel */
+.dh-dashboard #detailsPanel .x-tool {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    margin: 0;
+}
+
+/* The bar between the list and the details card, and the strip the card
+   leaves when it's closed, are 12px (SPLIT in darkhand.js) rather than
+   Ext's 5px, so they're easy to see and grab. The card is on the right
+   (east) or at the bottom (south). */
+.dh-details-right .x-layout-split-east {
+    width: 12px !important;
+}
+
+.dh-details-bottom .x-layout-split-south {
+    height: 12px !important;
+}
+
+.dh-details-right .x-layout-split-east,
+.dh-details-bottom .x-layout-split-south {
+    background: transparent;
+}
+
+/* A grip on the details card's side of the bar, and while the bar is
+   hovered the card's outline in the accent: it reads as the card's handle,
+   not a divider between two cards. Ext's close button on the bar (its
+   "mini" button) is hidden while the card is open: it looked like this
+   grip but closed the card on a click. The card's own button (top right)
+   closes it, as does double-clicking the bar. */
+.dh-details-right .x-layout-split-east::before,
+.dh-details-bottom .x-layout-split-south::before {
+    content: '';
+    position: absolute;
+    border-radius: 2px;
+    background: var(--dh-border-strong);
+    transition: background-color var(--dh-ease);
+}
+
+/* The card is right of the bar, touching it */
+.dh-details-right .x-layout-split-east::before {
+    top: 50%;
+    right: 2px;
+    width: 4px;
+    height: 40px;
+    margin-top: -20px;
+}
+
+/* The card is below the bar, 4px under it */
+.dh-details-bottom .x-layout-split-south::before {
+    left: 50%;
+    bottom: 1px;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+}
+
+.dh-details-right .x-layout-split-east:hover::before,
+.dh-details-bottom .x-layout-split-south:hover::before {
+    background: var(--dh-accent);
+}
+
+.dh-details-right .x-layout-split-east .x-layout-mini,
+.dh-details-bottom .x-layout-split-south .x-layout-mini {
+    display: none;
+}
+
+.dh-dashboard #detailsPanel.x-border-panel {
+    transition: box-shadow var(--dh-ease);
+}
+
+.dh-details-right :has(> .x-layout-split-east:hover) > #detailsPanel.x-border-panel,
+.dh-details-bottom :has(> .x-layout-split-south:hover) > #detailsPanel.x-border-panel {
+    box-shadow: inset 0 0 0 1px var(--dh-accent);
+}
+
+/* The closed card leaves a rounded strip, with an arrow to open it again
+   (clicking anywhere on the strip opens it) */
+.dh-details-right .x-layout-cmini-east {
+    width: 12px !important;
+}
+
+.dh-details-bottom .x-layout-cmini-south {
+    height: 12px !important;
+}
+
+.dh-details-right .x-layout-cmini-east,
+.dh-details-bottom .x-layout-cmini-south {
+    border-radius: var(--dh-bar-radius);
+    background: var(--dh-bg-1);
+    box-shadow: inset 0 0 0 1px var(--dh-border);
+    cursor: pointer;
+    transition: background-color var(--dh-ease);
+}
+
+.dh-details-right .x-layout-cmini-east:hover,
+.dh-details-bottom .x-layout-cmini-south:hover {
+    background: var(--dh-bg-3);
+}
+
+.dh-details-right .x-layout-cmini-east .x-layout-mini,
+.dh-details-bottom .x-layout-cmini-south .x-layout-mini {
+    opacity: 0.8;
+    filter: none;
+}
+
+.dh-details-right .x-layout-cmini-east .x-layout-mini {
+    top: 50%;
+    left: 0;
+    width: 12px;
+    height: 48px;
+    margin-top: -24px;
+    /* Lucide chevron-left (icons.css) */
+    background: center / 12px 12px no-repeat;
+}
+
+.dh-details-bottom .x-layout-cmini-south .x-layout-mini {
+    top: 0;
+    left: 50%;
+    width: 48px;
+    height: 12px;
+    margin-left: -24px;
+    /* Lucide chevron-up (icons.css) */
+    background: center / 12px 12px no-repeat;
+}
+
+.dh-details-right .x-layout-cmini-east:hover .x-layout-mini,
+.dh-details-bottom .x-layout-cmini-south:hover .x-layout-mini {
+    opacity: 1;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Windows: Preferences, Connection Manager, Add Torrents, dialogs...        */
+/* ------------------------------------------------------------------------ */
+
+/* Every window is a dashboard card: the card surface, radius, outline and
+   shadow, no separate frame around the title or the body */
+.dh-dashboard .x-window {
+    border-radius: var(--dh-card-radius);
+    overflow: hidden;
+    /* the outline outside: the window's own parts would cover an inset one */
+    box-shadow: 0 0 0 1px var(--dh-border), var(--dh-shadow-window);
+}
+
+.dh-dashboard .x-window-tl,
+.dh-dashboard .x-window-tr,
+.dh-dashboard .x-window-tc,
+.dh-dashboard .x-window-ml,
+.dh-dashboard .x-window-mr,
+.dh-dashboard .x-window-mc,
+.dh-dashboard .x-window-bl,
+.dh-dashboard .x-window-br,
+.dh-dashboard .x-window-bc,
+.dh-dashboard .x-window-plain .x-window-mc,
+body.dh-dashboard.x-body-masked .x-window-plain .x-window-mc,
+.dh-dashboard .x-window-body,
+.dh-dashboard .x-window-plain .x-window-body {
+    background: var(--dh-bg-1);
+    border-color: transparent;
+    border-radius: 0;
+}
+
+/* The frame's side and bottom strips become padding round the content */
+.dh-dashboard .x-window-ml {
+    padding-left: var(--dh-window-pad);
+}
+
+.dh-dashboard .x-window-mr {
+    padding-right: var(--dh-window-pad);
+}
+
+.dh-dashboard .x-window-header {
+    padding: 14px 14px 10px 18px;
+}
+
+/* A window's icon is the title bar's background: line it up with the
+   title */
+.dh-dashboard .x-window-header.x-panel-icon {
+    padding-left: 44px !important; /* Ext's is !important */
+    background-position: 18px 14px !important;
+    background-size: 18px 18px !important;
+}
+
+.dh-dashboard .x-window-tl {
+    padding-left: 0;
+}
+
+.dh-dashboard .x-window-tr {
+    padding-right: 0;
+}
+
+/* On one line: the plugin widens a window whose title is longer */
+.dh-dashboard .x-window-header-text {
+    font-size: var(--dh-text-title);
+    white-space: nowrap;
+}
+
+/* Close button: a Lucide x (icons.css) */
+.dh-dashboard .x-window .x-tool-close {
+    width: 24px;
+    height: 24px;
+    margin: -4px -4px 0 0;
+    border-radius: var(--dh-bar-radius);
+    background: center / 16px 16px no-repeat;
+    filter: none;
+    opacity: 1;
+}
+
+.dh-dashboard .x-window .x-tool-close:hover,
+.dh-dashboard .x-window .x-tool-close-over {
+    background-color: var(--dh-bg-3);
+}
+
+/* Panels framed inside a window (lists, the Preferences pages...) get
+   rounded corners, like the cards. Their right and bottom edges sit
+   exactly on the edges of the containers that clip them, where at some
+   display scalings a border would lose its last pixel, so the frame is
+   drawn just inside: the border stays (Ext sizes the panels with it) but
+   is transparent, and a layer over the panel's wrapper, 1px in, draws
+   the line. (An outline would sit under the Preferences pages' own
+   panels, and a layer in the body would scroll away with a long list;
+   the wrapper doesn't scroll, and also holds a panel's toolbar, like the
+   Connection Manager's, which the frame then takes in.) The wrapper is
+   clipped to the frame's outer edge, so the lines inside it (toolbars,
+   grid headers, tab strips) stop at the frame instead of running 1px past
+   it.
+   Some windows frame their whole body (Login, Remove...) the same way,
+   unless a framed panel inside already frames the contents (Connection
+   Manager, Edit Trackers): one frame, not two. (Every selector here needs
+   :has(); nothing without it goes in these rules, since a selector a
+   browser can't read drops its whole rule, G37.) */
+.dh-dashboard .x-window-body .x-panel-body:not(.x-panel-body-noborder),
+.dh-dashboard .x-window-body .x-tab-panel-body:not(.x-tab-panel-body-noborder) {
+    border-color: transparent;
+    border-radius: var(--dh-frame-radius);
+}
+
+.dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder)),
+.dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder)) {
+    position: relative;
+    clip-path: var(--dh-frame-clip);
+}
+
+.dh-dashboard .x-window:not(.dh-about):not(.dh-add) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)):not(:has(.x-panel-body:not(.x-panel-body-noborder))):not(:has(.x-tab-panel-body:not(.x-tab-panel-body-noborder))) {
+    position: relative;
+}
+
+.dh-dashboard .x-window-body .x-panel-bwrap:has(> .x-panel-body:not(.x-panel-body-noborder))::after,
+.dh-dashboard .x-window-body .x-tab-panel-bwrap:has(> .x-tab-panel-body:not(.x-tab-panel-body-noborder))::after,
+.dh-dashboard .x-window:not(.dh-about):not(.dh-add) .x-window-mc:has(> .x-window-body:not(.x-window-body-noborder)):not(:has(.x-panel-body:not(.x-panel-body-noborder))):not(:has(.x-tab-panel-body:not(.x-tab-panel-body-noborder)))::after {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    inset: 1px;
+    border: 1px solid var(--dh-border);
+    border-radius: calc(var(--dh-frame-radius) - 1px);
+    pointer-events: none;
+}
+
+/* A framed form that is a window's whole body, with no padding of its own
+   (Copy Magnet URI's): its fields in from the frame like other windows'
+   (Ext sizes them to the room inside the padding; the plugin makes the
+   room --dh-window-pad from the frame, like every form dialog's) */
+.dh-dashboard .x-window-body > .x-panel > .x-panel-bwrap > .x-panel-body.x-form:not(.x-panel-body-noborder) {
+    padding: 5px;
+}
+
+/* Form rows as far apart as list rows (Ext's are 4px) */
+.dh-dashboard .x-window .x-form-item {
+    margin-bottom: var(--dh-inset);
+}
+
+/* Add Torrents: two framed sections, the torrent list with its File / Url /
+   Remove bar at the bottom, and the Files / Options tabs, 10px apart (the
+   plugin sets the gap) */
+.dh-dashboard .dh-add-section {
+    clip-path: var(--dh-frame-clip);
+}
+
+.dh-dashboard .dh-add-section::after {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    inset: 1px;
+    border: 1px solid var(--dh-border);
+    border-radius: calc(var(--dh-frame-radius) - 1px);
+    pointer-events: none;
+}
+
+/* The tab strip on the section's own surface, in from the frame like the
+   rows. The line dividing it from the tab below is the header's, which runs
+   the full width (the strip's own starts in with it). */
+.dh-dashboard .dh-add-section .x-tab-panel-header {
+    padding: var(--dh-inset) var(--dh-inset) 0;
+    background: transparent;
+    border-color: transparent;
+    border-bottom-color: var(--dh-border);
+}
+
+.dh-dashboard .dh-add-section ul.x-tab-strip-top {
+    background: transparent;
+    border-bottom-color: transparent;
+}
+
+/* Toolbars inside window frames (Connection Manager's Add / Edit / Remove,
+   Add Torrents' File / Url / Remove) sit on the frame's own surface, set
+   off from the list by a divider, rather than on a square darker strip */
+.dh-dashboard .x-window-body .x-panel-bbar .x-toolbar,
+.dh-dashboard .x-window-body .x-panel-tbar .x-toolbar {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* As much room below its buttons as above, past the frame, which takes
+   the panel's bottom 2px */
+.dh-dashboard .x-window-body .x-panel-bbar .x-toolbar {
+    padding-bottom: 5px;
+    border-top: 1px solid var(--dh-border);
+}
+
+.dh-dashboard .x-window-body .x-panel-tbar .x-toolbar {
+    border-bottom: 1px solid var(--dh-border);
+}
+
+/* Preferences' page list: in from its frame, with rounded rows and the
+   current page filled with the soft accent. The inset lists below share it. */
+.dh-dashboard .dh-pref-list .x-list-body-inner,
+.dh-dashboard .dh-inset-list .x-list-body-inner {
+    padding: var(--dh-inset) 0;
+}
+
+.dh-dashboard .dh-pref-list dl,
+.dh-dashboard .dh-inset-list dl {
+    margin: 0 var(--dh-inset) 2px;
+    border-radius: var(--dh-bar-radius);
+}
+
+.dh-dashboard .dh-pref-list dt em,
+.dh-dashboard .dh-inset-list dt em {
+    padding: 5px 8px;
+}
+
+.dh-dashboard .dh-pref-list .x-list-selected,
+.dh-dashboard .dh-inset-list .x-list-selected {
+    box-shadow: none;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Inset lists: every list, grid and tree grid in a window                  */
+/* ------------------------------------------------------------------------ */
+
+/* The plugin marks each list, grid and tree grid it finds in a window with
+   .dh-inset and its kind (.dh-inset-list, -grid, -tree), and fits its
+   columns to the width less the inset. Whatever the kind: rows
+   --dh-inset in from the frame, rounded, no stripes, grid lines or
+   selection bar, the hovered / selected row filled; the column headers
+   moved in with the rows; checkboxes drawn like the form's. */
+
+/* The last column header's divider would stand alone by the frame */
+.dh-dashboard .dh-inset .x-grid3-hd-row td:last-child {
+    border-right-color: transparent;
+}
+
+/* Checkboxes: a rounded box, filled with the accent and ticked (icons.css)
+   when on */
+.dh-dashboard .dh-inset .x-grid3-check-col,
+.dh-dashboard .dh-inset .x-grid3-check-col-on {
+    position: relative;
+    height: 18px;
+    background: none;
+    filter: none;
+}
+
+.dh-dashboard .dh-inset .x-grid3-check-col::after,
+.dh-dashboard .dh-inset .x-grid3-check-col-on::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    box-sizing: border-box;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    border: 1px solid var(--dh-border-strong);
+    border-radius: var(--dh-small-radius);
+    background: var(--dh-bg-0) center / 12px 12px no-repeat;
+    cursor: pointer;
+}
+
+.dh-dashboard .dh-inset .x-grid3-check-col-on::after {
+    border-color: var(--dh-accent);
+    background-color: var(--dh-accent);
+}
+
+/* Lists (ListView): rows --dh-inset apart too; text too long for its
+   column ends in an ellipsis (the plugin adds the full text as a tooltip) */
+.dh-dashboard .dh-inset-list dt em {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    text-overflow: ellipsis;
+}
+
+.dh-dashboard .dh-inset-list .x-list-header-inner {
+    padding: 0 var(--dh-inset);
+}
+
+.dh-dashboard .dh-inset-list .x-list-header-inner em {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+/* Grids (GridPanel): Ext sizes the scroller less its padding, and the
+   plugin leaves the columns room for it */
+.dh-dashboard .dh-inset-grid .x-grid3-scroller {
+    padding: var(--dh-inset);
+}
+
+.dh-dashboard .dh-inset-grid .x-grid3-header-offset {
+    padding-left: var(--dh-inset);
+}
+
+.dh-dashboard .dh-inset-grid .x-grid3-row {
+    border-radius: var(--dh-bar-radius);
+}
+
+.dh-dashboard .dh-inset-grid .x-grid3-row-alt {
+    background-color: transparent;
+}
+
+.dh-dashboard .dh-inset-grid .x-grid3-row-selected,
+.dh-dashboard .dh-inset-grid .x-grid3-row-selected.x-grid3-row-over {
+    box-shadow: none;
+}
+
+/* Tree grids (TreeGrid, like Add Torrents' Files tab): a row is a table
+   row, so its colour goes on its cells, which take the rounding */
+.dh-dashboard .dh-inset-tree .x-treegrid-header-inner {
+    padding-left: var(--dh-inset);
+}
+
+.dh-dashboard .dh-inset-tree .x-treegrid-root-node {
+    box-sizing: border-box;
+    padding: var(--dh-inset);
+}
+
+.dh-dashboard .dh-inset-tree .x-treegrid-root-table,
+.dh-dashboard .dh-inset-tree .x-treegrid-col {
+    border: 0;
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-node-el {
+    background: transparent;
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-node-el > .x-treegrid-col {
+    padding: 3px 0;
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-node-el > .x-treegrid-col:first-child {
+    padding-left: 4px;
+    border-radius: var(--dh-bar-radius) 0 0 var(--dh-bar-radius);
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-node-el > .x-treegrid-col:last-child {
+    border-radius: 0 var(--dh-bar-radius) var(--dh-bar-radius) 0;
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-node-over > .x-treegrid-col {
+    background-color: var(--dh-bg-3);
+}
+
+.dh-dashboard .dh-inset-tree .x-tree-selected > .x-treegrid-col {
+    background-color: var(--dh-accent-soft);
+}
+
+/* Windows laid out in regions (Preferences: the page list and the page)
+   end their panels right at the bottom of the window body, and some
+   browsers put them a pixel or two past it. Nothing in these windows
+   needs the body to clip, so it doesn't cut off their frames' bottom
+   edge; any overhang falls in the footer's spacing. */
+.dh-dashboard .x-window-body.x-border-layout-ct {
+    overflow: visible;
+}
+
+/* Buttons along the bottom: the last one (the window's main
+   action: OK, Connect, Add...) in the accent colour, like the details
+   card's Apply (Options tab). Message boxes keep
+   hidden buttons in the row, so theirs are all plain. */
+.dh-dashboard .x-window-footer {
+    padding: var(--dh-window-pad) 6px;
+}
+
+.dh-dashboard .x-window-footer table.x-btn button {
+    padding: 0 14px;
+}
+
+.dh-dashboard .x-window:not(.x-window-dlg) .x-window-footer td.x-toolbar-cell:last-child table.x-btn,
+.dh-dashboard .dh-options table.x-btn#apply {
+    background: var(--dh-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--dh-accent-ring);
+}
+
+.dh-dashboard .x-window:not(.x-window-dlg) .x-window-footer td.x-toolbar-cell:last-child table.x-btn.x-btn-over,
+.dh-dashboard .dh-options table.x-btn#apply.x-btn-over {
+    background: color-mix(in srgb, var(--dh-accent) 28%, transparent);
+}
+
+.dh-dashboard .x-window:not(.x-window-dlg) .x-window-footer td.x-toolbar-cell:last-child table.x-btn button,
+.dh-dashboard .dh-options table.x-btn#apply button {
+    color: var(--dh-text-strong);
+}
+
+/* Message box icons: Lucide circle-help, info, triangle-alert and
+   circle-x (icons.css) in the accent, warning and error colours, instead
+   of Ext's bitmaps */
+.dh-dashboard .x-window-dlg .ext-mb-icon {
+    width: 28px;
+    height: 28px;
+    margin-right: 12px;
+    padding: 0;
+    background-position: center;
+    background-size: 24px 24px;
+}
+
+/* The About window: the logo is its header, so its title is a small
+   caption with no icon (the plugin tags its parts, which Deluge styles
+   inline, hence !important) */
+.dh-dashboard .dh-about .x-window-header,
+.dh-dashboard .dh-about .x-window-header.x-panel-icon {
+    padding: 14px 14px 4px 18px;
+    background-image: none !important; /* deluge.css sets the icon !important */
+}
+
+.dh-dashboard .dh-about .x-window-header-text {
+    padding-left: 0;
+    font-size: var(--dh-text-base);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dh-text-faint);
+}
+
+.dh-dashboard .dh-about .x-box-item {
+    font-family: var(--dh-font);
+}
+
+.dh-dashboard .dh-about-logo {
+    background: url('../../icons/deluge-192.png') center / 64px no-repeat !important;
+    filter: drop-shadow(0 8px 22px var(--dh-accent-glow));
+}
+
+.dh-dashboard .dh-about-title {
+    padding-top: 6px !important;
+    font-size: var(--dh-text-value) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em;
+    color: var(--dh-text-strong);
+}
+
+.dh-dashboard .dh-about-comment {
+    padding-top: 12px !important;
+    font-size: var(--dh-text-body) !important;
+    line-height: 1.6;
+    color: var(--dh-text-muted);
+}
+
+.dh-dashboard .dh-about-copyright {
+    padding-top: 14px !important;
+    font-size: var(--dh-text-small) !important;
+    color: var(--dh-text-faint);
+}
+
+.dh-dashboard .dh-about-link {
+    padding-top: 4px !important;
+    font-size: var(--dh-text-body) !important;
+}
+
+.dh-dashboard .dh-about-link a {
+    color: var(--dh-accent);
+    text-decoration: none;
+}
+
+.dh-dashboard .dh-about-link a:hover {
+    text-decoration: underline;
+}
+
+.dh-dashboard .dh-about .x-window-footer {
+    padding: 4px 0 20px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Disabled panels                                                          */
+/* ------------------------------------------------------------------------ */
+
+/* Ext greys out a disabled panel (the details card with no torrent
+   selected, Add Torrents' options with no file...) with a half-black
+   mask, far darker than the cards. Fade the contents into the card's own
+   surface instead. The page-wide mask behind open windows stays dark. */
+.dh-dashboard .x-panel .ext-el-mask,
+.dh-dashboard .x-window .ext-el-mask {
+    background-color: var(--dh-bg-1);
+    opacity: 0.6;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Status bar                                                               */
+/* ------------------------------------------------------------------------ */
+
+/* Full-width bar along the bottom of the window */
+.dh-dashboard #dh-shell > .x-panel-bwrap > .x-panel-body {
+    background: var(--dh-bg-0);
+}
+
+.dh-dashboard #dh-shell > .x-panel-bwrap > .x-panel-bbar {
+    border-top: 1px solid var(--dh-border);
+}
+
+.dh-dashboard #deluge-statusbar {
+    background: var(--dh-bg-0);
+    border: 0 none;
+    padding: 4px 20px;
+}
+
+/* Deluge fixes the Status tab at 1000px; fit it to the card. At the bottom
+   its four columns spread across the card, wrapping to fewer per row when
+   it's narrow; on the right they stack. */
+.dh-dashboard #deluge-details-status,
+.dh-dashboard #deluge-details-status > .x-panel-bwrap,
+.dh-dashboard #deluge-details-status > .x-panel-bwrap > .x-panel-body {
+    width: auto !important;
+}
+
+.dh-details-bottom #deluge-details-status > .x-panel-bwrap > .x-panel-body {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 24px;
+}
+
+.dh-details-bottom #deluge-details-status dl {
+    float: none;
+    flex: 1 1 220px;
+    min-width: 0;
+    width: auto;
+}
+
+.dh-details-bottom #deluge-details-status dd {
+    width: auto;
+}
+
+.dh-details-bottom #deluge-details-status br {
+    display: none;
+}
+
+.dh-details-right #deluge-details-status dl {
+    float: none;
+    width: auto;
+    min-height: 0;
+    margin: 0 0 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--dh-border);
+}
+
+.dh-details-right #deluge-details-status dl:last-child {
+    border-bottom: 0 none;
+}
+
+.dh-details-right #deluge-details-status dd {
+    width: auto;
+    margin-left: 130px;
+}
+
+.dh-details-right #deluge-details-status dt {
+    width: 130px;
+}
+
+/* Details and Status tabs: Deluge fixes each value at one line's height,
+   so long paths and hashes spill over the next rows. Let values wrap and
+   grow. */
+.dh-dashboard #torrentDetails dl dt {
+    clear: left;
+}
+
+.dh-dashboard #torrentDetails dl dd {
+    height: auto;
+    min-height: 19px;
+    overflow-wrap: anywhere;
+}
+
+.dh-dashboard #torrentDetails dd.hash {
+    width: auto;
+}
+
+/* Details tab: labels and values in two columns, the labels' as wide as
+   the longest (Deluge floats them in 100px, so "Download Folder:" ran into
+   its value). The plugin marks the tab. With the id, to beat Deluge's
+   #torrentDetails rules, whose 100px widths and margins would otherwise
+   push the values 100px further from the labels. */
+.dh-dashboard #torrentDetails .dh-details-tab dl {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0 16px;
+}
+
+.dh-dashboard #torrentDetails .dh-details-tab dl dt,
+.dh-dashboard #torrentDetails .dh-details-tab dl dd {
+    float: none;
+    width: auto;
+    margin: 0;
+}
+
+/* Options tab: Deluge's fieldsets become frames, side by side at the same
+   height (wrapping when the card is narrow; stacked in the right-hand
+   card), each as wide as its content, the
+   title inside as a caption. Deluge sets the columns' widths and margins
+   inline, hence !important. */
+.dh-dashboard .dh-options .x-column-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 12px;
+    width: auto !important;
+    padding: 12px 14px;
+}
+
+.dh-details-right .dh-options .x-column-inner {
+    flex-direction: column;
+}
+
+.dh-dashboard .dh-options .x-column-inner > .x-clear {
+    display: none;
+}
+
+.dh-dashboard .dh-options .x-column {
+    flex: none;
+    float: none;
+    width: auto !important;
+    margin: 0 !important;
+}
+
+.dh-dashboard .dh-options .x-column > .x-panel-bwrap > .x-panel-body {
+    width: auto !important;
+}
+
+.dh-dashboard .dh-options .x-fieldset {
+    margin: 0 0 12px !important;
+    padding: 12px 14px 10px !important;
+    border: 1px solid var(--dh-border);
+    border-radius: var(--dh-frame-radius);
+}
+
+.dh-dashboard .dh-options .x-column.x-fieldset {
+    margin: 0 !important;
+}
+
+.dh-dashboard .dh-options .x-fieldset legend {
+    float: left;
+    width: 100%;
+    margin: 0 0 8px;
+    padding: 0;
+}
+
+.dh-dashboard .dh-options .x-fieldset-header-text {
+    color: var(--dh-text-faint);
+    font-size: var(--dh-text-caption);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dh-dashboard .dh-options .x-fieldset-bwrap {
+    clear: both;
+}
+
+.dh-dashboard .dh-options .x-fieldset-body {
+    width: auto !important;
+    padding: 0 !important;
+}
+
+/* Edit Trackers and Apply: a row as wide as the buttons (Ext places them
+   in a box of fixed width, which the column can't see past) */
+.dh-dashboard .dh-options .x-box-inner {
+    position: static;
+    display: flex;
+    gap: 10px;
+    width: auto !important;
+    height: auto !important;
+}
+
+.dh-dashboard .dh-options .x-box-inner > .x-box-item {
+    position: static;
+    margin: 0 !important;
+}
+
+.dh-dashboard .dh-options .x-table-layout-cell {
+    padding: 2px 10px 2px 0;
+    white-space: nowrap;
+}
+
