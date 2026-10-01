@@ -6,7 +6,8 @@ A modern dashboard layout and dark theme for the **Deluge 2.x Web UI**
 It comes in two parts:
 
 - The **dashboard**, a Deluge plugin that rearranges the Web UI into floating
-  cards with live stats and a speed chart.
+  cards with live stats and a speed chart that keeps up to 90 days of
+  history.
 - The **theme**, which gives Deluge the same dark look. It's what the
   dashboard is built on, and what you see with Deluge's standard layout if the
   plugin is disabled or you install the theme on its own.
@@ -28,21 +29,9 @@ If the daemon can't find the download folder (it doesn't exist, or the user
 link to **Preferences → Downloads**, where Deluge's own status bar just says
 "Error".
 
-The speed chart plots download and upload over a range you pick: click the
-range in its header ("Last 5 minutes") for the last 5 minutes, hour, 12 hours,
-day or 30 days, or **Custom…** for any number of minutes, hours or days up to
-90 days. Your choice is remembered in that browser. Deluge's web API keeps no
-speed history, so the plugin's daemon side records one, every two seconds
-whether or not a browser is open. It keeps less detail the further back it
-goes, so 90 days take only a few hundred KB: every two seconds for the last
-hour, a one-minute average for two days, a 15-minute average for 90 days. It
-saves them to `darkhand_history.json` in Deluge's config folder every few
-minutes and when the daemon stops, so the history survives a restart (the time
-the daemon was down shows as a gap). The chart starts full when the page loads,
-and time spent in a background tab (where browsers slow the page's updates)
-fills in when you come back. It sits beside the stats when the column
-is wide and below them when it's narrower. When the window is too short for the
-chart without squeezing the torrent list, it's hidden until there's room again.
+The transfer speed chart plots download and upload over a range you pick, from
+the last 5 minutes to the last 90 days (see
+[Speed chart and history](#speed-chart-and-history)).
 
 By default the stats and speed chart sit below the torrent list, with the
 torrent details at the bottom, as above. Two switches in the header change
@@ -64,8 +53,9 @@ Preferences and the Connection Manager, among others.
 | **Preferences** | **Connection Manager** |
 | ![Preferences](screenshots/dashboard-preferences.png) | ![The Connection Manager](screenshots/dashboard-connection-manager.png) |
 
-The transfer activity in the dashboard screenshots (speeds, progress, peers)
-is simulated; the test setup they were taken on has no peers.
+The transfer activity in the dashboard screenshots (speeds, progress, peers,
+and the speed history) is simulated; the test setup they were taken on has no
+peers.
 
 Also in the dashboard:
 
@@ -95,6 +85,48 @@ Plugins** and the standard layout, in the Darkhand theme, returns after a
 page reload.
 
 The dashboard has been tested on Deluge 2.2.
+
+### Speed chart and history
+
+![The speed chart over the last 30 days, with its range menu open](screenshots/dashboard-chart.png)
+
+The speed chart plots download and upload speed over a range you choose. Click
+the range in its header ("Last 5 minutes") to pick the last 5 minutes, hour,
+12 hours, day or 30 days, or **Custom…** to enter any number of minutes, hours
+or days up to 90 days. Your choice is remembered in that browser. Times along
+the bottom show when things happened.
+
+Deluge's web API keeps no speed history, so the plugin's daemon side records
+one: the session's speeds every two seconds, whether or not a browser is open.
+So:
+
+- The chart is full as soon as the page loads, at any range.
+- Time spent in a background tab (where browsers slow a page's updates), or
+  with the browser closed, fills in when you come back.
+- The history survives restarting `deluged`. It's saved to
+  `darkhand_history.json` in Deluge's config folder every few minutes and when
+  the daemon stops. Time the daemon was down shows as a gap in the lines.
+
+It keeps less detail the further back it goes, so 90 days take only a few
+hundred KB, on disk and in memory:
+
+| Time ago | Detail kept |
+| --- | --- |
+| Up to an hour | a sample every 2 seconds |
+| Up to 2 days | one-minute averages |
+| Up to 90 days | 15-minute averages |
+
+The chart asks the daemon for only as many points as it has room to draw (a
+few KB at a time) and refreshes long ranges about once a minute. To clear the
+history, stop `deluged`, delete `darkhand_history.json` and start it again.
+
+The chart sits beside the stats when the column is wide and below them when
+it's narrower. When the window is too short for the chart without squeezing
+the torrent list, it's hidden until there's room again.
+
+**Upgrading from 1.0.x:** restart `deluged` after installing. Deluge keeps the
+plugin code it loaded until the daemon restarts, so until then ranges over an
+hour show only what the page itself has seen.
 
 ## Theme
 
@@ -294,7 +326,9 @@ Deluge builds its window and arranges Deluge's own components (toolbar,
 filters, torrent list, details tabs, status bar) differently, so everything
 keeps working as before. The plugin itself is a small Python package in
 `plugin/`, which the installer zips into a Deluge plugin egg; its script is
-`plugin/deluge_darkhand/data/darkhand.js`. The dashboard's styles live in the
+`plugin/deluge_darkhand/data/darkhand.js`. Its daemon side,
+`plugin/deluge_darkhand/core.py`, records the speed history the chart draws.
+The dashboard's styles live in the
 theme, in `theme/darkhand/dashboard.css`, and only apply while the plugin is
 enabled.
 
