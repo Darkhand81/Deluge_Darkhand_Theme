@@ -368,10 +368,13 @@ gaps of more than 10 seconds between updates (G27).
 
 The same in both positions:
 
-- Bar between list and card: 12px, transparent; a 2px line along its middle
-  on hover; a grip in the middle (6×48px, `--dh-border-strong`, accent on
-  hover) that closes the card. Tooltip "Drag to resize. Double-click to
-  close."
+- Bar between list and card: 12px, transparent, with a grip (40×4px,
+  `--dh-border-strong`) on the card's side of it, so it reads as the card's
+  handle. Hovered, the grip and the card's outline turn accent. Ext's
+  close button on the bar is hidden while the card is open (it looked like
+  the grip but closed the card on a click): the card's own button (top
+  right) closes it, as does double-clicking the bar. Tooltip "Drag to
+  resize the details card. Double-click to close it."
 - Closed: a 12px rounded strip (`--dh-bg-1`, 1px outline, lighter on hover)
   with a chevron pointing towards where the card opens; clicking anywhere on
   it opens the card in place.

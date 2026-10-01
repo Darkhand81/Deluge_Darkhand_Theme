@@ -918,66 +918,56 @@ html body.dh-dashboard,
     background: transparent;
 }
 
-/* A line along the middle while hovered: the bar can be dragged */
+/* A grip on the details card's side of the bar, and while the bar is
+   hovered the card's outline in the accent: it reads as the card's handle,
+   not a divider between two cards. Ext's close button on the bar (its
+   "mini" button) is hidden while the card is open: it looked like this
+   grip but closed the card on a click. The card's own button (top right)
+   closes it, as does double-clicking the bar. */
 .dh-details-right .x-layout-split-east::before,
 .dh-details-bottom .x-layout-split-south::before {
     content: '';
     position: absolute;
-    border-radius: 1px;
+    border-radius: 2px;
     background: var(--dh-border-strong);
-    opacity: 0;
-    transition: opacity var(--dh-ease);
+    transition: background-color var(--dh-ease);
 }
 
+/* The card is right of the bar, touching it */
 .dh-details-right .x-layout-split-east::before {
-    top: 0;
-    bottom: 0;
-    left: 5px;
-    width: 2px;
+    top: 50%;
+    right: 2px;
+    width: 4px;
+    height: 40px;
+    margin-top: -20px;
 }
 
+/* The card is below the bar, 4px under it */
 .dh-details-bottom .x-layout-split-south::before {
-    left: 0;
-    right: 0;
-    top: 5px;
-    height: 2px;
+    left: 50%;
+    bottom: 1px;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
 }
 
 .dh-details-right .x-layout-split-east:hover::before,
 .dh-details-bottom .x-layout-split-south:hover::before {
-    opacity: 1;
+    background: var(--dh-accent);
 }
 
-/* Its close button: a grip in the middle of the bar */
 .dh-details-right .x-layout-split-east .x-layout-mini,
 .dh-details-bottom .x-layout-split-south .x-layout-mini {
-    z-index: 1;
-    border-radius: 3px;
-    background: var(--dh-border-strong);
-    opacity: 1;
-    filter: none;
-    transition: background-color var(--dh-ease);
+    display: none;
 }
 
-.dh-details-right .x-layout-split-east .x-layout-mini {
-    top: 50%;
-    left: 3px;
-    width: 6px;
-    height: 48px;
-    margin-top: -24px;
+.dh-dashboard #detailsPanel.x-border-panel {
+    transition: box-shadow var(--dh-ease);
 }
 
-.dh-details-bottom .x-layout-split-south .x-layout-mini {
-    top: 3px;
-    left: 50%;
-    width: 48px;
-    height: 6px;
-    margin-left: -24px;
-}
-
-.dh-details-right .x-layout-split-east .x-layout-mini-over,
-.dh-details-bottom .x-layout-split-south .x-layout-mini-over {
-    background: var(--dh-accent);
+.dh-details-right :has(> .x-layout-split-east:hover) > #detailsPanel.x-border-panel,
+.dh-details-bottom :has(> .x-layout-split-south:hover) > #detailsPanel.x-border-panel {
+    box-shadow: inset 0 0 0 1px var(--dh-accent);
 }
 
 /* The closed card leaves a rounded strip, with an arrow to open it again
