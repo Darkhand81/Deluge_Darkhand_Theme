@@ -28,11 +28,14 @@ If the daemon can't find the download folder (it doesn't exist, or the user
 link to **Preferences → Downloads**, where Deluge's own status bar just says
 "Error".
 
-The speed chart plots download and upload over the last five minutes from the
-same updates. Deluge's web API keeps no speed history, so the chart starts
-filling when the page loads. It sits beside the stats when the column is wide
-and below them when it's narrower. When the window is too short for the chart
-without squeezing the torrent list, it's hidden until there's room again.
+The speed chart plots download and upload over the last five minutes. Deluge's
+web API keeps no speed history, so the plugin's daemon side records one, every
+two seconds whether or not a browser is open. The chart starts full when the
+page loads, and time spent in a background tab (where browsers slow the page's
+updates) fills in when you come back. The history is kept in memory, so it
+starts again when the daemon restarts. It sits beside the stats when the column
+is wide and below them when it's narrower. When the window is too short for the
+chart without squeezing the torrent list, it's hidden until there's room again.
 
 By default the stats and speed chart sit below the torrent list, with the
 torrent details at the bottom, as above. Two switches in the header change

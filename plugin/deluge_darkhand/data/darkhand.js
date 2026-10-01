@@ -321,8 +321,12 @@ Ext.ns('Deluge.plugins.darkhand');
 
     // -----------------------------------------------------------------------
     // Speed chart: download and upload over the last few minutes, sampled
-    // from the same update poll. Deluge's web API keeps no history, so it
-    // starts empty when the page loads. Plain SVG, no chart library.
+    // from the same update poll. Deluge's web API keeps no history, so the
+    // plugin's daemon half (core.py) records one; the chart fetches it when
+    // it loads and after any gap in its own samples (a background tab, a
+    // sleeping laptop), so it starts full and gaps fill in. Without it (an
+    // older daemon half) the chart fills from the page's samples alone.
+    // Plain SVG, no chart library.
     // -----------------------------------------------------------------------
 
     var CHART_WINDOW = 5 * 60 * 1000; // ms of history shown
@@ -347,8 +351,57 @@ Ext.ns('Deluge.plugins.darkhand');
         );
     }
 
+    // The daemon's history: fetched when the first update arrives and after
+    // a gap, one request at a time
+    var historyAsked = false, historyPending = false;
+
+    function loadHistory() {
+        var api = deluge.client && deluge.client.darkhand;
+        if (historyPending || !api || typeof api.get_speed_history !== 'function') return;
+        historyPending = true;
+        api.get_speed_history(0, {
+            success: function (history) {
+                historyPending = false;
+                mergeHistory(history);
+            },
+            failure: function () {
+                historyPending = false;
+            },
+        });
+    }
+
+    // The daemon's samples up to its latest, then the page's own after that.
+    // Its times are on the daemon's clock: shift them onto the page's.
+    function mergeHistory(history) {
+        try {
+            var list = history && history.samples;
+            if (!list || !list.length) return;
+            var shift = new Date().getTime() - history.now;
+            var merged = list.map(function (s) {
+                return { t: s[0] + shift, down: s[1], up: s[2] };
+            });
+            var last = merged[merged.length - 1].t;
+            Ext.each(samples, function (s) {
+                if (s.t > last) merged.push(s);
+            });
+            var now = merged[merged.length - 1].t;
+            while (merged.length > 2 && merged[1].t < now - CHART_WINDOW) {
+                merged.shift();
+            }
+            samples = merged;
+            drawChart();
+        } catch (e) {
+            if (window.console) console.error('Darkhand: speed history failed', e);
+        }
+    }
+
     function addSample(stats) {
         var now = new Date().getTime();
+        var previous = samples.length ? samples[samples.length - 1].t : 0;
+        if (!historyAsked || (previous && now - previous > CHART_GAP)) {
+            historyAsked = true;
+            loadHistory();
+        }
         samples.push({
             t: now,
             down: stats.download_rate || 0,

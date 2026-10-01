@@ -356,7 +356,14 @@ card doesn't jump) with an "Open Preferences" link when Deluge reports -1.
 
 ### Transfer speed chart
 
-Plain SVG, no library. Five-minute window, sampled from the same poll.
+Plain SVG, no library. Five-minute window, sampled from the same poll and
+backed by the plugin's daemon half (`core.py`), which records the session's
+speeds every 2s (10 minutes kept, in memory) and returns them from
+`darkhand.get_speed_history`. The chart fetches that when its first update
+arrives and after any gap in its own samples over 10s, and uses the
+daemon's samples up to its newest, its own after (the daemon's times
+shifted onto the page's clock by the `now` it returns). An older daemon
+half without the method leaves the chart on the page's samples alone.
 Download green, upload `#5b9dff`; 2px round-capped lines with a fading area
 fill (30% / 18% opacity to 0). Monotone cubic smoothing (Fritsch–Carlson) so
 lines never dip below zero. Axis: a "nice" maximum (1, 1.5, 2, 3, 4, 5, 6, 8
@@ -704,7 +711,8 @@ Each learned the hard way. Symptom → cause → what the code does.
 - **G27. Background tabs pause updates.** The poll stops while a tab is in
   the background or the computer sleeps; a sample kept from before the chart
   window can then be minutes old and draw far outside the card → clip lines
-  to the plot and break them at gaps > 10s.
+  to the plot and break them at gaps > 10s. A gap like that also fetches the
+  daemon's speed history, which fills it in (Transfer speed chart).
 - **G34. Theme load order.** Deluge before 2.2 loads the theme *before*
   `deluge.css`. Selectors that compete with it are prefixed `html` (or `html
   body`) so they win either way.

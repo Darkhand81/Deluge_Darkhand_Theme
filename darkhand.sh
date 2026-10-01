@@ -438,7 +438,8 @@ PY
 # daemon_plugin <daemon config dir> <enable|disable>
 # Ask the running daemon to (rescan and) enable or disable the plugin over
 # its local RPC port, authenticating as "localclient" from its auth file,
-# the same way Deluge's own clients connect locally.
+# the same way Deluge's own clients connect locally. Enabling returns 3 when
+# the plugin was already enabled (the daemon keeps the code it loaded then).
 daemon_plugin() {
     [[ -n "$DELUGE_PY" ]] || detect_deluge_python || return 1
     local -a cmd=("$DELUGE_PY" - "$1" "$2" "$PLUGIN_NAME")
@@ -483,10 +484,13 @@ def main():
     try:
         yield client.connect("127.0.0.1", port, user, password)
         if action == "enable":
+            # Already enabled: the daemon keeps running the code it loaded
+            # (Deluge doesn't reload a plugin's modules), so say so (3)
+            was_enabled = name in (yield client.core.get_enabled_plugins())
             yield client.core.rescan_plugins()
             if name in (yield client.core.get_available_plugins()):
                 yield client.core.enable_plugin(name)
-                status["code"] = 0
+                status["code"] = 3 if was_enabled else 0
         else:
             if name in (yield client.core.get_enabled_plugins()):
                 yield client.core.disable_plugin(name)
@@ -564,10 +568,16 @@ install_plugin() {
         chown --reference="$c" "$c/plugins/$egg" 2>/dev/null || true
         ok "installed the dashboard plugin to $c/plugins/$egg"
 
-        if daemon_plugin "$c" enable; then
+        local rc=0
+        daemon_plugin "$c" enable || rc=$?
+        if ((rc == 0 || rc == 3)); then
             conf_plugin "$c" add || true
             ok "enabled the $PLUGIN_NAME plugin in the running daemon"
             PLUGIN_ENABLED=1
+            if ((rc == 3)); then
+                warn "the daemon is still running the plugin version it loaded earlier;"
+                warn "restart deluged to load this one's daemon side (the speed chart's history)."
+            fi
         elif [[ -z "$(deluged_pids)" ]] && conf_plugin "$c" add; then
             ok "enabled $PLUGIN_NAME in $c/core.conf; it loads when deluged starts"
             PLUGIN_ENABLED=1
