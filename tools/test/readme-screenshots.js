@@ -107,11 +107,20 @@ async function dashboard(browser, details, stats) {
   await page.waitForSelector('input[type=password]', { state: 'visible', timeout: 20000 });
   await page.fill('input[type=password]', PASSWORD);
   await page.keyboard.press('Enter');
-  for (let i = 0; i < 40; i++) {
+  // Logged in once the torrents are in; the daemon can be slow to answer
+  // the first time (log in again if the login window is still up)
+  const loaded = () => page.evaluate(() => window.deluge && deluge.torrents && deluge.torrents.getStore().getCount() > 1);
+  let ok = false;
+  for (let i = 0; i < 120 && !ok; i++) {
     await page.clock.runFor(250);
-    if (await page.evaluate(() => window.deluge && deluge.torrents && deluge.torrents.getStore().getCount() > 1)) break;
     await page.waitForTimeout(100);
+    ok = await loaded();
+    if (!ok && i % 30 === 29 && await page.$('input[type=password]:visible')) {
+      await page.fill('input[type=password]', PASSWORD);
+      await page.keyboard.press('Enter');
+    }
   }
+  if (!ok) throw new Error(`couldn't log in for the ${details}/${stats} layout`);
   await page.evaluate(() => deluge.torrents.getSelectionModel().selectRow(1));
   for (let i = 0; i < 160; i++) {
     await page.clock.runFor(2000);
