@@ -133,6 +133,13 @@ async function dashboard(browser, details, stats) {
   return { ctx, page };
 }
 
+// Closed with its simulated updates dropped: one still in flight would
+// otherwise end the script with an error
+async function done(page, ctx) {
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+  await ctx.close();
+}
+
 const shot = (page, name) => page.screenshot({ path: path.join(OUT, name) });
 
 (async () => {
@@ -141,7 +148,7 @@ const shot = (page, name) => page.screenshot({ path: path.join(OUT, name) });
   for (const [details, stats, name] of [['right', 'below', 'dashboard-right.png'], ['bottom', 'above', 'dashboard-stats-above.png']]) {
     const { ctx, page } = await dashboard(b, details, stats);
     await shot(page, name);
-    await ctx.close();
+    await done(page, ctx);
   }
 
   // The default layout, then its menus and windows over it
@@ -195,7 +202,7 @@ const shot = (page, name) => page.screenshot({ path: path.join(OUT, name) });
   await shot(page, 'dashboard-connection-manager.png');
   await H.closeWindows(page);
 
-  await ctx.close();
+  await done(page, ctx);
   await b.close();
   console.log('wrote screenshots to', OUT);
 })();
