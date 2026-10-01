@@ -356,9 +356,17 @@ card doesn't jump) with an "Open Preferences" link when Deluge reports -1.
 
 ### Transfer speed chart
 
-Plain SVG, no library. Five-minute window, sampled from the same poll and
-backed by the plugin's daemon half (`core.py`), which records the session's
-speeds every 2s (10 minutes kept, in memory) and returns them from
+Plain SVG, no library. Range 1m, 5m (default), 15m or 1h, picked in a
+small switch in its header (the header switches at 2px padding,
+`--dh-text-small`; `dh-seg-small`) and kept in localStorage
+(`darkhand.chartRange`); a change redraws without a reload. The page keeps
+an hour of samples whatever the range, so each is full when picked. Where
+there are more samples than one per 3px (15m and 1h), each unbroken run is
+averaged in clock-aligned steps (so points don't shift as the chart moves
+on), and the axis maximum comes from the averaged values. Sampled from
+the same poll and backed by the plugin's daemon half (`core.py`), which
+records the session's speeds every 2s (an hour kept, in memory) and
+returns them from
 `darkhand.get_speed_history`. The chart fetches that when its first update
 arrives and after any gap in its own samples over 10s, and uses the
 daemon's samples up to its newest, its own after (the daemon's times

@@ -1,7 +1,7 @@
 """Daemon side of the plugin.
 
 Records the session's download and upload speeds every couple of seconds,
-so the dashboard's speed chart can show the last few minutes even when no
+so the dashboard's speed chart can show up to the last hour even when no
 browser was watching: a page in a background tab gets Deluge's updates only
 now and then (browsers throttle its timers), and a closed one gets none.
 The chart fetches the history when it loads and after any gap in its own
@@ -18,7 +18,7 @@ from deluge.core.rpcserver import export
 from deluge.plugins.pluginbase import CorePluginBase
 
 INTERVAL = 2  # seconds between samples, as often as the Web UI updates
-KEEP = 10 * 60  # seconds of history kept (the chart shows five minutes)
+KEEP = 60 * 60  # seconds of history kept (the chart shows up to an hour)
 
 
 class Core(CorePluginBase):

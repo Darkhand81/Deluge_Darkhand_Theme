@@ -28,9 +28,11 @@ If the daemon can't find the download folder (it doesn't exist, or the user
 link to **Preferences → Downloads**, where Deluge's own status bar just says
 "Error".
 
-The speed chart plots download and upload over the last five minutes. Deluge's
-web API keeps no speed history, so the plugin's daemon side records one, every
-two seconds whether or not a browser is open. The chart starts full when the
+The speed chart plots download and upload over the last minute, 5 minutes, 15
+minutes or hour: pick the range in its header (5 minutes to begin with; your
+choice is remembered in that browser). Deluge's web API keeps no speed history,
+so the plugin's daemon side records one, every two seconds whether or not a
+browser is open, and keeps the last hour. The chart starts full when the
 page loads, and time spent in a background tab (where browsers slow the page's
 updates) fills in when you come back. The history is kept in memory, so it
 starts again when the daemon restarts. It sits beside the stats when the column

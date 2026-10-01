@@ -546,24 +546,34 @@ html body.dh-dashboard,
 .dh-chart-head {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 4px 16px;
     margin-bottom: 8px;
 }
 
 .dh-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     font-size: var(--dh-text-body);
     font-weight: 700;
     color: var(--dh-text-strong);
     white-space: nowrap;
 }
 
-.dh-chart-title span {
-    margin-left: 6px;
-    font-size: var(--dh-text-base);
-    font-weight: 400;
-    color: var(--dh-text-faint);
+/* The range switch (1m, 5m, 15m, 1h): the header switches, small enough
+   not to take height from the plot */
+.dh-seg-small {
+    padding: 2px;
+    border-radius: var(--dh-bar-radius);
+}
+
+.dh-seg-small .dh-seg-btn {
+    padding: 2px 8px;
+    border-radius: var(--dh-small-radius);
+    font-size: var(--dh-text-small);
+    line-height: 16px;
 }
 
 .dh-chart-legend {
