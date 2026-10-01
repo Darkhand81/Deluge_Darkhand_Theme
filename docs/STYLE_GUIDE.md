@@ -334,6 +334,10 @@ toolbar doesn't fit (measured on every toolbar resize). Labels stay as tooltips.
     (`SHRINK_TO`) or below their header or content minimum.
   - Progress never goes below its longest label ("Downloading 99.99%", or its
     translation) + 12px, measured in the actual font (~141px).
+  - ETA never goes below its widest time ("59m 59s", "23h 59m", "30d 23h"),
+    measured in a cell (~63px; Deluge's 60px cut off "12m 34s"). Measure
+    number cells in the DOM, not with `textWidth`: the theme's tabular
+    figures are wider, and the canvas ignores `font-variant-numeric`.
   - A column you resize by hand keeps your width (remembered); Name takes
     whatever is left.
   - None of this changes the widths Deluge saves in its column cookie.

@@ -21,11 +21,10 @@ const MIB = 1048576;
 // ones, which also get a few peers
 const downRate = n => Math.max(0, Math.round((2.6 + 1.6 * Math.sin(n / 11) + 0.5 * Math.sin(n / 3.1)) * MIB));
 const upRate = n => Math.max(0, Math.round((0.7 + 0.45 * Math.sin(n / 17 + 1) + 0.15 * Math.sin(n / 2.3)) * MIB));
-// (ETAs under ten minutes: "12m 34s" is wider than Deluge's ETA column)
 const DOWNLOADS = [
-  { share: 0.52, progress: 41.7, eta: 341, seeds: 12, peers: 4 },
+  { share: 0.52, progress: 41.7, eta: 754, seeds: 12, peers: 4 },
   { share: 0.31, progress: 68.2, eta: 262, seeds: 7, peers: 3 },
-  { share: 0.17, progress: 23.9, eta: 518, seeds: 3, peers: 2 },
+  { share: 0.17, progress: 23.9, eta: 4920, seeds: 3, peers: 2 },
 ];
 const SEEDS = [{ share: 0.38, peers: 5 }, { share: 0.27, peers: 3 }, { share: 0.21, peers: 2 }, { share: 0.14, peers: 1 }];
 

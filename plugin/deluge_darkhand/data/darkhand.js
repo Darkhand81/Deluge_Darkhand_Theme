@@ -895,6 +895,40 @@ Ext.ns('Deluge.plugins.darkhand');
         return Math.ceil(widest + PROGRESS_PAD + (cell.offsetWidth - wrap.clientWidth));
     }
 
+    // ETA, at the widest Deluge writes ("59m 59s", "23h 59m", "30d 23h"):
+    // its 60px fits only single-digit minutes ("12m 34s" is cut off)
+    var ETA_SAMPLES = ['59m 59s', '23h 59m', '30d 23h'];
+
+    function etaMinWidth(view, i) {
+        if (!view.hasRows()) return 0;
+        var cell = view.getCell(0, i);
+        var inner = cell && Ext.fly(cell).child('.x-grid3-cell-inner', true);
+        if (!inner) return 0;
+        // Measured in the cell itself: its digits are tabular (the theme's
+        // font-variant-numeric), which textWidth's canvas doesn't apply
+        var probe = document.createElement('span');
+        probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+        inner.appendChild(probe);
+        var widest = 0;
+        Ext.each(ETA_SAMPLES, function (text) {
+            probe.textContent = text;
+            widest = Math.max(widest, probe.getBoundingClientRect().width);
+        });
+        inner.removeChild(probe);
+        var s = window.getComputedStyle(inner);
+        // plus the cell's padding round the text
+        return Math.ceil(widest + parseFloat(s.paddingLeft) + parseFloat(s.paddingRight) + (cell.offsetWidth - inner.offsetWidth));
+    }
+
+    // The least a column's content needs, whatever its header: Progress
+    // its bar's widest label, ETA its widest time
+    function contentMinWidth(view, cm, i) {
+        var index = cm.config[i].dataIndex;
+        if (index === 'progress') return progressMinWidth(view, i);
+        if (index === 'eta') return etaMinWidth(view, i);
+        return 0;
+    }
+
     // Take up to `need` px from the other columns for Name, in proportion
     // to what each can spare (never below its header, its content's
     // minimum, or SHRINK_TO of its normal width). Columns you've sized
@@ -907,7 +941,7 @@ Ext.ns('Deluge.plugins.darkhand');
             if (cm.isHidden(i) || i === nameIndex || sized[id]) continue;
             var w = cm.getColumnWidth(i);
             var floor = Math.max(headerWidth(view, i), Math.ceil((w - (stretch[id] || 0)) * SHRINK_TO));
-            if (cm.config[i].dataIndex === 'progress') floor = Math.max(floor, progressMinWidth(view, i));
+            floor = Math.max(floor, contentMinWidth(view, cm, i));
             if (w > floor) {
                 cols.push([i, id, w - floor]);
                 room += w - floor;
@@ -959,7 +993,7 @@ Ext.ns('Deluge.plugins.darkhand');
                 id = cm.getColumnId(i);
                 if (cm.isHidden(i) || i === nameIndex || sized[id]) continue;
                 var needed = headerWidth(view, i);
-                if (cm.config[i].dataIndex === 'progress') needed = Math.max(needed, progressMinWidth(view, i));
+                needed = Math.max(needed, contentMinWidth(view, cm, i));
                 var fit = needed - cm.getColumnWidth(i);
                 if (fit > 0) {
                     stretch[id] = (stretch[id] || 0) + fit;
@@ -980,7 +1014,7 @@ Ext.ns('Deluge.plugins.darkhand');
                 var short = SPEED_HEADERS[c.dataIndex] && c.dhHeader && c.header !== c.dhHeader;
                 var need = short ? c.dhFullWidth || 0 : headerWidth(view, i);
                 if (SPEED_HEADERS[c.dataIndex] && !short) c.dhFullWidth = need;
-                if (c.dataIndex === 'progress') need = Math.max(need, progressMinWidth(view, i));
+                need = Math.max(need, contentMinWidth(view, cm, i));
                 w = Math.max(w, need);
             }
             others += w;
