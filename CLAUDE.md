@@ -19,5 +19,8 @@
 - `tools/test/`: a throwaway test server, screenshot regression and
   cut-off text checks (see `tools/test/README.md`), and the README
   screenshot script.
+- The plugin's version (shown on Deluge's Plugins page) is the `Version:`
+  in `plugin/EGG-INFO/PKG-INFO`. Bump it before a release; the release
+  workflow fails if it doesn't match the tag.
 - `.github/workflows/release.yml`: a `v*` tag publishes a release with the
   plugin egg and a theme zip.

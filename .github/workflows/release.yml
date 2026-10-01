@@ -1,6 +1,7 @@
 # On a version tag (v1.0.0), publish a release with the dashboard plugin as
 # a prebuilt egg and the theme as a zip, for installs without darkhand.sh
-# (Windows: see the README). Tag on main, after merging.
+# (Windows: see the README). Tag on main, after merging, and after bumping
+# the version in plugin/EGG-INFO/PKG-INFO to the tag's.
 name: Release
 
 on:
@@ -24,17 +25,21 @@ jobs:
             echo "::error::tag $GITHUB_REF_NAME isn't a version (v1.0.0)"
             exit 1
           fi
+          # The plugin's metadata holds the version Deluge shows (its
+          # Plugins page), for darkhand.sh installs too: bump it first
+          plugin="$(sed -n 's/^Version: //p' plugin/EGG-INFO/PKG-INFO)"
+          if [ "$plugin" != "$version" ]; then
+            echo "::error::plugin/EGG-INFO/PKG-INFO is version $plugin, the tag $version: bump it, then tag"
+            exit 1
+          fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
 
       # As darkhand.sh's build_egg: plugin/ zipped as it is (the code is pure
-      # Python, so one "py3" egg suits every Python 3 Deluge), with the tag's
-      # version in its metadata
+      # Python, so one "py3" egg suits every Python 3 Deluge)
       - name: Build the plugin egg
         run: |
-          mkdir -p dist build
-          cp -R plugin build/plugin
-          sed -i "s/^Version: .*/Version: $VERSION/" build/plugin/EGG-INFO/PKG-INFO
-          python3 - build/plugin "dist/Darkhand-$VERSION-py3.egg" <<'PY'
+          mkdir -p dist
+          python3 - plugin "dist/Darkhand-$VERSION-py3.egg" <<'PY'
           import os, sys, zipfile
 
           src, dest = sys.argv[1], sys.argv[2]
