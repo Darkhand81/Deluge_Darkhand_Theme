@@ -48,7 +48,9 @@ def make_data(root):
                 f.write(os.urandom(500000 * (i + 1)))
         fs = lt.file_storage()
         lt.add_files(fs, path)
-        t = lt.create_torrent(fs, 16384 * 4)
+        # v1 only: libtorrent's hybrid torrents add padding files, which
+        # would show in the Files tabs (as a .pad folder)
+        t = lt.create_torrent(fs, 16384 * 4, flags=lt.create_torrent.v1_only)
         t.add_tracker(f'udp://tracker{i % 3}.example.org:1337/announce')
         lt.set_piece_hashes(t, dl)
         with open(os.path.join(tor, name + '.torrent'), 'wb') as f:
